@@ -9,6 +9,7 @@ export const translations = {
     navScanPlate: 'Scan Plate',
     navSignIn: 'Sign In',
     navRegister: 'Create Account',
+    navSignOut: 'Sign Out',
 
     // Landing Hero
     heroBadge: 'The New Era of Smart Nutrition',
@@ -40,7 +41,6 @@ export const translations = {
     passwordLabel: 'Password',
     signInButton: 'Sign In',
     signInVerifying: 'Verifying...',
-    demoLoginButton: 'Instant Demo Login (Aim\'fiz)',
 
     // Onboarding Wizard
     onboardingTitle: 'PlateVision AI Assessment',
@@ -113,7 +113,9 @@ export const translations = {
     hydration: 'Hydration',
     addWaterButton: '+250ml',
     loggedMealsTitle: "Today's Logged Meals",
-    loggedMealsCount: '{count} meals logged'
+    loggedMealsCount: '{count} meals logged',
+    emptyMealsTitle: 'No meals logged today yet',
+    emptyMealsDesc: 'Click "+ Scan a Plate" above to scan your first dish and calculate your calories!'
   },
   fr: {
     // Navbar
@@ -123,6 +125,7 @@ export const translations = {
     navScanPlate: 'Scanner Assiette',
     navSignIn: 'Se connecter',
     navRegister: 'Créer un compte',
+    navSignOut: 'Déconnexion',
 
     // Landing Hero
     heroBadge: 'La nouvelle ère de la nutrition intelligente',
@@ -154,7 +157,6 @@ export const translations = {
     passwordLabel: 'Mot de passe',
     signInButton: 'Se connecter',
     signInVerifying: 'Vérification...',
-    demoLoginButton: 'Connexion démo immédiate (Aim\'fiz)',
 
     // Onboarding Wizard
     onboardingTitle: 'Évaluation PlateVision AI',
@@ -227,6 +229,8 @@ export const translations = {
     hydration: 'Hydratation',
     addWaterButton: '+250ml',
     loggedMealsTitle: 'Repas Enregistrés Aujourd\'hui',
-    loggedMealsCount: '{count} repas enregistrés'
+    loggedMealsCount: '{count} repas enregistrés',
+    emptyMealsTitle: 'Aucun repas enregistré aujourd\'hui',
+    emptyMealsDesc: 'Cliquez sur "+ Scanner une Assiette" ci-dessus pour scanner votre premier plat et calculer vos calories !'
   }
 };

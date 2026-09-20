@@ -3,25 +3,27 @@
 import React, { useState } from 'react';
 import { 
   Flame, Dumbbell, Wheat, Droplets, Plus, Sparkles, 
-  Clock, TrendingUp, Award, Calendar, ChevronRight
+  Clock, TrendingUp, Award, Calendar, LogOut, Utensils
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../types/plateVision';
-import { INITIAL_LOGGED_MEALS } from '../data/mockPlateData';
 import { ScannerZone } from './ScannerZone';
 import { useLanguage } from '../context/LanguageContext';
 
 interface DashboardProps {
   profile: UserProfile;
   onOpenScannerModal: () => void;
+  onSignOut: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
   profile,
-  onOpenScannerModal
+  onOpenScannerModal,
+  onSignOut
 }) => {
   const { t } = useLanguage();
-  const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>(INITIAL_LOGGED_MEALS);
-  const [waterDrankLiters, setWaterDrankLiters] = useState<number>(1.8);
+  // Zero initial mock meals - real user logging!
+  const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>([]);
+  const [waterDrankLiters, setWaterDrankLiters] = useState<number>(0);
 
   const totalCaloriesConsumed = loggedMeals.reduce((acc, m) => acc + m.totalCalories, 0);
   const totalProteinConsumed = loggedMeals.reduce((acc, m) => acc + m.totalProtein, 0);
@@ -60,13 +62,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenScannerModal}
-          className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
-        >
-          <Sparkles className="w-5 h-5 text-[#14171d]" />
-          <span>{t('scanPlateButton')}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onOpenScannerModal}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
+          >
+            <Sparkles className="w-5 h-5 text-[#14171d]" />
+            <span>{t('scanPlateButton')}</span>
+          </button>
+
+          <button
+            onClick={onSignOut}
+            title={t('navSignOut')}
+            className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Top 4 Metric Cards */}
@@ -210,34 +222,51 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <span className="text-xs text-[#9ea3b0] font-semibold">{t('loggedMealsCount', { count: loggedMeals.length })}</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {loggedMeals.map((meal) => (
-            <div 
-              key={meal.id}
-              className="p-4 glass-card rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center gap-4 hover:border-[#b6ff2e]/40 transition-all group"
+        {loggedMeals.length === 0 ? (
+          <div className="p-8 glass-card rounded-3xl border border-dashed border-white/10 text-center space-y-3">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
+              <Utensils className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-white">{t('emptyMealsTitle')}</h4>
+            <p className="text-xs text-[#9ea3b0] max-w-md mx-auto">{t('emptyMealsDesc')}</p>
+            <button
+              onClick={onOpenScannerModal}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_15px_rgba(182,255,46,0.3)] mt-2"
             >
-              <img 
-                src={meal.imageUrl} 
-                alt={meal.title}
-                className="w-20 h-20 rounded-xl object-cover shrink-0 border border-white/10 group-hover:scale-105 transition-all"
-              />
+              <Sparkles className="w-4 h-4" />
+              <span>{t('scanPlateButton')}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {loggedMeals.map((meal) => (
+              <div 
+                key={meal.id}
+                className="p-4 glass-card rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center gap-4 hover:border-[#b6ff2e]/40 transition-all group"
+              >
+                <img 
+                  src={meal.imageUrl} 
+                  alt={meal.title}
+                  className="w-20 h-20 rounded-xl object-cover shrink-0 border border-white/10 group-hover:scale-105 transition-all"
+                />
 
-              <div className="flex-1 overflow-hidden">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-[#9ea3b0] font-semibold">{meal.timestamp}</span>
-                  <span className="text-xs font-extrabold text-[#b6ff2e]">{meal.totalCalories} kcal</span>
-                </div>
-                <h4 className="text-sm font-bold text-white truncate">{meal.title}</h4>
-                
-                <div className="flex items-center gap-3 mt-2 text-[11px] text-[#9ea3b0]">
-                  <span>{t('proteinsLabel')}: <strong className="text-white">{meal.totalProtein}g</strong></span>
-                  <span>{t('carbsLabel')}: <strong className="text-white">{meal.totalCarbs}g</strong></span>
-                  <span>{t('fatsLabel')}: <strong className="text-white">{meal.totalFats}g</strong></span>
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-[#9ea3b0] font-semibold">{meal.timestamp}</span>
+                    <span className="text-xs font-extrabold text-[#b6ff2e]">{meal.totalCalories} kcal</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white truncate">{meal.title}</h4>
+                  
+                  <div className="flex items-center gap-3 mt-2 text-[11px] text-[#9ea3b0]">
+                    <span>{t('proteinsLabel')}: <strong className="text-white">{meal.totalProtein}g</strong></span>
+                    <span>{t('carbsLabel')}: <strong className="text-white">{meal.totalCarbs}g</strong></span>
+                    <span>{t('fatsLabel')}: <strong className="text-white">{meal.totalFats}g</strong></span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>

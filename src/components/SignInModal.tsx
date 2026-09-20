@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, LogIn, Lock, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, LogIn, Lock, Mail, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface SignInModalProps {
@@ -28,18 +28,10 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
     setTimeout(() => {
       setIsLoading(false);
-      onSuccessLogin(email.split('@')[0] || "Aim'fiz");
+      const nameFromEmail = email.split('@')[0] || "User";
+      onSuccessLogin(nameFromEmail);
       onClose();
     }, 800);
-  };
-
-  const handleDemoLogin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      onSuccessLogin("Aim'fiz Ibrahim");
-      onClose();
-    }, 600);
   };
 
   return (
@@ -113,15 +105,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           </button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.08)]">
-          <button
-            onClick={handleDemoLogin}
-            className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-[#b6ff2e]/40 text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all"
-          >
-            <CheckCircle2 className="w-4 h-4 text-[#b6ff2e]" />
-            {t('demoLoginButton')}
-          </button>
-        </div>
       </div>
     </div>
   );

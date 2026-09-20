@@ -7,7 +7,7 @@ import { Dashboard } from '../components/Dashboard';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { SignInModal } from '../components/SignInModal';
 import { ScannerZone } from '../components/ScannerZone';
-import { UserProfile, ScannedMeal } from '../types/plateVision';
+import { UserProfile } from '../types/plateVision';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'scanner' | 'macros'>('home');
@@ -15,7 +15,7 @@ export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-  // User Profile state
+  // User Profile state (null = not signed in)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const handleCompleteOnboarding = (profile: UserProfile) => {
@@ -24,7 +24,6 @@ export default function Home() {
   };
 
   const handleSuccessLogin = (userName: string) => {
-    // Generate default profile for returning user
     const defaultProfile: UserProfile = {
       goal: 'lose',
       name: userName,
@@ -46,6 +45,11 @@ export default function Home() {
     setActiveTab('dashboard');
   };
 
+  const handleSignOut = () => {
+    setUserProfile(null);
+    setActiveTab('home');
+  };
+
   return (
     <main className="min-h-screen bg-[#14171d] text-white flex flex-col selection:bg-[#b6ff2e] selection:text-[#14171d]">
       
@@ -54,9 +58,11 @@ export default function Home() {
         onOpenSignIn={() => setIsSignInOpen(true)}
         onOpenRegister={() => setIsRegisterOpen(true)}
         onOpenScanner={() => setIsScannerOpen(true)}
+        onSignOut={handleSignOut}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         hasProfile={!!userProfile}
+        userName={userProfile?.name}
       />
 
       {/* Main Body Content */}
@@ -70,26 +76,12 @@ export default function Home() {
           />
         )}
 
-        {/* VIEW 2: DASHBOARD (When profile exists or tab switched) */}
-        {(activeTab === 'dashboard' || (activeTab === 'home' && userProfile)) && (
+        {/* VIEW 2: DASHBOARD */}
+        {(activeTab === 'dashboard' || (activeTab === 'home' && userProfile)) && userProfile && (
           <Dashboard
-            profile={userProfile || {
-              goal: 'lose',
-              name: "Aim'fiz",
-              age: 18,
-              gender: 'male',
-              heightCm: 178,
-              currentWeightKg: 78,
-              targetWeightKg: 72,
-              workoutDaysPerWeek: 4,
-              timeframeMonths: 3,
-              dailyCaloriesGoal: 2150,
-              proteinGoalGrams: 156,
-              carbsGoalGrams: 210,
-              fatsGoalGrams: 60,
-              waterGoalLiters: 2.8
-            }}
+            profile={userProfile}
             onOpenScannerModal={() => setIsScannerOpen(true)}
+            onSignOut={handleSignOut}
           />
         )}
 
@@ -126,7 +118,7 @@ export default function Home() {
           onMealScanned={(meal) => {
             setIsScannerOpen(false);
             if (!userProfile) {
-              handleSuccessLogin("Aim'fiz");
+              handleSuccessLogin("User");
             } else {
               setActiveTab('dashboard');
             }
