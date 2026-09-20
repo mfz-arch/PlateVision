@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { 
-  Sparkles, Camera, ArrowRight, ShieldCheck, Zap, 
-  Flame, Dumbbell, Award, ChevronRight, CheckCircle2
+  Camera, ArrowRight, ShieldCheck, Zap, 
+  Flame, Dumbbell, Award, ChevronRight, CheckCircle2, Utensils
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,14 +11,26 @@ import { useLanguage } from '../context/LanguageContext';
 interface LandingHeroProps {
   onStartAssessment: () => void;
   onOpenScanner: () => void;
+  hasProfile?: boolean;
+  onOpenSignIn?: () => void;
 }
 
 export const LandingHero: React.FC<LandingHeroProps> = ({
   onStartAssessment,
-  onOpenScanner
+  onOpenScanner,
+  hasProfile = false,
+  onOpenSignIn
 }) => {
   const { t } = useLanguage();
   const sampleDish = SAMPLE_DISHES[0];
+
+  const handleTestScannerClick = () => {
+    if (!hasProfile && onOpenSignIn) {
+      onOpenSignIn();
+    } else {
+      onOpenScanner();
+    }
+  };
 
   return (
     <div className="space-y-20 py-8 sm:py-12">
@@ -30,7 +42,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         <div className="lg:col-span-7 space-y-6 text-left">
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 text-[#b6ff2e] text-xs font-extrabold tracking-wide">
-            <Sparkles className="w-4 h-4 text-[#b6ff2e]" />
+            <Utensils className="w-4 h-4 text-[#b6ff2e]" />
             <span>{t('heroBadge')}</span>
           </div>
 
@@ -56,7 +68,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             </button>
 
             <button
-              onClick={onOpenScanner}
+              onClick={handleTestScannerClick}
               className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#23262f] border border-[rgba(255,255,255,0.12)] hover:border-[#b6ff2e]/40 text-white font-bold text-base transition-all hover:bg-[#2a2e39]"
             >
               <Camera className="w-5 h-5 text-[#b6ff2e]" />

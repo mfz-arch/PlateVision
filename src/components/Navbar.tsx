@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Camera, Sparkles, LogIn, UserPlus, Globe, LogOut } from 'lucide-react';
+import { Camera, LogIn, UserPlus, Globe, LogOut } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
@@ -26,6 +26,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   userName
 }) => {
   const { language, toggleLanguage, t } = useLanguage();
+
+  const handleScanClick = () => {
+    if (!hasProfile) {
+      // Unauthenticated user -> Open Sign In modal!
+      onOpenSignIn();
+    } else {
+      onOpenScanner();
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel border-b border-[rgba(255,255,255,0.08)] bg-[#14171d]/85 backdrop-blur-xl">
@@ -79,10 +88,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             <button
-              onClick={onOpenScanner}
+              onClick={handleScanClick}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-[#b6ff2e] hover:bg-[#b6ff2e]/10 transition-all border border-[#b6ff2e]/30"
             >
-              <Sparkles className="w-4 h-4 text-[#b6ff2e]" />
+              <Camera className="w-4 h-4 text-[#b6ff2e]" />
               {t('navScanPlate')}
             </button>
           </div>

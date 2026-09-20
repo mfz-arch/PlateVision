@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, LogIn, Lock, Mail, ArrowRight } from 'lucide-react';
+import { X, LogIn, Lock, Mail, ArrowRight, UserPlus } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccessLogin: (name: string) => void;
+  onSwitchToRegister?: () => void;
 }
 
 export const SignInModal: React.FC<SignInModalProps> = ({
   isOpen,
   onClose,
-  onSuccessLogin
+  onSuccessLogin,
+  onSwitchToRegister
 }) => {
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
@@ -104,6 +106,23 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             )}
           </button>
         </form>
+
+        {/* Link to Registration Modal */}
+        {onSwitchToRegister && (
+          <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.08)] text-center">
+            <p className="text-xs text-[#9ea3b0] mb-2">{t('noAccountPrompt')}</p>
+            <button
+              onClick={() => {
+                onClose();
+                onSwitchToRegister();
+              }}
+              className="inline-flex items-center justify-center gap-2 text-xs font-bold text-[#b6ff2e] hover:underline"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>{t('createAccountLink')}</span>
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

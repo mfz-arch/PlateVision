@@ -6,7 +6,7 @@ export const translations = {
     logoSubtitle: 'AI Nutrition & Macro Scanner',
     navHome: 'Home',
     navDashboard: 'My Dashboard',
-    navScanPlate: 'Scan Plate',
+    navScanPlate: 'Scan My Meal',
     navSignIn: 'Sign In',
     navRegister: 'Create Account',
     navSignOut: 'Sign Out',
@@ -29,7 +29,7 @@ export const translations = {
     howItWorksSubtitle: '3 Simple Steps to Master Your Nutrition',
     step1Title: 'Define your goals',
     step1Desc: 'Answer the smart assessment questionnaire to calculate your exact caloric and macro needs.',
-    step2Title: 'Scan your plate',
+    step2Title: 'Scan your meal',
     step2Desc: 'Take a photo of your dish. PlateVision AI automatically identifies the food items present.',
     step3Title: 'Receive AI insights',
     step3Desc: 'View instant nutrient breakdown and track your progress on your personalized dashboard.',
@@ -41,6 +41,8 @@ export const translations = {
     passwordLabel: 'Password',
     signInButton: 'Sign In',
     signInVerifying: 'Verifying...',
+    noAccountPrompt: "Don't have an account?",
+    createAccountLink: 'Create an account',
 
     // Onboarding Wizard
     onboardingTitle: 'PlateVision AI Assessment',
@@ -107,7 +109,7 @@ export const translations = {
     dashGoalLoss: 'Weight Loss',
     dashGoalGain: 'Muscle Gain',
     dashGoalMaintain: 'Weight Maintenance',
-    scanPlateButton: '+ Scan a Plate',
+    scanPlateButton: '+ Scan My Meal',
     caloriesConsumed: 'Calories Consumed',
     remainingCalories: 'Remaining',
     hydration: 'Hydration',
@@ -115,14 +117,14 @@ export const translations = {
     loggedMealsTitle: "Today's Logged Meals",
     loggedMealsCount: '{count} meals logged',
     emptyMealsTitle: 'No meals logged today yet',
-    emptyMealsDesc: 'Click "+ Scan a Plate" above to scan your first dish and calculate your calories!'
+    emptyMealsDesc: 'Click "+ Scan My Meal" above to scan your first dish and calculate your calories!'
   },
   fr: {
     // Navbar
     logoSubtitle: 'Scanner Nutritionnel & Macros IA',
     navHome: 'Accueil',
     navDashboard: 'Mon Tableau de Bord',
-    navScanPlate: 'Scanner Assiette',
+    navScanPlate: 'Scanner Mon Repas',
     navSignIn: 'Se connecter',
     navRegister: 'Créer un compte',
     navSignOut: 'Déconnexion',
@@ -145,7 +147,7 @@ export const translations = {
     howItWorksSubtitle: '3 étapes simples pour piloter sa nutrition',
     step1Title: 'Définis tes objectifs',
     step1Desc: 'Réponds au questionnaire intelligent pour calculer tes besoins exacts en calories et macronutriments.',
-    step2Title: 'Scanne ton assiette',
+    step2Title: 'Scanne ton repas',
     step2Desc: 'Prends une photo de ton plat. L\'IA de PlateVision analyse automatiquement les aliments présents.',
     step3Title: 'Reçois tes conseils IA',
     step3Desc: 'Consulte le bilan nutritionnel instantané et suis ton avancement sur ton tableau de bord personnalisé.',
@@ -157,6 +159,8 @@ export const translations = {
     passwordLabel: 'Mot de passe',
     signInButton: 'Se connecter',
     signInVerifying: 'Vérification...',
+    noAccountPrompt: "Vous n'avez pas de compte ?",
+    createAccountLink: 'Créer un compte',
 
     // Onboarding Wizard
     onboardingTitle: 'Évaluation PlateVision AI',
@@ -223,7 +227,7 @@ export const translations = {
     dashGoalLoss: 'Perte de poids',
     dashGoalGain: 'Prise de masse',
     dashGoalMaintain: 'Maintien',
-    scanPlateButton: '+ Scanner une Assiette',
+    scanPlateButton: '+ Scanner Mon Repas',
     caloriesConsumed: 'Calories Consommées',
     remainingCalories: 'Reste',
     hydration: 'Hydratation',
@@ -231,6 +235,6 @@ export const translations = {
     loggedMealsTitle: 'Repas Enregistrés Aujourd\'hui',
     loggedMealsCount: '{count} repas enregistrés',
     emptyMealsTitle: 'Aucun repas enregistré aujourd\'hui',
-    emptyMealsDesc: 'Cliquez sur "+ Scanner une Assiette" ci-dessus pour scanner votre premier plat et calculer vos calories !'
+    emptyMealsDesc: 'Cliquez sur "+ Scanner Mon Repas" ci-dessus pour scanner votre premier plat et calculer vos calories !'
   }
 };

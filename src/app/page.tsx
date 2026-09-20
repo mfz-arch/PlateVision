@@ -57,7 +57,13 @@ export default function Home() {
       <Navbar
         onOpenSignIn={() => setIsSignInOpen(true)}
         onOpenRegister={() => setIsRegisterOpen(true)}
-        onOpenScanner={() => setIsScannerOpen(true)}
+        onOpenScanner={() => {
+          if (!userProfile) {
+            setIsSignInOpen(true);
+          } else {
+            setIsScannerOpen(true);
+          }
+        }}
         onSignOut={handleSignOut}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -72,7 +78,15 @@ export default function Home() {
         {activeTab === 'home' && !userProfile && (
           <LandingHero
             onStartAssessment={() => setIsRegisterOpen(true)}
-            onOpenScanner={() => setIsScannerOpen(true)}
+            onOpenScanner={() => {
+              if (!userProfile) {
+                setIsSignInOpen(true);
+              } else {
+                setIsScannerOpen(true);
+              }
+            }}
+            hasProfile={!!userProfile}
+            onOpenSignIn={() => setIsSignInOpen(true)}
           />
         )}
 
@@ -101,6 +115,7 @@ export default function Home() {
         isOpen={isSignInOpen}
         onClose={() => setIsSignInOpen(false)}
         onSuccessLogin={handleSuccessLogin}
+        onSwitchToRegister={() => setIsRegisterOpen(true)}
       />
 
       {/* Register / Onboarding Wizard Modal */}
