@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { SampleDish, ScannedMeal } from '../types/plateVision';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ScannerZoneProps {
   onMealScanned: (meal: ScannedMeal) => void;
@@ -19,6 +20,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   onClose,
   isModal = false
 }) => {
+  const { t } = useLanguage();
   const [selectedDish, setSelectedDish] = useState<SampleDish>(SAMPLE_DISHES[0]);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<number>(100);
@@ -53,11 +55,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       const url = URL.createObjectURL(file);
       setCustomImage(url);
 
-      // Create a custom scanned dish
       const customDish: SampleDish = {
         id: 'custom-' + Date.now(),
-        title: file.name.replace(/\.[^/.]+$/, "") || 'Assiette Personnalisée',
-        category: 'Scan En Direct',
+        title: file.name.replace(/\.[^/.]+$/, "") || 'Custom Scanned Plate',
+        category: 'Live AI Scan',
         imageUrl: url,
         totalCalories: 580,
         totalProtein: 36,
@@ -66,7 +67,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         detectedItems: [
           {
             id: 'c-1',
-            name: 'Protéine Principale (Poulet / Poisson)',
+            name: 'Lean Protein Source',
             calories: 300,
             protein: 32,
             carbs: 0,
@@ -76,7 +77,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           },
           {
             id: 'c-2',
-            name: 'Portion de Glucides (Riz / Pâtes)',
+            name: 'Complex Carbohydrate',
             calories: 200,
             protein: 4,
             carbs: 42,
@@ -86,7 +87,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           },
           {
             id: 'c-3',
-            name: 'Légumes & Condiments',
+            name: 'Mixed Vegetables',
             calories: 80,
             protein: 0,
             carbs: 6,
@@ -95,7 +96,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             boundingBox: { x: 55, y: 48, width: 35, height: 38 }
           }
         ],
-        aiAdvice: 'Assiette détectée avec succès ! Bon équilibre global entre protéines et glucides.'
+        aiAdvice: 'Plate detected successfully! Great balance between protein and complex carbs.'
       };
 
       setSelectedDish(customDish);
@@ -132,12 +133,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-              <span>Scanner Visuel IA</span>
+              <span>{t('scannerTitle')}</span>
               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#b6ff2e]/20 text-[#b6ff2e] border border-[#b6ff2e]/40">
                 Gemini Vision API
               </span>
             </h3>
-            <p className="text-xs text-[#9ea3b0]">Déposez une photo ou choisissez un modèle d'assiette à analyser</p>
+            <p className="text-xs text-[#9ea3b0]">{t('scannerSubtitle')}</p>
           </div>
         </div>
 
@@ -178,7 +179,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         {/* Upload Custom File */}
         <label className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5">
           <Upload className="w-4 h-4" />
-          <span>Uploader Photo</span>
+          <span>{t('uploadPhoto')}</span>
           <input 
             type="file" 
             accept="image/*" 
@@ -191,7 +192,6 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       {/* Main Image Viewport with Bounding Boxes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column: Image Canvas & Scanning Overlay */}
         <div className="lg:col-span-7 relative rounded-3xl overflow-hidden bg-[#14171d] border border-[rgba(255,255,255,0.1)] group">
           
           <img 
@@ -200,20 +200,18 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             className="w-full h-[360px] object-cover transition-all duration-500"
           />
 
-          {/* Scanner Beam Animation when scanning */}
           {isScanning && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]">
               <div className="scanner-beam" />
               <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#14171d]/90 border border-[#b6ff2e]/40 text-center">
                 <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#b6ff2e]">
                   <RefreshCw className="w-4 h-4 animate-spin text-[#b6ff2e]" />
-                  <span>Analyse par la Vision IA en cours ({scanProgress}%)...</span>
+                  <span>{t('scanningInProgress')} ({scanProgress}%)...</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Computer Vision Bounding Boxes Overlay */}
           {!isScanning && selectedDish.detectedItems.map((item) => {
             const isActive = activeBoxId === item.id;
             return (
@@ -233,7 +231,6 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                     : 'border-[#b6ff2e]/70 bg-[#b6ff2e]/10 hover:border-[#b6ff2e]'
                 }`}
               >
-                {/* Bounding Box Corner Badges */}
                 <div className="flex items-center justify-between">
                   <span className="px-1.5 py-0.5 rounded bg-[#14171d]/90 text-[10px] font-extrabold text-[#b6ff2e] border border-[#b6ff2e]/40">
                     {item.name}
@@ -247,14 +244,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           })}
 
           <div className="absolute bottom-3 left-3 bg-[#14171d]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-[#9ea3b0] font-semibold">
-            Survolez les cadres verts pour inspecter les aliments détectés
+            {t('hoverBoxInstruction')}
           </div>
         </div>
 
-        {/* Right Column: Nutrient Breakdown & AI Co-pilot */}
+        {/* Right Column: Nutrient Breakdown */}
         <div className="lg:col-span-5 space-y-4">
-          
-          {/* Main Dish Summary Card */}
           <div className="p-5 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)] space-y-4">
             <div>
               <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
@@ -263,10 +258,9 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               <h4 className="text-lg font-extrabold text-white mt-2 leading-snug">{selectedDish.title}</h4>
             </div>
 
-            {/* Total Calories Indicator */}
             <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30 flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Apport Total Détecté</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('scannerTitle')}</p>
                 <p className="text-3xl font-extrabold text-[#b6ff2e]">{selectedDish.totalCalories} <span className="text-sm font-normal">kcal</span></p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
@@ -274,43 +268,39 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               </div>
             </div>
 
-            {/* Macro Stats Bar */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Protéines</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
                 <p className="text-base font-extrabold text-white">{selectedDish.totalProtein}g</p>
               </div>
               <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Glucides</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
                 <p className="text-base font-extrabold text-white">{selectedDish.totalCarbs}g</p>
               </div>
               <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Lipides</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('fatsLabel')}</p>
                 <p className="text-base font-extrabold text-white">{selectedDish.totalFats}g</p>
               </div>
             </div>
 
-            {/* AI Co-Pilot Advice Box */}
             <div className="p-4 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-[#b6ff2e]">
                 <Zap className="w-4 h-4 text-[#b6ff2e]" />
-                <span>Conseil AI Co-Pilot :</span>
+                <span>{t('aiAdviceTitle')} :</span>
               </div>
               <p className="text-xs text-white/90 leading-relaxed italic">
                 "{selectedDish.aiAdvice}"
               </p>
             </div>
 
-            {/* Confirm & Log Button */}
             <button
               onClick={handleLogMeal}
               className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Enregistrer ce repas dans mon Journal</span>
+              <span>{t('logMealCTA')}</span>
             </button>
           </div>
-
         </div>
       </div>
     </div>

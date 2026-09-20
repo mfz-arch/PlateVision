@@ -6,6 +6,7 @@ import {
   Flame, Dumbbell, Award, ChevronRight, CheckCircle2
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LandingHeroProps {
   onStartAssessment: () => void;
@@ -16,6 +17,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   onStartAssessment,
   onOpenScanner
 }) => {
+  const { t } = useLanguage();
   const sampleDish = SAMPLE_DISHES[0];
 
   return (
@@ -29,18 +31,18 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 text-[#b6ff2e] text-xs font-extrabold tracking-wide">
             <Sparkles className="w-4 h-4 text-[#b6ff2e]" />
-            <span>La nouvelle ère de la nutrition intelligente</span>
+            <span>{t('heroBadge')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.1]">
-            Scanne ton assiette. <br />
+            {t('heroTitleStart')} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#b6ff2e] via-[#a3f01b] to-emerald-400">
-              Maîtrise tes macros.
+              {t('heroTitleEnd')}
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-[#9ea3b0] leading-relaxed max-w-2xl font-normal">
-            Prends simplement une photo de ton repas. L'intelligence artificielle **PlateVision** détecte automatiquement chaque aliment et calcule tes calories, protéines et glucides en moins de 2 secondes.
+            {t('heroSubtitle')}
           </p>
 
           {/* Action CTAs */}
@@ -49,7 +51,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               onClick={onStartAssessment}
               className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_30px_rgba(182,255,46,0.4)] hover:scale-105 active:scale-95"
             >
-              <span>Lancer mon Bilan Gratuit</span>
+              <span>{t('heroStartAssessment')}</span>
               <ArrowRight className="w-5 h-5 text-[#14171d]" />
             </button>
 
@@ -58,23 +60,23 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#23262f] border border-[rgba(255,255,255,0.12)] hover:border-[#b6ff2e]/40 text-white font-bold text-base transition-all hover:bg-[#2a2e39]"
             >
               <Camera className="w-5 h-5 text-[#b6ff2e]" />
-              <span>Tester le Scanner IA</span>
+              <span>{t('heroTestScanner')}</span>
             </button>
           </div>
 
           {/* Key Guarantee Badges */}
-          <div className="flex items-center gap-6 pt-4 text-xs text-[#9ea3b0] font-semibold border-t border-white/5">
+          <div className="flex flex-wrap items-center gap-6 pt-4 text-xs text-[#9ea3b0] font-semibold border-t border-white/5">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#b6ff2e]" />
-              <span>Calcul BMR Précis</span>
+              <span>{t('heroBmrGuarantee')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#b6ff2e]" />
-              <span>Gemini Vision API Integration</span>
+              <span>{t('heroGeminiGuarantee')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#b6ff2e]" />
-              <span>100% Gratuit pour tester</span>
+              <span>{t('heroFreeGuarantee')}</span>
             </div>
           </div>
 
@@ -99,7 +101,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 className="absolute border-2 border-[#b6ff2e] bg-[#b6ff2e]/20 rounded-xl flex items-center justify-between p-2 shadow-[0_0_20px_#b6ff2e] animate-pulse"
               >
                 <span className="bg-[#14171d] text-[#b6ff2e] text-[10px] font-black px-1.5 py-0.5 rounded border border-[#b6ff2e]/40">
-                  Saumon Grillé (180g)
+                  Atlantic Salmon (180g)
                 </span>
                 <span className="bg-[#b6ff2e] text-[#14171d] text-[10px] font-black px-1.5 py-0.5 rounded">
                   320 kcal
@@ -109,14 +111,14 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               {/* Top AI Live Badge */}
               <div className="absolute top-3 left-3 bg-[#14171d]/90 backdrop-blur-md border border-[#b6ff2e]/40 px-3 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-extrabold text-[#b6ff2e]">
                 <span className="w-2 h-2 rounded-full bg-[#b6ff2e] animate-ping" />
-                <span>Détection Vision IA Active</span>
+                <span>{t('detectionActive')}</span>
               </div>
             </div>
 
             {/* Floating Stats Footer Card */}
             <div className="p-4 mt-3 rounded-2xl bg-[#14171d] border border-white/10 flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Apport Détecté</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('detectedIntake')}</p>
                 <p className="text-xl font-extrabold text-[#b6ff2e]">{sampleDish.totalCalories} kcal</p>
               </div>
 
@@ -125,7 +127,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   Prot: {sampleDish.totalProtein}g
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Gluc: {sampleDish.totalCarbs}g
+                  Carbs: {sampleDish.totalCarbs}g
                 </span>
               </div>
             </div>
@@ -139,28 +141,28 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       {/* THREE STEP HOW IT WORKS SECTION */}
       <div className="space-y-10 pt-10 border-t border-white/5">
         <div className="text-center max-w-xl mx-auto space-y-2">
-          <span className="text-xs font-extrabold text-[#b6ff2e] uppercase tracking-wider">Comment ça marche</span>
-          <h2 className="text-3xl font-extrabold text-white">3 étapes simples pour piloter sa nutrition</h2>
+          <span className="text-xs font-extrabold text-[#b6ff2e] uppercase tracking-wider">{t('howItWorksTitle')}</span>
+          <h2 className="text-3xl font-extrabold text-white">{t('howItWorksSubtitle')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
               step: '01',
-              title: 'Définis tes objectifs',
-              desc: "Réponds au questionnaire intelligent pour calculer tes besoins exacts en calories et macronutriments.",
+              title: t('step1Title'),
+              desc: t('step1Desc'),
               icon: Flame
             },
             {
               step: '02',
-              title: 'Scanne ton assiette',
-              desc: "Prends une photo de ton plat. L'IA de PlateVision analyse automatiquement les aliments présents.",
+              title: t('step2Title'),
+              desc: t('step2Desc'),
               icon: Camera
             },
             {
               step: '03',
-              title: 'Reçois tes conseils IA',
-              desc: "Consulte le bilan nutritionnel instantané et suis ton avancement sur ton tableau de bord personnalisé.",
+              title: t('step3Title'),
+              desc: t('step3Desc'),
               icon: Zap
             }
           ].map((card, idx) => {

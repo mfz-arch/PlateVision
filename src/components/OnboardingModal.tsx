@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { OnboardingData, UserProfile } from '../types/plateVision';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -19,12 +20,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   onClose,
   onComplete
 }) => {
+  const { t } = useLanguage();
   const [step, setStep] = useState<number>(1);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [calcProgress, setCalcProgress] = useState<number>(0);
-  const [calcMessage, setCalcMessage] = useState<string>('Calcul de votre métabolisme de base (MB)...');
 
-  // Form state
   const [formData, setFormData] = useState<OnboardingData>({
     goal: 'lose',
     name: "Aim'fiz",
@@ -40,7 +40,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Calculate weight change pace (kg / week)
   const weightDiffKg = Math.abs(formData.currentWeightKg - formData.targetWeightKg);
   const weeksTotal = formData.timeframeMonths * 4.33;
   const kgPerWeek = weeksTotal > 0 ? (weightDiffKg / weeksTotal) : 0;
@@ -48,10 +47,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   const handleNextStep = () => {
     if (step === 3) {
-      // Move to feasibility check step
       setStep(4);
     } else if (step === 4) {
-      // Start AI calculations
       setStep(5);
       runCalculations();
     } else {
@@ -66,23 +63,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const runCalculations = () => {
     setIsCalculating(true);
     setCalcProgress(15);
-    setCalcMessage('Analyse de votre métabolisme de base (BMR)...');
 
     setTimeout(() => {
       setCalcProgress(45);
-      setCalcMessage('Calcul de la répartition optimale Protéines / Glucides / Lipides...');
     }, 800);
 
     setTimeout(() => {
       setCalcProgress(75);
-      setCalcMessage("Ajustement de l'objectif d'hydratation (Eau)...");
     }, 1600);
 
     setTimeout(() => {
       setCalcProgress(100);
       setIsCalculating(false);
       
-      // Fire celebration confetti
       try {
         confetti({
           particleCount: 80,
@@ -94,7 +87,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const handleFinalSubmit = () => {
-    // Generate final profile goals based on Harris-Benedict formula approximation
     let bmr = 10 * formData.currentWeightKg + 6.25 * formData.heightCm - 5 * formData.age + 5;
     let activityMultiplier = 1.2 + (formData.workoutDaysPerWeek * 0.1);
     let tdee = bmr * activityMultiplier;
@@ -103,7 +95,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     if (formData.goal === 'lose') targetCalories -= 450;
     if (formData.goal === 'gain') targetCalories += 450;
 
-    const proteinGrams = Math.round(formData.currentWeightKg * 2.0); // 2g/kg
+    const proteinGrams = Math.round(formData.currentWeightKg * 2.0);
     const fatsGrams = Math.round((targetCalories * 0.25) / 9);
     const carbsGrams = Math.round((targetCalories - (proteinGrams * 4 + fatsGrams * 9)) / 4);
 
@@ -130,7 +122,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center">
               <Target className="w-4 h-4 text-[#b6ff2e]" />
             </div>
-            <span className="text-sm font-extrabold text-white">Évaluation PlateVision AI</span>
+            <span className="text-sm font-extrabold text-white">{t('onboardingTitle')}</span>
           </div>
           <button
             onClick={onClose}
@@ -152,15 +144,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">Quel est votre objectif principal ?</h3>
-              <p className="text-xs text-[#9ea3b0] mt-1">PlateVision adaptera vos cibles caloriques et vos conseils nutritionnels IA.</p>
+              <h3 className="text-2xl font-extrabold text-white">{t('step1Question')}</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { id: 'lose', title: 'Perdre du poids', desc: 'Brûler de la graisse tout en préservant le muscle', icon: Flame },
-                { id: 'gain', title: 'Prendre du muscle', desc: 'Prise de masse propre avec surplus calorique', icon: Activity },
-                { id: 'maintain', title: 'Maintenir son poids', desc: 'Conserver la forme et optimiser la santé', icon: Heart }
+                { id: 'lose', title: t('goalLose'), desc: t('goalLoseDesc'), icon: Flame },
+                { id: 'gain', title: t('goalGain'), desc: t('goalGainDesc'), icon: Activity },
+                { id: 'maintain', title: t('goalMaintain'), desc: t('goalMaintainDesc'), icon: Heart }
               ].map((item) => {
                 const IconComp = item.icon;
                 const isSelected = formData.goal === item.id;
@@ -188,17 +179,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           </div>
         )}
 
-        {/* STEP 2: Personal Stats (Age, Weight, Height, Target) */}
+        {/* STEP 2: Personal Stats */}
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">Vos données physiques actuelles</h3>
-              <p className="text-xs text-[#9ea3b0] mt-1">Ces données servent à calculer votre métabolisme de base (MB).</p>
+              <h3 className="text-2xl font-extrabold text-white">{t('wizardStep2Title')}</h3>
+              <p className="text-xs text-[#9ea3b0] mt-1">{t('wizardStep2Desc')}</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">Votre Prénom</label>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('nameLabel')}</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -208,7 +199,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">Âge (années)</label>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('ageLabel')}</label>
                 <input
                   type="number"
                   value={formData.age}
@@ -218,7 +209,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">Taille (cm)</label>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('heightLabel')}</label>
                 <input
                   type="number"
                   value={formData.heightCm}
@@ -228,7 +219,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">Poids Actuel (kg)</label>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('currentWeightLabel')}</label>
                 <input
                   type="number"
                   value={formData.currentWeightKg}
@@ -239,7 +230,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-[#b6ff2e] uppercase mb-1 flex items-center justify-between">
-                  <span>Poids Cible Souhaité (kg)</span>
+                  <span>{t('targetWeightLabel')}</span>
                   <span className="text-white text-sm">{formData.targetWeightKg} kg</span>
                 </label>
                 <input
@@ -259,14 +250,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">Activité physique & Horizon temporel</h3>
-              <p className="text-xs text-[#9ea3b0] mt-1">Déterminez le rythme pour atteindre votre objectif.</p>
+              <h3 className="text-2xl font-extrabold text-white">{t('wizardStep3Title')}</h3>
+              <p className="text-xs text-[#9ea3b0] mt-1">{t('wizardStep3Desc')}</p>
             </div>
 
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-2">
-                  Fréquence d'entraînement par semaine : <span className="text-[#b6ff2e] font-bold">{formData.workoutDaysPerWeek} jours/semaine</span>
+                  {t('workoutDaysLabel')} : <span className="text-[#b6ff2e] font-bold">{formData.workoutDaysPerWeek} {t('workoutDaysUnit')}</span>
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((days) => (
@@ -280,7 +271,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           : 'bg-[#14171d] text-[#9ea3b0] border-white/10 hover:border-white/20'
                       }`}
                     >
-                      {days}j
+                      {days}d
                     </button>
                   ))}
                 </div>
@@ -288,7 +279,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-2">
-                  Durée souhaitée pour atteindre le poids cible : <span className="text-[#b6ff2e] font-bold">{formData.timeframeMonths} mois</span>
+                  {t('timeframeLabel')} : <span className="text-[#b6ff2e] font-bold">{formData.timeframeMonths} {t('timeframeUnit')}</span>
                 </label>
                 <div className="grid grid-cols-4 gap-3">
                   {[1, 2, 3, 6].map((months) => (
@@ -302,7 +293,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           : 'bg-[#14171d] text-[#9ea3b0] border-white/10 hover:border-white/20'
                       }`}
                     >
-                      {months} mois
+                      {months} {t('timeframeUnit')}
                     </button>
                   ))}
                 </div>
@@ -317,54 +308,52 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 text-[#b6ff2e] text-xs font-bold mb-2">
                 <Sparkles className="w-3.5 h-3.5" />
-                Analyse IA de Faisabilité
+                {t('step4Badge')}
               </div>
-              <h3 className="text-2xl font-extrabold text-white">Évaluation de votre objectif</h3>
+              <h3 className="text-2xl font-extrabold text-white">{t('step4Title')}</h3>
             </div>
 
-            {/* Feasibility Alert Card */}
             {isPaceUnrealistic ? (
               <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                 <div className="flex items-center gap-3 text-amber-400 font-bold text-base">
                   <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
-                  <span>Alerte Rythme Intensif ({kgPerWeek.toFixed(1)} kg / semaine)</span>
+                  <span>{t('alertIntensiveTitle')} ({kgPerWeek.toFixed(1)} kg / wk)</span>
                 </div>
                 <p className="text-xs text-amber-200/90 leading-relaxed">
-                  Attention : Viser une variation de plus de 1.0 kg par semaine sur {formData.timeframeMonths} mois risque de fatiguer votre organisme ou de vous faire perdre de la masse musculaire. 
+                  {t('alertIntensiveDesc', { months: formData.timeframeMonths })}
                 </p>
                 <div className="p-3 rounded-xl bg-amber-500/15 text-xs text-amber-300 font-medium">
-                  💡 Conseil IA : PlateVision va automatiquement réajuster l'apport calorique quotidien pour protéger vos muscles tout en atteignant la cible.
+                  {t('alertIntensiveAdvice')}
                 </div>
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-3">
                 <div className="flex items-center gap-3 text-[#b6ff2e] font-bold text-base">
                   <CheckCircle className="w-6 h-6 text-[#b6ff2e] shrink-0" />
-                  <span>Objectif Très Sain & Réaliste ! ({kgPerWeek.toFixed(1)} kg / semaine)</span>
+                  <span>{t('alertRealisticTitle')} ({kgPerWeek.toFixed(1)} kg / wk)</span>
                 </div>
                 <p className="text-xs text-white/80 leading-relaxed">
-                  Votre rythme cible est idéal pour une transformation durable sans effet yoyo.
+                  {t('alertRealisticDesc')}
                 </p>
               </div>
             )}
 
-            {/* Target Overview Card */}
             <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Actuel</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('currentStat')}</p>
                 <p className="text-base font-extrabold text-white">{formData.currentWeightKg} kg</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Cible</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('targetStat')}</p>
                 <p className="text-base font-extrabold text-[#b6ff2e]">{formData.targetWeightKg} kg</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Durée</p>
-                <p className="text-base font-extrabold text-white">{formData.timeframeMonths} mois</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('durationStat')}</p>
+                <p className="text-base font-extrabold text-white">{formData.timeframeMonths} mo</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Entraînement</p>
-                <p className="text-base font-extrabold text-white">{formData.workoutDaysPerWeek}j / sem</p>
+                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('workoutStat')}</p>
+                <p className="text-base font-extrabold text-white">{formData.workoutDaysPerWeek}d / wk</p>
               </div>
             </div>
           </div>
@@ -379,8 +368,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <Sparkles className="w-10 h-10 text-[#b6ff2e] animate-spin" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-extrabold text-white mb-2">Génération de votre profil PlateVision</h4>
-                  <p className="text-xs text-[#b6ff2e] font-semibold">{calcMessage}</p>
+                  <h4 className="text-xl font-extrabold text-white mb-2">{t('step5CalculatingTitle')}</h4>
                 </div>
                 <div className="w-full bg-[#14171d] h-3 rounded-full overflow-hidden border border-white/10">
                   <div 
@@ -395,25 +383,25 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <Check className="w-8 h-8 stroke-[3]" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold text-white">Votre Plan Nutritionnel est prêt !</h3>
-                  <p className="text-xs text-[#9ea3b0]">Voici vos cibles quotidiennes personnalisées générées par PlateVision AI :</p>
+                  <h3 className="text-2xl font-extrabold text-white">{t('step5SuccessTitle')}</h3>
+                  <p className="text-xs text-[#9ea3b0]">{t('step5SuccessDesc')}</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
                   <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Calories / jour</p>
+                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('caloriesPerDay')}</p>
                     <p className="text-xl font-extrabold text-[#b6ff2e]">2 150 <span className="text-xs font-normal">kcal</span></p>
                   </div>
                   <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Protéines</p>
+                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
                     <p className="text-xl font-extrabold text-white">156 <span className="text-xs font-normal">g</span></p>
                   </div>
                   <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Glucides</p>
+                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
                     <p className="text-xl font-extrabold text-white">210 <span className="text-xs font-normal">g</span></p>
                   </div>
                   <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">Eau / jour</p>
+                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('waterPerDay')}</p>
                     <p className="text-xl font-extrabold text-sky-400">2.8 <span className="text-xs font-normal">L</span></p>
                   </div>
                 </div>
@@ -422,14 +410,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   onClick={handleFinalSubmit}
                   className="w-full py-4 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)]"
                 >
-                  Accéder à mon Dashboard PlateVision
+                  {t('accessDashboardCTA')}
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Footer Navigation Buttons (Steps 1 to 4) */}
+        {/* Footer Navigation Buttons */}
         {step <= 4 && (
           <div className="flex items-center justify-between mt-8 pt-4 border-t border-white/10">
             {step > 1 ? (
@@ -438,7 +426,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 text-white font-bold text-xs hover:bg-white/10 transition-all"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Précédent
+                {t('prevButton')}
               </button>
             ) : <div />}
 
@@ -446,7 +434,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               onClick={handleNextStep}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_15px_rgba(182,255,46,0.3)]"
             >
-              <span>{step === 4 ? "Lancer l'analyse IA" : 'Suivant'}</span>
+              <span>{step === 4 ? t('launchAnalysisCTA') : t('nextButton')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Camera, Sparkles, User, LogIn, UserPlus } from 'lucide-react';
+import { Camera, Sparkles, LogIn, UserPlus, Globe } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
   onOpenSignIn: () => void;
@@ -20,6 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   hasProfile
 }) => {
+  const { language, toggleLanguage, t } = useLanguage();
+
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel border-b border-[rgba(255,255,255,0.08)] bg-[#14171d]/85 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   AI
                 </span>
               </div>
-              <p className="text-[11px] text-[#9ea3b0] font-medium tracking-wide">Nutrition & Macro Scanner</p>
+              <p className="text-[11px] text-[#9ea3b0] font-medium tracking-wide">{t('logoSubtitle')}</p>
             </div>
           </div>
 
@@ -55,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-[#9ea3b0] hover:text-white hover:bg-white/5'
               }`}
             >
-              Accueil
+              {t('navHome')}
             </button>
 
             {hasProfile && (
@@ -67,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#9ea3b0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Mon Tableau de Bord
+                {t('navDashboard')}
               </button>
             )}
 
@@ -76,18 +79,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-[#b6ff2e] hover:bg-[#b6ff2e]/10 transition-all border border-[#b6ff2e]/30"
             >
               <Sparkles className="w-4 h-4 text-[#b6ff2e]" />
-              Scanner Assiette
+              {t('navScanPlate')}
             </button>
           </div>
 
-          {/* Action Buttons (Distinct Sign In & Register) */}
+          {/* Action Controls & Language Switcher */}
           <div className="flex items-center gap-3">
+            
+            {/* Language Switcher Button */}
+            <button
+              onClick={toggleLanguage}
+              title="Switch Language / Changer de langue"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#23262f] border border-[rgba(255,255,255,0.1)] hover:border-[#b6ff2e]/50 text-xs font-extrabold text-white transition-all hover:scale-105 active:scale-95 shadow-md"
+            >
+              <Globe className="w-4 h-4 text-[#b6ff2e]" />
+              <span>{language === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'}</span>
+            </button>
+
             <button
               onClick={onOpenSignIn}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-[#23262f] border border-[rgba(255,255,255,0.12)] hover:border-[#b6ff2e]/40 hover:text-[#b6ff2e] transition-all shadow-md"
+              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-[#23262f] border border-[rgba(255,255,255,0.12)] hover:border-[#b6ff2e]/40 hover:text-[#b6ff2e] transition-all shadow-md"
             >
               <LogIn className="w-4 h-4" />
-              Se connecter
+              {t('navSignIn')}
             </button>
 
             <button
@@ -95,8 +109,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-[#14171d] bg-[#b6ff2e] hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
             >
               <UserPlus className="w-4 h-4" />
-              Créer un compte
+              {t('navRegister')}
             </button>
+
           </div>
 
         </div>

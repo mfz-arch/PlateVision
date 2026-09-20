@@ -8,6 +8,7 @@ import {
 import { UserProfile, ScannedMeal } from '../types/plateVision';
 import { INITIAL_LOGGED_MEALS } from '../data/mockPlateData';
 import { ScannerZone } from './ScannerZone';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DashboardProps {
   profile: UserProfile;
@@ -18,10 +19,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   profile,
   onOpenScannerModal
 }) => {
+  const { t } = useLanguage();
   const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>(INITIAL_LOGGED_MEALS);
   const [waterDrankLiters, setWaterDrankLiters] = useState<number>(1.8);
 
-  // Compute total calories & macros consumed today
   const totalCaloriesConsumed = loggedMeals.reduce((acc, m) => acc + m.totalCalories, 0);
   const totalProteinConsumed = loggedMeals.reduce((acc, m) => acc + m.totalProtein, 0);
   const totalCarbsConsumed = loggedMeals.reduce((acc, m) => acc + m.totalCarbs, 0);
@@ -39,6 +40,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setWaterDrankLiters((prev) => Math.min(4.0, Number((prev + 0.25).toFixed(2))));
   };
 
+  const goalText = profile.goal === 'lose' ? t('dashGoalLoss') : profile.goal === 'gain' ? t('dashGoalGain') : t('dashGoalMaintain');
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       
@@ -46,16 +49,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#b6ff2e]">Profil Actif</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#b6ff2e]">{t('activeProfileBadge')}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#b6ff2e] animate-ping" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Bonjour, {profile.name} 👋
+            {t('greeting', { name: profile.name })}
           </h2>
           <p className="text-xs text-[#9ea3b0] mt-1">
-            Objectif : <span className="text-white font-semibold">
-              {profile.goal === 'lose' ? 'Perte de poids' : profile.goal === 'gain' ? 'Prise de masse' : 'Maintien'} ({profile.targetWeightKg} kg)
-            </span> • {profile.workoutDaysPerWeek} séances/semaine
+            {goalText} ({profile.targetWeightKg} kg) • {profile.workoutDaysPerWeek} {t('workoutDaysUnit')}
           </p>
         </div>
 
@@ -64,7 +65,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
         >
           <Sparkles className="w-5 h-5 text-[#14171d]" />
-          <span>+ Scanner une Assiette</span>
+          <span>{t('scanPlateButton')}</span>
         </button>
       </div>
 
@@ -74,16 +75,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Card 1: Calories Gauge Ring */}
         <div className="p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)] flex items-center justify-between relative overflow-hidden group">
           <div>
-            <p className="text-xs font-bold text-[#9ea3b0] uppercase tracking-wider mb-1">Calories Consommées</p>
+            <p className="text-xs font-bold text-[#9ea3b0] uppercase tracking-wider mb-1">{t('caloriesConsumed')}</p>
             <h3 className="text-3xl font-extrabold text-[#b6ff2e]">
               {totalCaloriesConsumed} <span className="text-xs font-normal text-white">/ {profile.dailyCaloriesGoal} kcal</span>
             </h3>
             <p className="text-[11px] text-[#9ea3b0] mt-2 font-medium">
-              Reste : <span className="text-white font-bold">{Math.max(0, profile.dailyCaloriesGoal - totalCaloriesConsumed)} kcal</span>
+              {t('remainingCalories')} : <span className="text-white font-bold">{Math.max(0, profile.dailyCaloriesGoal - totalCaloriesConsumed)} kcal</span>
             </p>
           </div>
 
-          {/* SVG Circular Ring Gauge */}
           <div className="relative w-20 h-20 shrink-0">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path
@@ -116,7 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
                 <Dumbbell className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold text-[#9ea3b0] uppercase">Protéines</span>
+              <span className="text-xs font-bold text-[#9ea3b0] uppercase">{t('proteinsLabel')}</span>
             </div>
             <span className="text-xs font-extrabold text-white">{proteinPercentage}%</span>
           </div>
@@ -142,7 +142,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <Wheat className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold text-[#9ea3b0] uppercase">Glucides</span>
+              <span className="text-xs font-bold text-[#9ea3b0] uppercase">{t('carbsLabel')}</span>
             </div>
             <span className="text-xs font-extrabold text-white">{carbsPercentage}%</span>
           </div>
@@ -168,14 +168,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
                 <Droplets className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold text-[#9ea3b0] uppercase">Hydratation</span>
+              <span className="text-xs font-bold text-[#9ea3b0] uppercase">{t('hydration')}</span>
             </div>
             <button
               onClick={handleAddWater}
               className="px-2 py-1 rounded-lg bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 text-[10px] font-bold transition-all flex items-center gap-1 border border-sky-500/30"
             >
               <Plus className="w-3 h-3" />
-              +250ml
+              {t('addWaterButton')}
             </button>
           </div>
 
@@ -205,9 +205,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
             <Clock className="w-5 h-5 text-[#b6ff2e]" />
-            <span>Repas Enregistrés Aujourd'hui</span>
+            <span>{t('loggedMealsTitle')}</span>
           </h3>
-          <span className="text-xs text-[#9ea3b0] font-semibold">{loggedMeals.length} repas enregistrés</span>
+          <span className="text-xs text-[#9ea3b0] font-semibold">{t('loggedMealsCount', { count: loggedMeals.length })}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,9 +230,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <h4 className="text-sm font-bold text-white truncate">{meal.title}</h4>
                 
                 <div className="flex items-center gap-3 mt-2 text-[11px] text-[#9ea3b0]">
-                  <span>Prot: <strong className="text-white">{meal.totalProtein}g</strong></span>
-                  <span>Gluc: <strong className="text-white">{meal.totalCarbs}g</strong></span>
-                  <span>Lip: <strong className="text-white">{meal.totalFats}g</strong></span>
+                  <span>{t('proteinsLabel')}: <strong className="text-white">{meal.totalProtein}g</strong></span>
+                  <span>{t('carbsLabel')}: <strong className="text-white">{meal.totalCarbs}g</strong></span>
+                  <span>{t('fatsLabel')}: <strong className="text-white">{meal.totalFats}g</strong></span>
                 </div>
               </div>
             </div>
