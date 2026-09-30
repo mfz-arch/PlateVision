@@ -1,9 +1,7 @@
-'use client';
-
 import React, { useState } from 'react';
 import { 
   X, ArrowRight, ArrowLeft, Check, AlertTriangle, Sparkles, 
-  Target, Activity, Scale, Heart, Flame, Droplets, CheckCircle, User
+  Target, Activity, Scale, Heart, Flame, Droplets, CheckCircle, User, Eye, EyeOff
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { OnboardingData, UserProfile } from '../types/plateVision';
@@ -25,6 +23,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [calcProgress, setCalcProgress] = useState<number>(0);
 
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<OnboardingData>({
     goal: 'lose',
     name: "Aim'fiz",
@@ -242,14 +241,24 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('passwordLabel')}</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={formData.password || ''}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-4 pr-10 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3.5 text-[#9ea3b0] hover:text-white transition-all"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
