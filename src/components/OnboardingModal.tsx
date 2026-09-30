@@ -28,6 +28,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [formData, setFormData] = useState<OnboardingData>({
     goal: 'lose',
     name: "Aim'fiz",
+    email: "",
+    password: "",
     age: 18,
     gender: 'male',
     heightCm: 178,
@@ -37,6 +39,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     timeframeMonths: 3,
     hasChildren: false
   });
+  const [authError, setAuthError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -46,6 +49,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const isPaceUnrealistic = kgPerWeek > 1.0 && formData.goal !== 'maintain';
 
   const handleNextStep = () => {
+    if (step === 2) {
+      if (!formData.email || !formData.password) {
+        setAuthError('Please provide both email and password to create your account.');
+        return;
+      }
+      setAuthError(null);
+    }
     if (step === 3) {
       setStep(4);
     } else if (step === 4) {
@@ -57,6 +67,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const handlePrevStep = () => {
+    setAuthError(null);
     setStep((prev) => Math.max(1, prev - 1));
   };
 
@@ -86,7 +97,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }, 2400);
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     let bmr = 10 * formData.currentWeightKg + 6.25 * formData.heightCm - 5 * formData.age + 5;
     let activityMultiplier = 1.2 + (formData.workoutDaysPerWeek * 0.1);
     let tdee = bmr * activityMultiplier;
@@ -107,6 +118,29 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       fatsGoalGrams: fatsGrams,
       waterGoalLiters: 2.8
     };
+
+    try {
+      if (formData.email && formData.password) {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setAuthError(data.error || 'Failed to register user account');
+          setStep(2);
+          return;
+        }
+        if (data.user) {
+          onComplete(data.user);
+          onClose();
+          return;
+        }
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+    }
 
     onComplete(profile);
     onClose();
@@ -187,7 +221,37 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <p className="text-xs text-[#9ea3b0] mt-1">{t('wizardStep2Desc')}</p>
             </div>
 
+            {authError && (
+              <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold text-center">
+                {authError}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('emailLabel')}</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="your.email@example.com"
+                  value={formData.email || ''}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('passwordLabel')}</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={formData.password || ''}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('nameLabel')}</label>
                 <input

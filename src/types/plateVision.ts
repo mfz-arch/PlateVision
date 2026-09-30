@@ -4,6 +4,8 @@ export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'ath
 export interface OnboardingData {
   goal: GoalType;
   name: string;
+  email?: string;
+  password?: string;
   age: number;
   gender: 'male' | 'female' | 'other';
   heightCm: number;

@@ -1,36 +1,13 @@
+import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '../config/mongodb';
 import User from '../models/User';
 
-export async function getUserProfile() {
-  await connectToDatabase();
-  let user = await User.findOne();
-
-  if (!user) {
-    user = await User.create({
-      name: 'Alex Johnson',
-      goal: 'lose',
-      gender: 'male',
-      age: 26,
-      heightCm: 178,
-      currentWeightKg: 82,
-      targetWeightKg: 75,
-      workoutDaysPerWeek: 4,
-      timeframeMonths: 3,
-      dailyCaloriesGoal: 2150,
-      proteinGoalGrams: 160,
-      carbsGoalGrams: 200,
-      fatsGoalGrams: 60,
-      waterGoalLiters: 3.2
-    });
-  }
-
-  return user;
-}
-
-export async function updateUserProfile(data: any) {
+export async function registerUser(data: any) {
   await connectToDatabase();
 
   const {
+    email,
+    password,
     name = 'Athlete',
     goal = 'lose',
     gender = 'male',
@@ -42,15 +19,25 @@ export async function updateUserProfile(data: any) {
     timeframeMonths = 3
   } = data;
 
+  if (!email || !password) {
+    throw new Error('Email and password are required');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw new Error('An account with this email already exists');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   // BMR Calculation (Mifflin-St Jeor)
   let bmr = (10 * currentWeightKg) + (6.25 * heightCm) - (5 * age);
   bmr += gender === 'male' ? 5 : -161;
 
-  // Activity multiplier
   const activityMultiplier = 1.2 + (workoutDaysPerWeek * 0.08);
   let tdee = Math.round(bmr * activityMultiplier);
 
-  // Goal adjustment
   let dailyCalories = tdee;
   if (goal === 'lose') dailyCalories = Math.round(tdee * 0.82);
   else if (goal === 'gain') dailyCalories = Math.round(tdee * 1.15);
@@ -60,7 +47,106 @@ export async function updateUserProfile(data: any) {
   const carbsGrams = Math.round((dailyCalories - (proteinGrams * 4) - (fatsGrams * 9)) / 4);
   const waterLiters = Number((currentWeightKg * 0.04).toFixed(1));
 
-  let user = await User.findOne();
+  const user = await User.create({
+    email: normalizedEmail,
+    password: hashedPassword,
+    name,
+    goal,
+    gender,
+    age,
+    heightCm,
+    currentWeightKg,
+    targetWeightKg,
+    workoutDaysPerWeek,
+    timeframeMonths,
+    dailyCaloriesGoal: dailyCalories,
+    proteinGoalGrams: proteinGrams,
+    carbsGoalGrams: Math.max(carbsGrams, 50),
+    fatsGoalGrams: fatsGrams,
+    waterGoalLiters: waterLiters
+  });
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+}
+
+export async function loginUser(data: { email?: string; password?: string }) {
+  await connectToDatabase();
+
+  const { email, password } = data;
+  if (!email || !password) {
+    throw new Error('Incorrect email or password');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (!user || !user.password) {
+    throw new Error('Incorrect email or password');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error('Incorrect email or password');
+  }
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+}
+
+export async function getUserProfile(email?: string) {
+  await connectToDatabase();
+  let query = email ? { email: email.trim().toLowerCase() } : {};
+  let user = await User.findOne(query).sort({ updatedAt: -1 });
+
+  if (!user && !email) {
+    user = await User.findOne().sort({ updatedAt: -1 });
+  }
+
+  if (user) {
+    const userObj = user.toObject();
+    delete userObj.password;
+    return userObj;
+  }
+
+  return null;
+}
+
+export async function updateUserProfile(data: any) {
+  await connectToDatabase();
+
+  const {
+    email,
+    name = 'Athlete',
+    goal = 'lose',
+    gender = 'male',
+    age = 25,
+    heightCm = 175,
+    currentWeightKg = 75,
+    targetWeightKg = 70,
+    workoutDaysPerWeek = 4,
+    timeframeMonths = 3
+  } = data;
+
+  let bmr = (10 * currentWeightKg) + (6.25 * heightCm) - (5 * age);
+  bmr += gender === 'male' ? 5 : -161;
+
+  const activityMultiplier = 1.2 + (workoutDaysPerWeek * 0.08);
+  let tdee = Math.round(bmr * activityMultiplier);
+
+  let dailyCalories = tdee;
+  if (goal === 'lose') dailyCalories = Math.round(tdee * 0.82);
+  else if (goal === 'gain') dailyCalories = Math.round(tdee * 1.15);
+
+  const proteinGrams = Math.round(currentWeightKg * (goal === 'lose' ? 2.2 : 2.0));
+  const fatsGrams = Math.round((dailyCalories * 0.25) / 9);
+  const carbsGrams = Math.round((dailyCalories - (proteinGrams * 4) - (fatsGrams * 9)) / 4);
+  const waterLiters = Number((currentWeightKg * 0.04).toFixed(1));
+
+  let query = email ? { email: email.trim().toLowerCase() } : {};
+  let user = await User.findOne(query);
 
   if (user) {
     user.name = name;
@@ -79,24 +165,13 @@ export async function updateUserProfile(data: any) {
     user.waterGoalLiters = waterLiters;
     user.updatedAt = new Date();
     await user.save();
-  } else {
-    user = await User.create({
-      name,
-      goal,
-      gender,
-      age,
-      heightCm,
-      currentWeightKg,
-      targetWeightKg,
-      workoutDaysPerWeek,
-      timeframeMonths,
-      dailyCaloriesGoal: dailyCalories,
-      proteinGoalGrams: proteinGrams,
-      carbsGoalGrams: Math.max(carbsGrams, 50),
-      fatsGoalGrams: fatsGrams,
-      waterGoalLiters: waterLiters
-    });
   }
 
-  return user;
+  if (!user) {
+    return null;
+  }
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
 }

@@ -21,19 +21,38 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setErrorMessage(data.error || 'Incorrect email or password');
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(false);
-      const nameFromEmail = email.split('@')[0] || "User";
-      onSuccessLogin(nameFromEmail);
+      onSuccessLogin(data.user?.name || email.split('@')[0] || "User");
       onClose();
-    }, 800);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setErrorMessage('Incorrect email or password');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +75,12 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           <p className="text-xs text-[#9ea3b0] mt-1">{t('signInSubtitle')}</p>
         </div>
 
+        {errorMessage && (
+          <div className="mb-4 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold text-center animate-in fade-in duration-200">
+            {errorMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-[#9ea3b0] uppercase tracking-wider mb-1.5">
@@ -67,7 +92,10 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="your.email@example.com"
                 className="w-full pl-10 pr-4 py-3 bg-[#14171d] border border-[rgba(255,255,255,0.1)] rounded-xl text-white text-sm focus:outline-none focus:border-[#b6ff2e] focus:ring-1 focus:ring-[#b6ff2e] transition-all"
               />
@@ -84,7 +112,10 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="••••••••"
                 className="w-full pl-10 pr-4 py-3 bg-[#14171d] border border-[rgba(255,255,255,0.1)] rounded-xl text-white text-sm focus:outline-none focus:border-[#b6ff2e] focus:ring-1 focus:ring-[#b6ff2e] transition-all"
               />

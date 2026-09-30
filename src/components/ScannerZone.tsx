@@ -1,9 +1,7 @@
-'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Camera, Upload, Sparkles, CheckCircle2, RefreshCw, X, Flame, 
-  Dumbbell, Layers, Info, ArrowRight, Zap
+  Dumbbell, Layers, Info, ArrowRight, Zap, Image as ImageIcon
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { SampleDish, ScannedMeal } from '../types/plateVision';
@@ -27,6 +25,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   const [activeBoxId, setActiveBoxId] = useState<string | null>(null);
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showSourceChoiceModal, setShowSourceChoiceModal] = useState<boolean>(false);
+
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectSample = (dish: SampleDish) => {
     setSelectedDish(dish);
@@ -52,34 +54,54 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
     return interval;
   };
 
+  const compressImage = (file: File, maxWidth = 1024): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setApiError(null);
-    const url = URL.createObjectURL(file);
-    setCustomImage(url);
 
     // Start scanning animation
     const interval = triggerScanAnimation();
 
     try {
-      // Convert file to Base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (err) => reject(err);
-      });
-      reader.readAsDataURL(file);
-      const base64String = await base64Promise;
+      // 1. Client-side compress high-res photo (max 1024px) for speed & reliability
+      const compressedBase64 = await compressImage(file, 1024);
+      setCustomImage(compressedBase64);
 
-      // Call Next.js Gemini API Route
+      // 2. Call Next.js Gemini API Route
       const res = await fetch('/api/analyze-plate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageBase64: base64String,
-          mimeType: file.type || 'image/jpeg'
+          imageBase64: compressedBase64,
+          mimeType: 'image/jpeg'
         })
       });
 
@@ -96,7 +118,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       if (data.dish) {
         const customDish: SampleDish = {
           ...data.dish,
-          imageUrl: url
+          imageUrl: compressedBase64
         };
         setSelectedDish(customDish);
       }
@@ -181,19 +203,73 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           </button>
         ))}
 
-        {/* Upload Custom File */}
-        <label className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5">
+        {/* Hidden Inputs for Gallery vs Camera */}
+        <input 
+          ref={galleryInputRef}
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileUpload} 
+          className="hidden" 
+        />
+        <input 
+          ref={cameraInputRef}
+          type="file" 
+          accept="image/*" 
+          capture="environment"
+          onChange={handleFileUpload} 
+          className="hidden" 
+        />
+
+        {/* Upload Custom File Trigger */}
+        <button 
+          onClick={() => setShowSourceChoiceModal(true)}
+          className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5"
+        >
           <Camera className="w-4 h-4 text-[#b6ff2e]" />
           <span>{t('uploadPhoto')}</span>
-          <input 
-            type="file" 
-            accept="image/*" 
-            capture="environment"
-            onChange={handleFileUpload} 
-            className="hidden" 
-          />
-        </label>
+        </button>
       </div>
+
+      {/* Choice Modal for Upload Source (Gallery vs Camera) */}
+      {showSourceChoiceModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-sm p-6 glass-card rounded-3xl border border-white/10 text-center space-y-5 animate-in zoom-in duration-200">
+            <h4 className="text-lg font-extrabold text-white">Choose Photo Source</h4>
+            <p className="text-xs text-[#9ea3b0]">Select how you want to upload your meal photo</p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowSourceChoiceModal(false);
+                  galleryInputRef.current?.click();
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#14171d] border border-white/10 hover:border-[#b6ff2e] hover:bg-[#b6ff2e]/10 text-white text-sm font-bold flex items-center justify-center gap-3 transition-all"
+              >
+                <ImageIcon className="w-5 h-5 text-[#b6ff2e]" />
+                <span>Upload from Galerie</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSourceChoiceModal(false);
+                  cameraInputRef.current?.click();
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#14171d] border border-white/10 hover:border-[#b6ff2e] hover:bg-[#b6ff2e]/10 text-white text-sm font-bold flex items-center justify-center gap-3 transition-all"
+              >
+                <Camera className="w-5 h-5 text-[#b6ff2e]" />
+                <span>Take Picture Directly</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowSourceChoiceModal(false)}
+              className="text-xs font-semibold text-[#9ea3b0] hover:text-white pt-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Image Viewport with Bounding Boxes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
