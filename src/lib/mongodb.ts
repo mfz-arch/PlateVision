@@ -1,16 +1,5 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
-
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route execution.
- */
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -27,6 +16,13 @@ if (!global.mongooseCache) {
 }
 
 export async function connectToDatabase() {
+  const mongodbUri = process.env.MONGODB_URI;
+
+  if (!mongodbUri) {
+    console.warn('MONGODB_URI environment variable is not defined.');
+    throw new Error('Please define the MONGODB_URI environment variable in Vercel / .env.local');
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -36,7 +32,7 @@ export async function connectToDatabase() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
       console.log('Successfully connected to MongoDB Atlas (PlateVision)');
       return mongooseInstance;
     });
