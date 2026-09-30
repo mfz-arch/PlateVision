@@ -54,29 +54,41 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
     return interval;
   };
 
-  const compressImage = (file: File, maxWidth = 1024): Promise<string> => {
-    return new Promise((resolve, reject) => {
+  const compressImage = (file: File, maxWidth = 800): Promise<string> => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const rawDataUrl = e.target?.result as string;
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth || height > maxWidth) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+          } catch {
+            resolve(rawDataUrl);
           }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.82));
         };
-        img.onerror = reject;
-        img.src = e.target?.result as string;
+        img.onerror = () => resolve(rawDataUrl);
+        img.src = rawDataUrl;
       };
-      reader.onerror = reject;
+      reader.onerror = () => {
+        resolve('');
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -91,8 +103,11 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
     const interval = triggerScanAnimation();
 
     try {
-      // 1. Client-side compress high-res photo (max 1024px) for speed & reliability
-      const compressedBase64 = await compressImage(file, 1024);
+      // 1. Client-side compress high-res photo (max 800px) for ultra-fast mobile upload
+      const compressedBase64 = await compressImage(file, 800);
+      if (!compressedBase64) {
+        throw new Error('Could not read image file from device.');
+      }
       setCustomImage(compressedBase64);
 
       // 2. Call Next.js Gemini API Route
@@ -112,7 +127,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       setIsScanning(false);
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to analyze plate');
+        throw new Error(data.error || 'Failed to analyze plate with Gemini Vision AI.');
       }
 
       if (data.dish) {
@@ -127,7 +142,9 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       clearInterval(interval);
       setIsScanning(false);
       setScanProgress(100);
-      setApiError(err?.message || 'Error scanning image');
+      setApiError(err?.message || 'Error scanning image. Please try again.');
+    } finally {
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -179,6 +196,25 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           </button>
         )}
       </div>
+
+      {/* API Error Alert Banner */}
+      {apiError && (
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start justify-between gap-3 text-red-400 text-xs animate-in fade-in duration-200">
+          <div className="flex items-start gap-2.5">
+            <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-white text-sm">Scan Error</p>
+              <p className="mt-0.5 leading-relaxed text-red-300">{apiError}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setApiError(null)} 
+            className="p-1 rounded-lg hover:bg-white/10 text-red-400 hover:text-white transition-all shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Preset Dish Selector & Upload Trigger */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
