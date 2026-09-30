@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { 
   Flame, Dumbbell, Wheat, Droplets, Plus, Sparkles, 
-  Clock, TrendingUp, Award, Calendar, LogOut, Utensils
+  Clock, TrendingUp, Award, Calendar, LogOut, Utensils, Trash2
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../types/plateVision';
 import { ScannerZone } from './ScannerZone';
@@ -21,21 +21,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSignOut
 }) => {
   const { t } = useLanguage();
-  // Zero initial mock meals - real user logging!
   const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>([]);
   const [waterDrankLiters, setWaterDrankLiters] = useState<number>(0);
+  const [isLoadingMeals, setIsLoadingMeals] = useState<boolean>(true);
 
-  const totalCaloriesConsumed = loggedMeals.reduce((acc, m) => acc + m.totalCalories, 0);
-  const totalProteinConsumed = loggedMeals.reduce((acc, m) => acc + m.totalProtein, 0);
-  const totalCarbsConsumed = loggedMeals.reduce((acc, m) => acc + m.totalCarbs, 0);
-  const totalFatsConsumed = loggedMeals.reduce((acc, m) => acc + m.totalFats, 0);
+  // Load meals from MongoDB Atlas on mount
+  React.useEffect(() => {
+    async function loadMeals() {
+      try {
+        const res = await fetch('/api/meals');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.meals)) {
+          setLoggedMeals(data.meals);
+        }
+      } catch (err) {
+        console.error('Failed to load meals from DB:', err);
+      } finally {
+        setIsLoadingMeals(false);
+      }
+    }
+    loadMeals();
+  }, []);
 
-  const calPercentage = Math.min(100, Math.round((totalCaloriesConsumed / profile.dailyCaloriesGoal) * 100));
-  const proteinPercentage = Math.min(100, Math.round((totalProteinConsumed / profile.proteinGoalGrams) * 100));
-  const carbsPercentage = Math.min(100, Math.round((totalCarbsConsumed / profile.carbsGoalGrams) * 100));
+  const totalCaloriesConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalCalories || 0), 0);
+  const totalProteinConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalProtein || 0), 0);
+  const totalCarbsConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalCarbs || 0), 0);
+  const totalFatsConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalFats || 0), 0);
 
-  const handleMealScanned = (newMeal: ScannedMeal) => {
+  const calPercentage = Math.min(100, Math.round((totalCaloriesConsumed / (profile.dailyCaloriesGoal || 2000)) * 100));
+  const proteinPercentage = Math.min(100, Math.round((totalProteinConsumed / (profile.proteinGoalGrams || 150)) * 100));
+  const carbsPercentage = Math.min(100, Math.round((totalCarbsConsumed / (profile.carbsGoalGrams || 200)) * 100));
+
+  const handleMealScanned = async (newMeal: ScannedMeal) => {
     setLoggedMeals([newMeal, ...loggedMeals]);
+  };
+
+  const handleDeleteMeal = async (mealId: string) => {
+    try {
+      const res = await fetch(`/api/meals?id=${mealId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setLoggedMeals((prev) => prev.filter((m) => m.id !== mealId));
+      }
+    } catch (err) {
+      console.error('Failed to delete meal:', err);
+    }
   };
 
   const handleAddWater = () => {
@@ -239,32 +268,46 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {loggedMeals.map((meal) => (
-              <div 
-                key={meal.id}
-                className="p-4 glass-card rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center gap-4 hover:border-[#b6ff2e]/40 transition-all group"
-              >
-                <img 
-                  src={meal.imageUrl} 
-                  alt={meal.title}
-                  className="w-20 h-20 rounded-xl object-cover shrink-0 border border-white/10 group-hover:scale-105 transition-all"
-                />
+            {loggedMeals.map((meal, index) => {
+              const mealKey = (meal as any)._id || meal.id || `meal-${index}`;
+              const mealIdToDelete = (meal as any)._id || meal.id;
 
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-[#9ea3b0] font-semibold">{meal.timestamp}</span>
-                    <span className="text-xs font-extrabold text-[#b6ff2e]">{meal.totalCalories} kcal</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-white truncate">{meal.title}</h4>
-                  
-                  <div className="flex items-center gap-3 mt-2 text-[11px] text-[#9ea3b0]">
-                    <span>{t('proteinsLabel')}: <strong className="text-white">{meal.totalProtein}g</strong></span>
-                    <span>{t('carbsLabel')}: <strong className="text-white">{meal.totalCarbs}g</strong></span>
-                    <span>{t('fatsLabel')}: <strong className="text-white">{meal.totalFats}g</strong></span>
+              return (
+                <div 
+                  key={mealKey}
+                  className="p-4 glass-card rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center gap-4 hover:border-[#b6ff2e]/40 transition-all group"
+                >
+                  <img 
+                    src={meal.imageUrl} 
+                    alt={meal.title}
+                    className="w-20 h-20 rounded-xl object-cover shrink-0 border border-white/10 group-hover:scale-105 transition-all"
+                  />
+
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-[#9ea3b0] font-semibold">{meal.timestamp}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold text-[#b6ff2e]">{meal.totalCalories} kcal</span>
+                        <button
+                          onClick={() => handleDeleteMeal(mealIdToDelete)}
+                          title="Delete meal"
+                          className="p-1 rounded-lg text-[#9ea3b0] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <h4 className="text-sm font-bold text-white truncate">{meal.title}</h4>
+                    
+                    <div className="flex items-center gap-3 mt-2 text-[11px] text-[#9ea3b0]">
+                      <span>{t('proteinsLabel')}: <strong className="text-white">{meal.totalProtein}g</strong></span>
+                      <span>{t('carbsLabel')}: <strong className="text-white">{meal.totalCarbs}g</strong></span>
+                      <span>{t('fatsLabel')}: <strong className="text-white">{meal.totalFats}g</strong></span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

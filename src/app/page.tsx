@@ -18,30 +18,65 @@ export default function Home() {
   // User Profile state (null = not signed in)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  const handleCompleteOnboarding = (profile: UserProfile) => {
+  // Fetch user profile from MongoDB Atlas on load
+  React.useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/user');
+        const data = await res.json();
+        if (data.success && data.user) {
+          setUserProfile(data.user);
+        }
+      } catch (err) {
+        console.error('Failed to load user from DB:', err);
+      }
+    }
+    loadUser();
+  }, []);
+
+  const handleCompleteOnboarding = async (profile: UserProfile) => {
     setUserProfile(profile);
     setActiveTab('dashboard');
+
+    try {
+      await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+    } catch (err) {
+      console.error('Failed to save profile to DB:', err);
+    }
   };
 
-  const handleSuccessLogin = (userName: string) => {
-    const defaultProfile: UserProfile = {
-      goal: 'lose',
-      name: userName,
-      age: 18,
-      gender: 'male',
-      heightCm: 178,
-      currentWeightKg: 78,
-      targetWeightKg: 72,
-      workoutDaysPerWeek: 4,
-      timeframeMonths: 3,
-      dailyCaloriesGoal: 2150,
-      proteinGoalGrams: 156,
-      carbsGoalGrams: 210,
-      fatsGoalGrams: 60,
-      waterGoalLiters: 2.8
-    };
-
-    setUserProfile(defaultProfile);
+  const handleSuccessLogin = async (userName: string) => {
+    try {
+      const res = await fetch('/api/user');
+      const data = await res.json();
+      if (data.success && data.user) {
+        setUserProfile(data.user);
+      } else {
+        const defaultProfile: UserProfile = {
+          goal: 'lose',
+          name: userName,
+          age: 24,
+          gender: 'male',
+          heightCm: 178,
+          currentWeightKg: 78,
+          targetWeightKg: 72,
+          workoutDaysPerWeek: 4,
+          timeframeMonths: 3,
+          dailyCaloriesGoal: 2150,
+          proteinGoalGrams: 156,
+          carbsGoalGrams: 210,
+          fatsGoalGrams: 60,
+          waterGoalLiters: 2.8
+        };
+        setUserProfile(defaultProfile);
+      }
+    } catch (err) {
+      console.error('Error during login fetch:', err);
+    }
     setActiveTab('dashboard');
   };
 

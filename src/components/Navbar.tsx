@@ -141,6 +141,39 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Phones) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel bg-[#14171d]/95 backdrop-blur-xl border-t border-[rgba(255,255,255,0.1)] px-4 py-2 flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
+            activeTab === 'home' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+          }`}
+        >
+          <Camera className="w-5 h-5" />
+          <span>{t('navHome')}</span>
+        </button>
+
+        {hasProfile && (
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
+              activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+            }`}
+          >
+            <Globe className="w-5 h-5" />
+            <span>{t('navDashboard')}</span>
+          </button>
+        )}
+
+        <button
+          onClick={handleScanClick}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.4)] active:scale-95 transition-all"
+        >
+          <Camera className="w-4 h-4 text-[#14171d]" />
+          <span>{t('navScanPlate')}</span>
+        </button>
+      </div>
     </nav>
   );
 };

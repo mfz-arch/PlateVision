@@ -132,29 +132,4 @@ export const SAMPLE_DISHES: SampleDish[] = [
   }
 ];
 
-export const INITIAL_LOGGED_MEALS: ScannedMeal[] = [
-  {
-    id: 'log-1',
-    title: 'Oatmeal with Blueberries & Almond Butter',
-    timestamp: '08:30 AM',
-    imageUrl: 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?auto=format&fit=crop&w=800&q=80',
-    totalCalories: 450,
-    totalProtein: 18,
-    totalCarbs: 62,
-    totalFats: 14,
-    detectedItems: [],
-    aiAdvice: 'Great complex carbohydrates to kickstart metabolic energy for the morning.'
-  },
-  {
-    id: 'log-2',
-    title: 'Grilled Salmon Bowl with Quinoa & Avocado',
-    timestamp: '01:15 PM',
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
-    totalCalories: 640,
-    totalProtein: 42,
-    totalCarbs: 55,
-    totalFats: 22,
-    detectedItems: [],
-    aiAdvice: 'Perfect macro balance for lunch.'
-  }
-];
+export const INITIAL_LOGGED_MEALS: ScannedMeal[] = [];

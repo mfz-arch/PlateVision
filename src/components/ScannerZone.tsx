@@ -26,10 +26,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   const [scanProgress, setScanProgress] = useState<number>(100);
   const [activeBoxId, setActiveBoxId] = useState<string | null>(null);
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleSelectSample = (dish: SampleDish) => {
     setSelectedDish(dish);
     setCustomImage(null);
+    setApiError(null);
     triggerScanAnimation();
   };
 
@@ -39,68 +41,71 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
     const interval = setInterval(() => {
       setScanProgress((prev) => {
-        if (prev >= 100) {
+        if (prev >= 90) {
           clearInterval(interval);
-          setIsScanning(false);
-          return 100;
+          return 90;
         }
-        return prev + 25;
+        return prev + 15;
       });
     }, 200);
+
+    return interval;
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setCustomImage(url);
+    if (!file) return;
 
-      const customDish: SampleDish = {
-        id: 'custom-' + Date.now(),
-        title: file.name.replace(/\.[^/.]+$/, "") || 'Custom Scanned Plate',
-        category: 'Live AI Scan',
-        imageUrl: url,
-        totalCalories: 580,
-        totalProtein: 36,
-        totalCarbs: 48,
-        totalFats: 16,
-        detectedItems: [
-          {
-            id: 'c-1',
-            name: 'Lean Protein Source',
-            calories: 300,
-            protein: 32,
-            carbs: 0,
-            fats: 10,
-            weightGrams: 180,
-            boundingBox: { x: 25, y: 20, width: 45, height: 40 }
-          },
-          {
-            id: 'c-2',
-            name: 'Complex Carbohydrate',
-            calories: 200,
-            protein: 4,
-            carbs: 42,
-            fats: 2,
-            weightGrams: 140,
-            boundingBox: { x: 15, y: 55, width: 35, height: 35 }
-          },
-          {
-            id: 'c-3',
-            name: 'Mixed Vegetables',
-            calories: 80,
-            protein: 0,
-            carbs: 6,
-            fats: 4,
-            weightGrams: 90,
-            boundingBox: { x: 55, y: 48, width: 35, height: 38 }
-          }
-        ],
-        aiAdvice: 'Plate detected successfully! Great balance between protein and complex carbs.'
-      };
+    setApiError(null);
+    const url = URL.createObjectURL(file);
+    setCustomImage(url);
 
-      setSelectedDish(customDish);
-      triggerScanAnimation();
+    // Start scanning animation
+    const interval = triggerScanAnimation();
+
+    try {
+      // Convert file to Base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+      });
+      reader.readAsDataURL(file);
+      const base64String = await base64Promise;
+
+      // Call Next.js Gemini API Route
+      const res = await fetch('/api/analyze-plate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64String,
+          mimeType: file.type || 'image/jpeg'
+        })
+      });
+
+      const data = await res.json();
+
+      clearInterval(interval);
+      setScanProgress(100);
+      setIsScanning(false);
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to analyze plate');
+      }
+
+      if (data.dish) {
+        const customDish: SampleDish = {
+          ...data.dish,
+          imageUrl: url
+        };
+        setSelectedDish(customDish);
+      }
+    } catch (err: any) {
+      console.error('Scan error:', err);
+      clearInterval(interval);
+      setIsScanning(false);
+      setScanProgress(100);
+      setApiError(err?.message || 'Error scanning image');
     }
   };
 
@@ -178,11 +183,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
         {/* Upload Custom File */}
         <label className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5">
-          <Upload className="w-4 h-4" />
+          <Camera className="w-4 h-4 text-[#b6ff2e]" />
           <span>{t('uploadPhoto')}</span>
           <input 
             type="file" 
             accept="image/*" 
+            capture="environment"
             onChange={handleFileUpload} 
             className="hidden" 
           />
