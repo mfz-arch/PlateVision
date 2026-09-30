@@ -74,18 +74,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               {t('navHome')}
             </button>
 
-            {hasProfile && (
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === 'dashboard'
-                    ? 'bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.3)]'
-                    : 'text-[#9ea3b0] hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {t('navDashboard')}
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (!hasProfile) {
+                  onOpenSignIn();
+                } else {
+                  setActiveTab('dashboard');
+                }
+              }}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.3)]'
+                  : 'text-[#9ea3b0] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {t('navDashboard')}
+            </button>
 
             <button
               onClick={handleScanClick}
@@ -154,17 +158,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>{t('navHome')}</span>
         </button>
 
-        {hasProfile && (
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
-              activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
-            }`}
-          >
-            <Globe className="w-5 h-5" />
-            <span>{t('navDashboard')}</span>
-          </button>
-        )}
+        <button
+          onClick={() => {
+            if (!hasProfile) {
+              onOpenSignIn();
+            } else {
+              setActiveTab('dashboard');
+            }
+          }}
+          className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
+            activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+          }`}
+        >
+          <Globe className="w-5 h-5" />
+          <span>{t('navDashboard')}</span>
+        </button>
 
         <button
           onClick={handleScanClick}

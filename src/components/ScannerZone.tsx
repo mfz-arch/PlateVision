@@ -19,7 +19,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   isModal = false
 }) => {
   const { t } = useLanguage();
-  const [selectedDish, setSelectedDish] = useState<SampleDish>(SAMPLE_DISHES[0]);
+  const [selectedDish, setSelectedDish] = useState<SampleDish | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<number>(100);
   const [activeBoxId, setActiveBoxId] = useState<string | null>(null);
@@ -132,6 +132,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   };
 
   const handleLogMeal = () => {
+    if (!selectedDish) return;
     const newMeal: ScannedMeal = {
       id: 'meal-' + Date.now(),
       title: selectedDish.title,
@@ -186,7 +187,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             key={dish.id}
             onClick={() => handleSelectSample(dish)}
             className={`p-2.5 rounded-2xl border text-left flex items-center gap-3 transition-all ${
-              selectedDish.id === dish.id && !customImage
+              selectedDish?.id === dish.id && !customImage
                 ? 'bg-[#b6ff2e]/10 border-[#b6ff2e] shadow-[0_0_15px_rgba(182,255,46,0.2)]'
                 : 'bg-[#14171d] border-white/10 hover:border-white/20'
             }`}
@@ -271,120 +272,141 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         </div>
       )}
 
-      {/* Main Image Viewport with Bounding Boxes */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        <div className="lg:col-span-7 relative rounded-3xl overflow-hidden bg-[#14171d] border border-[rgba(255,255,255,0.1)] group">
+      {/* Main Image Viewport with Bounding Boxes OR Empty State Upload Dropzone */}
+      {!selectedDish ? (
+        <div 
+          onClick={() => setShowSourceChoiceModal(true)}
+          className="p-10 sm:p-14 text-center border-2 border-dashed border-[#b6ff2e]/40 hover:border-[#b6ff2e] bg-[#14171d]/80 glass-card rounded-3xl cursor-pointer space-y-4 hover:bg-[#b6ff2e]/5 transition-all group"
+        >
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e] group-hover:scale-110 transition-all shadow-[0_0_25px_rgba(182,255,46,0.2)]">
+            <Camera className="w-8 h-8" />
+          </div>
+          <div>
+            <h4 className="text-xl font-extrabold text-white">Scan Your Meal with Gemini Vision AI</h4>
+            <p className="text-xs text-[#9ea3b0] mt-1 max-w-md mx-auto leading-relaxed">
+              Upload a meal photo from your Galerie or take a picture directly to calculate calories, protein, carbs & fats with automatic green box overlays.
+            </p>
+          </div>
+          <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_20px_rgba(182,255,46,0.3)]">
+            <Upload className="w-4 h-4" />
+            <span>Upload Photo / Open Camera</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <img 
-            src={selectedDish.imageUrl} 
-            alt={selectedDish.title}
-            className="w-full h-[360px] object-cover transition-all duration-500"
-          />
+          <div className="lg:col-span-7 relative rounded-3xl overflow-hidden bg-[#14171d] border border-[rgba(255,255,255,0.1)] group">
+            
+            <img 
+              src={selectedDish.imageUrl} 
+              alt={selectedDish.title}
+              className="w-full h-[360px] object-cover transition-all duration-500"
+            />
 
-          {isScanning && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]">
-              <div className="scanner-beam" />
-              <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#14171d]/90 border border-[#b6ff2e]/40 text-center">
-                <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#b6ff2e]">
-                  <RefreshCw className="w-4 h-4 animate-spin text-[#b6ff2e]" />
-                  <span>{t('scanningInProgress')} ({scanProgress}%)...</span>
+            {isScanning && (
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]">
+                <div className="scanner-beam" />
+                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#14171d]/90 border border-[#b6ff2e]/40 text-center">
+                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#b6ff2e]">
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#b6ff2e]" />
+                    <span>{t('scanningInProgress')} ({scanProgress}%)...</span>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {!isScanning && selectedDish.detectedItems.map((item) => {
+              const isActive = activeBoxId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  onMouseEnter={() => setActiveBoxId(item.id)}
+                  onMouseLeave={() => setActiveBoxId(null)}
+                  style={{
+                    left: `${item.boundingBox.x}%`,
+                    top: `${item.boundingBox.y}%`,
+                    width: `${item.boundingBox.width}%`,
+                    height: `${item.boundingBox.height}%`
+                  }}
+                  className={`absolute rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between p-2 ${
+                    isActive
+                      ? 'border-[#b6ff2e] bg-[#b6ff2e]/20 shadow-[0_0_20px_#b6ff2e]'
+                      : 'border-[#b6ff2e]/70 bg-[#b6ff2e]/10 hover:border-[#b6ff2e]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-1.5 py-0.5 rounded bg-[#14171d]/90 text-[10px] font-extrabold text-[#b6ff2e] border border-[#b6ff2e]/40">
+                      {item.name}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#b6ff2e] text-[10px] font-extrabold text-[#14171d]">
+                      {item.calories} kcal
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="absolute bottom-3 left-3 bg-[#14171d]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-[#9ea3b0] font-semibold">
+              {t('hoverBoxInstruction')}
             </div>
-          )}
-
-          {!isScanning && selectedDish.detectedItems.map((item) => {
-            const isActive = activeBoxId === item.id;
-            return (
-              <div
-                key={item.id}
-                onMouseEnter={() => setActiveBoxId(item.id)}
-                onMouseLeave={() => setActiveBoxId(null)}
-                style={{
-                  left: `${item.boundingBox.x}%`,
-                  top: `${item.boundingBox.y}%`,
-                  width: `${item.boundingBox.width}%`,
-                  height: `${item.boundingBox.height}%`
-                }}
-                className={`absolute rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between p-2 ${
-                  isActive
-                    ? 'border-[#b6ff2e] bg-[#b6ff2e]/20 shadow-[0_0_20px_#b6ff2e]'
-                    : 'border-[#b6ff2e]/70 bg-[#b6ff2e]/10 hover:border-[#b6ff2e]'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="px-1.5 py-0.5 rounded bg-[#14171d]/90 text-[10px] font-extrabold text-[#b6ff2e] border border-[#b6ff2e]/40">
-                    {item.name}
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded bg-[#b6ff2e] text-[10px] font-extrabold text-[#14171d]">
-                    {item.calories} kcal
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-
-          <div className="absolute bottom-3 left-3 bg-[#14171d]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-[#9ea3b0] font-semibold">
-            {t('hoverBoxInstruction')}
           </div>
-        </div>
 
-        {/* Right Column: Nutrient Breakdown */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="p-5 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)] space-y-4">
-            <div>
-              <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
-                {selectedDish.category}
-              </span>
-              <h4 className="text-lg font-extrabold text-white mt-2 leading-snug">{selectedDish.title}</h4>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30 flex items-center justify-between">
+          {/* Right Column: Nutrient Breakdown */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="p-5 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)] space-y-4">
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('scannerTitle')}</p>
-                <p className="text-3xl font-extrabold text-[#b6ff2e]">{selectedDish.totalCalories} <span className="text-sm font-normal">kcal</span></p>
+                <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
+                  {selectedDish.category}
+                </span>
+                <h4 className="text-lg font-extrabold text-white mt-2 leading-snug">{selectedDish.title}</h4>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
-                <Flame className="w-6 h-6" />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
-                <p className="text-base font-extrabold text-white">{selectedDish.totalProtein}g</p>
+              <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('scannerTitle')}</p>
+                  <p className="text-3xl font-extrabold text-[#b6ff2e]">{selectedDish.totalCalories} <span className="text-sm font-normal">kcal</span></p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
+                  <Flame className="w-6 h-6" />
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
-                <p className="text-base font-extrabold text-white">{selectedDish.totalCarbs}g</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('fatsLabel')}</p>
-                <p className="text-base font-extrabold text-white">{selectedDish.totalFats}g</p>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#b6ff2e]">
-                <Zap className="w-4 h-4 text-[#b6ff2e]" />
-                <span>{t('aiAdviceTitle')} :</span>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
+                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
+                  <p className="text-base font-extrabold text-white">{selectedDish.totalProtein}g</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
+                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
+                  <p className="text-base font-extrabold text-white">{selectedDish.totalCarbs}g</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
+                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('fatsLabel')}</p>
+                  <p className="text-base font-extrabold text-white">{selectedDish.totalFats}g</p>
+                </div>
               </div>
-              <p className="text-xs text-white/90 leading-relaxed italic">
-                "{selectedDish.aiAdvice}"
-              </p>
-            </div>
 
-            <button
-              onClick={handleLogMeal}
-              className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{t('logMealCTA')}</span>
-            </button>
+              <div className="p-4 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#b6ff2e]">
+                  <Zap className="w-4 h-4 text-[#b6ff2e]" />
+                  <span>{t('aiAdviceTitle')} :</span>
+                </div>
+                <p className="text-xs text-white/90 leading-relaxed italic">
+                  "{selectedDish.aiAdvice}"
+                </p>
+              </div>
+
+              <button
+                onClick={handleLogMeal}
+                className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{t('logMealCTA')}</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 

@@ -110,7 +110,7 @@ export default function Home() {
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         {/* VIEW 1: HOME LANDING PAGE */}
-        {activeTab === 'home' && !userProfile && (
+        {activeTab === 'home' && (
           <LandingHero
             onStartAssessment={() => setIsRegisterOpen(true)}
             onOpenScanner={() => {
@@ -126,12 +126,33 @@ export default function Home() {
         )}
 
         {/* VIEW 2: DASHBOARD */}
-        {(activeTab === 'dashboard' || (activeTab === 'home' && userProfile)) && userProfile && (
+        {activeTab === 'dashboard' && userProfile && (
           <Dashboard
             profile={userProfile}
             onOpenScannerModal={() => setIsScannerOpen(true)}
             onSignOut={handleSignOut}
           />
+        )}
+
+        {activeTab === 'dashboard' && !userProfile && (
+          <div className="py-16 text-center space-y-4 glass-card rounded-3xl border border-white/10 max-w-lg mx-auto px-6">
+            <h3 className="text-2xl font-extrabold text-white">Access Your Dashboard</h3>
+            <p className="text-xs text-[#9ea3b0]">Please sign in or create an account first to view your personalized CalZen nutrition dashboard.</p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button 
+                onClick={() => setIsSignInOpen(true)} 
+                className="px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_15px_rgba(182,255,46,0.3)]"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => setIsRegisterOpen(true)} 
+                className="px-6 py-3 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/15"
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
         )}
 
         {/* VIEW 3: SCANNER ONLY PAGE */}
