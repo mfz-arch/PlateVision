@@ -7,11 +7,10 @@ const fallbackUserMap = new Map<string, any>();
 
 async function safeConnectDB(): Promise<boolean> {
   try {
-    if (!process.env.MONGODB_URI) return false;
     await connectToDatabase();
     return true;
   } catch (err) {
-    console.warn('[Backend] MongoDB connection skipped/failed, using fallback store:', err);
+    console.warn('[Backend] MongoDB connection failed, using fallback store:', err);
     return false;
   }
 }

@@ -7,11 +7,10 @@ const fallbackMeals: any[] = [];
 
 async function safeConnectDB(): Promise<boolean> {
   try {
-    if (!process.env.MONGODB_URI) return false;
     await connectToDatabase();
     return true;
   } catch (err) {
-    console.warn('[Backend] MongoDB connection skipped/failed in mealController:', err);
+    console.warn('[Backend] MongoDB connection failed in mealController:', err);
     return false;
   }
 }

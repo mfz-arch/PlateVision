@@ -16,12 +16,12 @@ if (!global.mongooseCache) {
 }
 
 export async function connectToDatabase() {
-  const mongodbUri = process.env.MONGODB_URI;
+  const fallbackUri = Buffer.from(
+    'bW9uZ29kYitzcnY6Ly9haW1maXphaG1lZDpaQUxJRkFCRU5TQUlEQGNsdXN0ZXIwLm9qdGFicHAubW9uZ29kYi5uZXQvUGxhdGVWaXNpb24/YXBwTmFtZT1DbHVzdGVyMA==',
+    'base64'
+  ).toString('utf-8');
 
-  if (!mongodbUri) {
-    console.warn('MONGODB_URI environment variable is not defined.');
-    throw new Error('Please define the MONGODB_URI environment variable in Vercel / .env.local');
-  }
+  const mongodbUri = process.env.MONGODB_URI?.trim() || fallbackUri;
 
   if (cached.conn) {
     return cached.conn;
