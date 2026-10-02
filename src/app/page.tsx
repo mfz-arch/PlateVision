@@ -18,17 +18,26 @@ export default function Home() {
   // User Profile state (null = not signed in)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // Fetch user profile from MongoDB Atlas on load
+  // Fetch user profile from MongoDB Atlas on load based on stored session email
   React.useEffect(() => {
     async function loadUser() {
       try {
-        const res = await fetch('/api/user');
-        const data = await res.json();
-        if (data.success && data.user) {
-          setUserProfile(data.user);
+        const storedJson = localStorage.getItem('platevision_user');
+        if (storedJson) {
+          const storedUser = JSON.parse(storedJson);
+          setUserProfile(storedUser);
+
+          if (storedUser.email) {
+            const res = await fetch(`/api/user?email=${encodeURIComponent(storedUser.email)}`);
+            const data = await res.json();
+            if (data.success && data.user) {
+              setUserProfile(data.user);
+              localStorage.setItem('platevision_user', JSON.stringify(data.user));
+            }
+          }
         }
       } catch (err) {
-        console.error('Failed to load user from DB:', err);
+        console.error('Failed to load user session:', err);
       }
     }
     loadUser();
@@ -36,6 +45,7 @@ export default function Home() {
 
   const handleCompleteOnboarding = async (profile: UserProfile) => {
     setUserProfile(profile);
+    localStorage.setItem('platevision_user', JSON.stringify(profile));
     setActiveTab('dashboard');
 
     try {
@@ -49,38 +59,14 @@ export default function Home() {
     }
   };
 
-  const handleSuccessLogin = async (userName: string) => {
-    try {
-      const res = await fetch('/api/user');
-      const data = await res.json();
-      if (data.success && data.user) {
-        setUserProfile(data.user);
-      } else {
-        const defaultProfile: UserProfile = {
-          goal: 'lose',
-          name: userName,
-          age: 24,
-          gender: 'male',
-          heightCm: 178,
-          currentWeightKg: 78,
-          targetWeightKg: 72,
-          workoutDaysPerWeek: 4,
-          timeframeMonths: 3,
-          dailyCaloriesGoal: 2150,
-          proteinGoalGrams: 156,
-          carbsGoalGrams: 210,
-          fatsGoalGrams: 60,
-          waterGoalLiters: 2.8
-        };
-        setUserProfile(defaultProfile);
-      }
-    } catch (err) {
-      console.error('Error during login fetch:', err);
-    }
+  const handleSuccessLogin = (user: UserProfile) => {
+    setUserProfile(user);
+    localStorage.setItem('platevision_user', JSON.stringify(user));
     setActiveTab('dashboard');
   };
 
   const handleSignOut = () => {
+    localStorage.removeItem('platevision_user');
     setUserProfile(null);
     setActiveTab('home');
   };
@@ -189,7 +175,7 @@ export default function Home() {
           onMealScanned={(meal) => {
             setIsScannerOpen(false);
             if (!userProfile) {
-              handleSuccessLogin("User");
+              setIsSignInOpen(true);
             } else {
               setActiveTab('dashboard');
             }

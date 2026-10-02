@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { X, LogIn, Lock, Mail, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { UserProfile } from '../types/plateVision';
 
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccessLogin: (name: string) => void;
+  onSuccessLogin: (user: UserProfile) => void;
   onSwitchToRegister?: () => void;
 }
 
@@ -45,7 +46,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
       }
 
       setIsLoading(false);
-      onSuccessLogin(data.user?.name || email.split('@')[0] || "User");
+      onSuccessLogin(data.user);
       onClose();
     } catch (err: any) {
       console.error('Login error:', err);

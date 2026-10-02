@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserProfile, updateUserProfile } from '@/backend/controllers/userController';
 
 // GET /api/user - Retrieve user profile and macro targets from MongoDB Atlas
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getUserProfile();
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email') || undefined;
+    const user = await getUserProfile(email);
     return NextResponse.json({ success: true, user });
   } catch (error: any) {
     console.error('[API /api/user GET Error]:', error);
