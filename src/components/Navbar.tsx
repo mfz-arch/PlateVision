@@ -146,16 +146,27 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar — 4-item layout with centered "+" FAB */}
+      {/* Floating "+" FAB — only visible on Dashboard (like Calzen) */}
+      {activeTab === 'dashboard' && (
+        <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[60]">
+          <button
+            onClick={handleScanClick}
+            className="w-16 h-16 rounded-full bg-[#1a1d24] flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.6)] active:scale-90 transition-all border border-[rgba(255,255,255,0.1)]"
+          >
+            <Plus className="w-8 h-8 text-white stroke-[2.5]" />
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation Bar — Clean 3-tab layout */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 max-w-full overflow-x-hidden">
-        {/* Background bar */}
-        <div className="bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] shadow-[0_-10px_30px_rgba(0,0,0,0.95)] px-2 pb-[env(safe-area-inset-bottom)] pt-1">
-          <div className="grid grid-cols-4 items-end">
+        <div className="bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] shadow-[0_-10px_30px_rgba(0,0,0,0.95)] px-4 pb-[env(safe-area-inset-bottom)] pt-1">
+          <div className="grid grid-cols-3 items-center">
 
             {/* 1 — Home */}
             <button
               onClick={() => setActiveTab('home')}
-              className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl transition-all ${
                 activeTab === 'home' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
               }`}
             >
@@ -172,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setActiveTab('dashboard');
                 }
               }}
-              className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl transition-all ${
                 activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
               }`}
             >
@@ -180,20 +191,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] font-semibold">{t('navDashboard')}</span>
             </button>
 
-            {/* 3 — "+" Floating Action Button */}
-            <div className="flex items-center justify-center -mt-7">
-              <button
-                onClick={handleScanClick}
-                className="w-14 h-14 rounded-full bg-[#b6ff2e] flex items-center justify-center shadow-[0_0_24px_rgba(182,255,46,0.55)] active:scale-90 transition-all hover:bg-[#a3f01b] border-4 border-[#14171d]"
-              >
-                <Plus className="w-7 h-7 text-[#14171d] stroke-[3]" />
-              </button>
-            </div>
-
-            {/* 4 — Scan My Meal */}
+            {/* 3 — Scan My Meal */}
             <button
               onClick={handleScanClick}
-              className="flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all text-[#9ea3b0]"
+              className="flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl transition-all text-[#9ea3b0]"
             >
               <Camera className="w-[22px] h-[22px]" />
               <span className="text-[10px] font-semibold">{t('navScanPlate')}</span>
