@@ -151,9 +151,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[60]">
           <button
             onClick={handleScanClick}
-            className="w-16 h-16 rounded-full bg-[#1a1d24] flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.6)] active:scale-90 transition-all border border-[rgba(255,255,255,0.1)]"
+            className="w-16 h-16 rounded-full bg-[#b6ff2e] flex items-center justify-center shadow-[0_0_28px_rgba(182,255,46,0.5)] active:scale-90 transition-all border-4 border-[#14171d]"
           >
-            <Plus className="w-8 h-8 text-white stroke-[2.5]" />
+            <Plus className="w-8 h-8 text-[#14171d] stroke-[2.5]" />
           </button>
         </div>
       )}
