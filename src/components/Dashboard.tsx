@@ -317,14 +317,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           )}
         </div>
 
-        {/* Floating Camera Button (Bottom Center) */}
-        <button
-          onClick={onOpenScannerModal}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#b6ff2e] text-[#14171d] w-14 h-14 rounded-full shadow-[0_0_30px_rgba(182,255,46,0.6)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-[#14171d]"
-        >
-          <Plus className="w-7 h-7 stroke-[3]" />
-        </button>
-
       </div>
 
       {/* DESKTOP VIEW (Preserved exact Desktop Layout) */}

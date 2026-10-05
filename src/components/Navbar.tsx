@@ -146,16 +146,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (Phones) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] px-4 py-2.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.9)] max-w-full overflow-x-hidden">
+      {/* Mobile Bottom Navigation Bar (Phones - Clean 3-Tab Layout) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] px-6 py-2 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.95)] max-w-full overflow-x-hidden">
         <button
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold p-1 rounded-xl transition-all ${
-            activeTab === 'home' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'home' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0] hover:text-white'
           }`}
         >
           <Camera className="w-5 h-5" />
           <span>{t('navHome')}</span>
+        </button>
+
+        <button
+          onClick={handleScanClick}
+          className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl text-xs font-black bg-[#b6ff2e] text-[#14171d] shadow-[0_0_20px_rgba(182,255,46,0.5)] active:scale-95 transition-all hover:bg-[#a3f01b]"
+        >
+          <Camera className="w-4 h-4 text-[#14171d] stroke-[2.5]" />
+          <span>{t('navScanPlate')}</span>
         </button>
 
         <button
@@ -166,20 +174,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               setActiveTab('dashboard');
             }
           }}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold p-1 rounded-xl transition-all ${
-            activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0] hover:text-white'
           }`}
         >
           <Globe className="w-5 h-5" />
           <span>{t('navDashboard')}</span>
-        </button>
-
-        <button
-          onClick={handleScanClick}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.4)] active:scale-95 transition-all"
-        >
-          <Camera className="w-4 h-4 text-[#14171d]" />
-          <span>{t('navScanPlate')}</span>
         </button>
       </div>
     </nav>
