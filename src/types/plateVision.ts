@@ -44,6 +44,7 @@ export interface ScannedMeal {
   id: string;
   title: string;
   timestamp: string;
+  dateStr?: string;
   imageUrl: string;
   totalCalories: number;
   totalProtein: number;

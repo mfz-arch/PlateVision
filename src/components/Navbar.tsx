@@ -37,27 +37,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full glass-panel border-b border-[rgba(255,255,255,0.08)] bg-[#14171d]/85 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 w-full glass-panel border-b border-[rgba(255,255,255,0.08)] bg-[#14171d] max-w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo Brand */}
           <div 
             onClick={() => setActiveTab('home')}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0"
           >
-            <div className="w-11 h-11 rounded-xl bg-[#23262f] border border-[#b6ff2e]/40 flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(182,255,46,0.25)]">
-              <Camera className="w-6 h-6 text-[#b6ff2e]" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#23262f] border border-[#b6ff2e]/40 flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(182,255,46,0.25)]">
+              <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-[#b6ff2e]" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-extrabold tracking-wider text-white">PLATE</span>
-                <span className="text-xl font-extrabold tracking-wider text-[#b6ff2e]">VISION</span>
-                <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
+              <div className="flex items-center gap-1">
+                <span className="text-base sm:text-xl font-extrabold tracking-wider text-white">PLATE</span>
+                <span className="text-base sm:text-xl font-extrabold tracking-wider text-[#b6ff2e]">VISION</span>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold px-1 py-0.5 rounded bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
                   AI
                 </span>
               </div>
-              <p className="text-[11px] text-[#9ea3b0] font-medium tracking-wide">{t('logoSubtitle')}</p>
+              <p className="text-[10px] sm:text-[11px] text-[#9ea3b0] font-medium tracking-wide hidden sm:block">{t('logoSubtitle')}</p>
             </div>
           </div>
 
@@ -101,24 +101,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Action Controls & Language Switcher */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             
             {/* Language Switcher Button */}
             <button
               onClick={toggleLanguage}
               title="Switch Language / Changer de langue"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#23262f] border border-[rgba(255,255,255,0.1)] hover:border-[#b6ff2e]/50 text-xs font-extrabold text-white transition-all hover:scale-105 active:scale-95 shadow-md"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#23262f] border border-[rgba(255,255,255,0.1)] hover:border-[#b6ff2e]/50 text-[11px] sm:text-xs font-extrabold text-white transition-all hover:scale-105 active:scale-95 shadow-md"
             >
-              <Globe className="w-4 h-4 text-[#b6ff2e]" />
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#b6ff2e]" />
               <span>{language === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'}</span>
             </button>
 
             {hasProfile ? (
               <button
                 onClick={onSignOut}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all shadow-md"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all shadow-md"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{t('navSignOut')}</span>
               </button>
             ) : (
@@ -133,9 +133,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   onClick={onOpenRegister}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-[#14171d] bg-[#b6ff2e] hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#14171d] bg-[#b6ff2e] hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
                 >
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {t('navRegister')}
                 </button>
               </>
@@ -147,10 +147,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Mobile Bottom Navigation Bar (Phones) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel bg-[#14171d]/95 backdrop-blur-xl border-t border-[rgba(255,255,255,0.1)] px-4 py-2 flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] px-4 py-2.5 flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.9)] max-w-full overflow-x-hidden">
         <button
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold p-1 rounded-xl transition-all ${
             activeTab === 'home' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
           }`}
         >
@@ -166,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               setActiveTab('dashboard');
             }
           }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold p-1.5 rounded-xl transition-all ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold p-1 rounded-xl transition-all ${
             activeTab === 'dashboard' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
           }`}
         >
@@ -176,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={handleScanClick}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.4)] active:scale-95 transition-all"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.4)] active:scale-95 transition-all"
         >
           <Camera className="w-4 h-4 text-[#14171d]" />
           <span>{t('navScanPlate')}</span>

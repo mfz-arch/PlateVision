@@ -99,16 +99,30 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
     setApiError(null);
 
-    // Start scanning animation
-    const interval = triggerScanAnimation();
-
     try {
       // 1. Client-side compress high-res photo (max 800px) for ultra-fast mobile upload
       const compressedBase64 = await compressImage(file, 800);
       if (!compressedBase64) {
         throw new Error('Could not read image file from device.');
       }
+
+      // Set custom image and temporary placeholder dish so the viewport renders IMMEDIATELY with loading state!
       setCustomImage(compressedBase64);
+      setSelectedDish({
+        id: 'scanning-temp',
+        title: 'Analyzing Plate...',
+        category: 'Vision AI Analysis',
+        totalCalories: 0,
+        totalProtein: 0,
+        totalCarbs: 0,
+        totalFats: 0,
+        imageUrl: compressedBase64,
+        detectedItems: [],
+        aiAdvice: 'Analyzing meal contents...'
+      });
+
+      // Start scanning animation
+      const interval = triggerScanAnimation();
 
       // 2. Call Next.js Gemini API Route
       const res = await fetch('/api/analyze-plate', {
@@ -139,7 +153,6 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       }
     } catch (err: any) {
       console.error('Scan error:', err);
-      clearInterval(interval);
       setIsScanning(false);
       setScanProgress(100);
       setApiError(err?.message || 'Error scanning image. Please try again.');

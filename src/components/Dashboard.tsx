@@ -21,9 +21,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSignOut
 }) => {
   const { t } = useLanguage();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
   const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>([]);
   const [waterDrankLiters, setWaterDrankLiters] = useState<number>(0);
   const [isLoadingMeals, setIsLoadingMeals] = useState<boolean>(true);
+
+  // Generate 7-day calendar week ending today
+  const weekDays = React.useMemo(() => {
+    const days = [];
+    const curr = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(curr);
+      d.setDate(curr.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'narrow' });
+      const dayNum = d.getDate();
+      const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
+      days.push({ dateStr, dayLabel, dayNum, monthLabel });
+    }
+    return days;
+  }, []);
 
   // Load meals from MongoDB Atlas on mount
   React.useEffect(() => {
@@ -43,17 +61,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
     loadMeals();
   }, []);
 
-  const totalCaloriesConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalCalories || 0), 0);
-  const totalProteinConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalProtein || 0), 0);
-  const totalCarbsConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalCarbs || 0), 0);
-  const totalFatsConsumed = loggedMeals.reduce((acc, m) => acc + (m.totalFats || 0), 0);
+  // Filter meals strictly for selected calendar date
+  const mealsForSelectedDate = loggedMeals.filter((m) => {
+    if (!m.dateStr) return true;
+    return m.dateStr === selectedDateStr;
+  });
+
+  const totalCaloriesConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalCalories || 0), 0);
+  const totalProteinConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalProtein || 0), 0);
+  const totalCarbsConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalCarbs || 0), 0);
+  const totalFatsConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalFats || 0), 0);
 
   const calPercentage = Math.min(100, Math.round((totalCaloriesConsumed / (profile.dailyCaloriesGoal || 2000)) * 100));
   const proteinPercentage = Math.min(100, Math.round((totalProteinConsumed / (profile.proteinGoalGrams || 150)) * 100));
   const carbsPercentage = Math.min(100, Math.round((totalCarbsConsumed / (profile.carbsGoalGrams || 200)) * 100));
 
   const handleMealScanned = async (newMeal: ScannedMeal) => {
-    setLoggedMeals([newMeal, ...loggedMeals]);
+    const mealWithDate = {
+      ...newMeal,
+      dateStr: selectedDateStr
+    };
+    setLoggedMeals([mealWithDate, ...loggedMeals]);
   };
 
   const handleDeleteMeal = async (mealId: string) => {
@@ -78,7 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* MOBILE VIEW (CalZen Arrangement for Mobile Phones ONLY) */}
       <div className="block md:hidden space-y-5 pb-20">
         
-        {/* Header with Title & Sign out */}
+        {/* Header with Title */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#14171d] border border-white/10 flex items-center justify-center text-xs font-bold text-white">
@@ -86,39 +114,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <span className="text-2xl font-black text-white tracking-tight">PlateVision</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={onSignOut}
-              className="p-2 rounded-full bg-[#14171d] border border-white/10 text-rose-400"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
         </div>
 
-        {/* Days of Week Row (CalZen style) */}
+        {/* Days of Week Row (CalZen style - Interactive Date Selector) */}
         <div className="grid grid-cols-7 gap-1 text-center py-2 px-1 glass-card rounded-2xl border border-white/5">
-          {[
-            { day: 'M', date: 7 },
-            { day: 'T', date: 8 },
-            { day: 'W', date: 9 },
-            { day: 'T', date: 10 },
-            { day: 'F', date: 11 },
-            { day: 'S', date: 12 },
-            { day: 'S', date: 13 }
-          ].map((item, i) => {
-            const isToday = i === 0;
+          {weekDays.map((item) => {
+            const isSelected = item.dateStr === selectedDateStr;
             return (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <span className="text-[10px] font-bold text-[#9ea3b0]">{item.day}</span>
+              <button 
+                key={item.dateStr}
+                onClick={() => setSelectedDateStr(item.dateStr)}
+                className="flex flex-col items-center gap-1 focus:outline-none"
+              >
+                <span className="text-[10px] font-bold text-[#9ea3b0]">{item.dayLabel}</span>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  isToday 
+                  isSelected 
                     ? 'bg-[#b6ff2e] text-[#14171d] shadow-[0_0_12px_#b6ff2e]' 
                     : 'text-white hover:bg-white/5'
                 }`}>
-                  {item.date}
+                  {item.dayNum}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -314,8 +330,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* DESKTOP VIEW (Preserved exact Desktop Layout) */}
       <div className="hidden md:block space-y-8 animate-in fade-in duration-300">
         
-        {/* Top Welcome Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
+        {/* Top Welcome Header & Desktop Calendar Date Selector */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-bold uppercase tracking-wider text-[#b6ff2e]">{t('activeProfileBadge')}</span>
@@ -329,21 +345,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Desktop Calendar Week Selector Strip */}
+            <div className="p-2 glass-card rounded-2xl border border-white/10 flex items-center gap-1 bg-[#14171d]/80">
+              <div className="flex items-center gap-1 px-2 text-xs font-bold text-[#b6ff2e]">
+                <Calendar className="w-4 h-4 text-[#b6ff2e]" />
+              </div>
+              {weekDays.map((item) => {
+                const isSelected = item.dateStr === selectedDateStr;
+                return (
+                  <button
+                    key={item.dateStr}
+                    onClick={() => setSelectedDateStr(item.dateStr)}
+                    className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl transition-all ${
+                      isSelected
+                        ? 'bg-[#b6ff2e] text-[#14171d] font-extrabold shadow-[0_0_12px_#b6ff2e]'
+                        : 'bg-[#14171d] text-[#9ea3b0] hover:text-white hover:bg-white/5 border border-white/5'
+                    }`}
+                  >
+                    <span className="text-[9px] uppercase font-bold">{item.dayLabel}</span>
+                    <span className="text-xs font-black">{item.dayNum}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             <button
               onClick={onOpenScannerModal}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)] hover:scale-105 active:scale-95 shrink-0"
             >
               <Sparkles className="w-5 h-5 text-[#14171d]" />
               <span>{t('scanPlateButton')}</span>
-            </button>
-
-            <button
-              onClick={onSignOut}
-              title={t('navSignOut')}
-              className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
-            >
-              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
