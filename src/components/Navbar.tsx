@@ -163,26 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] font-semibold">{t('navHome')}</span>
             </button>
 
-            {/* 2 — Scan My Meal */}
-            <button
-              onClick={handleScanClick}
-              className="flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all text-[#9ea3b0]"
-            >
-              <Camera className="w-[22px] h-[22px]" />
-              <span className="text-[10px] font-semibold">{t('navScanPlate')}</span>
-            </button>
-
-            {/* 3 — "+" Floating Action Button (center) */}
-            <div className="flex items-center justify-center -mt-7">
-              <button
-                onClick={handleScanClick}
-                className="w-14 h-14 rounded-full bg-[#b6ff2e] flex items-center justify-center shadow-[0_0_24px_rgba(182,255,46,0.55)] active:scale-90 transition-all hover:bg-[#a3f01b] border-4 border-[#14171d]"
-              >
-                <Plus className="w-7 h-7 text-[#14171d] stroke-[3]" />
-              </button>
-            </div>
-
-            {/* 4 — Dashboard */}
+            {/* 2 — Dashboard */}
             <button
               onClick={() => {
                 if (!hasProfile) {
@@ -197,6 +178,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <LayoutDashboard className="w-[22px] h-[22px]" />
               <span className="text-[10px] font-semibold">{t('navDashboard')}</span>
+            </button>
+
+            {/* 3 — "+" Floating Action Button */}
+            <div className="flex items-center justify-center -mt-7">
+              <button
+                onClick={handleScanClick}
+                className="w-14 h-14 rounded-full bg-[#b6ff2e] flex items-center justify-center shadow-[0_0_24px_rgba(182,255,46,0.55)] active:scale-90 transition-all hover:bg-[#a3f01b] border-4 border-[#14171d]"
+              >
+                <Plus className="w-7 h-7 text-[#14171d] stroke-[3]" />
+              </button>
+            </div>
+
+            {/* 4 — Scan My Meal */}
+            <button
+              onClick={handleScanClick}
+              className="flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all text-[#9ea3b0]"
+            >
+              <Camera className="w-[22px] h-[22px]" />
+              <span className="text-[10px] font-semibold">{t('navScanPlate')}</span>
             </button>
 
           </div>
