@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { 
   Camera, Upload, Sparkles, CheckCircle2, RefreshCw, X, Flame, 
-  Dumbbell, Layers, Info, ArrowRight, Zap, Image as ImageIcon
+  Dumbbell, Layers, Info, ArrowRight, Zap, Image as ImageIcon,
+  Edit3, MessageSquare, Save, Trash2, PlusCircle
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
-import { SampleDish, ScannedMeal } from '../types/plateVision';
+import { SampleDish, ScannedMeal, DetectedItem } from '../types/plateVision';
 import { useLanguage } from '../context/LanguageContext';
 
 interface ScannerZoneProps {
@@ -26,6 +27,14 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [showSourceChoiceModal, setShowSourceChoiceModal] = useState<boolean>(false);
+
+  // Fix Result states
+  const [showFixPanel, setShowFixPanel] = useState<boolean>(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Partial<DetectedItem>>({});
+  const [aiFixText, setAiFixText] = useState<string>('');
+  const [isAiFixing, setIsAiFixing] = useState<boolean>(false);
+  const [aiFixError, setAiFixError] = useState<string | null>(null);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -158,6 +167,115 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       setApiError(err?.message || 'Error scanning image. Please try again.');
     } finally {
       if (e.target) e.target.value = '';
+    }
+  };
+
+  // --- Fix Result Handlers ---
+  const startEditItem = (item: DetectedItem) => {
+    setEditingItemId(item.id);
+    setEditValues({ ...item });
+  };
+
+  const saveEditItem = () => {
+    if (!selectedDish || !editingItemId || !editValues) return;
+    const updatedItems = selectedDish.detectedItems.map((item) =>
+      item.id === editingItemId
+        ? { ...item, ...editValues, id: item.id, boundingBox: item.boundingBox }
+        : item
+    );
+    const totalCal = updatedItems.reduce((s, i) => s + (i.calories || 0), 0);
+    const totalProt = updatedItems.reduce((s, i) => s + (i.protein || 0), 0);
+    const totalCarb = updatedItems.reduce((s, i) => s + (i.carbs || 0), 0);
+    const totalFat = updatedItems.reduce((s, i) => s + (i.fats || 0), 0);
+    setSelectedDish({
+      ...selectedDish,
+      detectedItems: updatedItems,
+      totalCalories: totalCal,
+      totalProtein: totalProt,
+      totalCarbs: totalCarb,
+      totalFats: totalFat
+    });
+    setEditingItemId(null);
+    setEditValues({});
+  };
+
+  const deleteItem = (itemId: string) => {
+    if (!selectedDish) return;
+    const updatedItems = selectedDish.detectedItems.filter((i) => i.id !== itemId);
+    const totalCal = updatedItems.reduce((s, i) => s + (i.calories || 0), 0);
+    const totalProt = updatedItems.reduce((s, i) => s + (i.protein || 0), 0);
+    const totalCarb = updatedItems.reduce((s, i) => s + (i.carbs || 0), 0);
+    const totalFat = updatedItems.reduce((s, i) => s + (i.fats || 0), 0);
+    setSelectedDish({
+      ...selectedDish,
+      detectedItems: updatedItems,
+      totalCalories: totalCal,
+      totalProtein: totalProt,
+      totalCarbs: totalCarb,
+      totalFats: totalFat
+    });
+  };
+
+  const addManualItem = () => {
+    if (!selectedDish) return;
+    const newItem: DetectedItem = {
+      id: `manual-${Date.now()}`,
+      name: 'New Food Item',
+      calories: 100,
+      protein: 5,
+      carbs: 15,
+      fats: 3,
+      weightGrams: 100,
+      boundingBox: { x: 30, y: 30, width: 25, height: 25 }
+    };
+    const updatedItems = [...selectedDish.detectedItems, newItem];
+    setSelectedDish({
+      ...selectedDish,
+      detectedItems: updatedItems,
+      totalCalories: selectedDish.totalCalories + 100,
+      totalProtein: selectedDish.totalProtein + 5,
+      totalCarbs: selectedDish.totalCarbs + 15,
+      totalFats: selectedDish.totalFats + 3
+    });
+    startEditItem(newItem);
+  };
+
+  const handleAiFix = async () => {
+    if (!selectedDish || !aiFixText.trim() || !customImage) return;
+    setIsAiFixing(true);
+    setAiFixError(null);
+    try {
+      const res = await fetch('/api/fix-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: customImage,
+          mimeType: 'image/jpeg',
+          previousResult: {
+            title: selectedDish.title,
+            detectedItems: selectedDish.detectedItems.map((i) => ({
+              name: i.name,
+              calories: i.calories,
+              protein: i.protein,
+              carbs: i.carbs,
+              fats: i.fats,
+              weightGrams: i.weightGrams
+            }))
+          },
+          userCorrection: aiFixText
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI fix failed');
+      if (data.dish) {
+        setSelectedDish({ ...data.dish, imageUrl: selectedDish.imageUrl });
+        setAiFixText('');
+        setShowFixPanel(false);
+      }
+    } catch (err: any) {
+      setAiFixError(err?.message || 'Failed to fix result with AI');
+    } finally {
+      setIsAiFixing(false);
     }
   };
 
@@ -444,6 +562,138 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                   "{selectedDish.aiAdvice}"
                 </p>
               </div>
+
+              {/* Fix Result Toggle Button */}
+              <button
+                onClick={() => setShowFixPanel(!showFixPanel)}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all border ${
+                  showFixPanel
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                    : 'bg-[#14171d] border-white/10 text-[#9ea3b0] hover:border-amber-500/40 hover:text-amber-400'
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{showFixPanel ? 'Close Fix Panel' : 'Fix / Edit Result'}</span>
+              </button>
+
+              {/* Fix Result Panel */}
+              {showFixPanel && (
+                <div className="space-y-3 p-4 rounded-2xl bg-[#14171d] border border-amber-500/30 animate-in slide-in-from-top duration-200">
+                  <p className="text-[10px] uppercase font-extrabold text-amber-400 tracking-wider">Edit Detected Items</p>
+
+                  {/* Editable Items List */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {selectedDish.detectedItems.map((item) => (
+                      <div key={item.id} className="p-3 rounded-xl bg-[#1a1d24] border border-white/5 space-y-2">
+                        {editingItemId === item.id ? (
+                          /* Editing Mode */
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={editValues.name || ''}
+                              onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+                              className="w-full px-3 py-1.5 rounded-lg bg-[#14171d] border border-amber-500/40 text-white text-xs font-bold focus:outline-none focus:border-[#b6ff2e]"
+                              placeholder="Food name"
+                            />
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {(['calories', 'protein', 'carbs', 'fats', 'weightGrams'] as const).map((field) => (
+                                <div key={field} className="flex items-center gap-1">
+                                  <label className="text-[9px] text-[#9ea3b0] uppercase font-bold w-12 shrink-0">
+                                    {field === 'weightGrams' ? 'Weight' : field}
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={editValues[field] || 0}
+                                    onChange={(e) => setEditValues({ ...editValues, [field]: Number(e.target.value) })}
+                                    className="w-full px-2 py-1 rounded-md bg-[#14171d] border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#b6ff2e] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={saveEditItem}
+                                className="flex-1 py-1.5 rounded-lg bg-[#b6ff2e] text-[#14171d] text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95"
+                              >
+                                <Save className="w-3 h-3" /> Save
+                              </button>
+                              <button
+                                onClick={() => { setEditingItemId(null); setEditValues({}); }}
+                                className="px-3 py-1.5 rounded-lg bg-white/5 text-[#9ea3b0] text-[10px] font-bold transition-all hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Display Mode */
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs font-bold text-white">{item.name}</p>
+                              <p className="text-[10px] text-[#9ea3b0]">
+                                {item.calories}kcal · P:{item.protein}g · C:{item.carbs}g · F:{item.fats}g · {item.weightGrams}g
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => startEditItem(item)}
+                                className="p-1.5 rounded-lg hover:bg-amber-500/15 text-[#9ea3b0] hover:text-amber-400 transition-all"
+                                title="Edit item"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => deleteItem(item.id)}
+                                className="p-1.5 rounded-lg hover:bg-red-500/15 text-[#9ea3b0] hover:text-red-400 transition-all"
+                                title="Remove item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Manual Item Button */}
+                  <button
+                    onClick={addManualItem}
+                    className="w-full py-2 rounded-xl border border-dashed border-[#b6ff2e]/40 text-[#b6ff2e] text-[10px] font-bold flex items-center justify-center gap-1.5 hover:bg-[#b6ff2e]/5 transition-all"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" /> Add Food Item Manually
+                  </button>
+
+                  {/* AI Re-fix Section */}
+                  {customImage && (
+                    <div className="pt-2 border-t border-white/5 space-y-2">
+                      <p className="text-[10px] uppercase font-extrabold text-[#b6ff2e] tracking-wider flex items-center gap-1.5">
+                        <MessageSquare className="w-3 h-3" /> Ask AI to Fix
+                      </p>
+                      <textarea
+                        value={aiFixText}
+                        onChange={(e) => setAiFixText(e.target.value)}
+                        placeholder={"E.g., \"That's fufu not mashed potatoes\" or \"The rice portion is about 300g not 150g\""}
+                        className="w-full px-3 py-2 rounded-xl bg-[#14171d] border border-white/10 text-white text-xs placeholder:text-[#9ea3b0]/50 focus:outline-none focus:border-[#b6ff2e] resize-none h-16"
+                      />
+                      {aiFixError && (
+                        <p className="text-[10px] text-red-400 font-semibold">{aiFixError}</p>
+                      )}
+                      <button
+                        onClick={handleAiFix}
+                        disabled={isAiFixing || !aiFixText.trim()}
+                        className="w-full py-2.5 rounded-xl bg-[#b6ff2e] text-[#14171d] text-xs font-extrabold flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-[0_0_15px_rgba(182,255,46,0.25)]"
+                      >
+                        {isAiFixing ? (
+                          <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> AI is Re-analyzing...</>
+                        ) : (
+                          <><Zap className="w-3.5 h-3.5" /> Fix with AI</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={handleLogMeal}
