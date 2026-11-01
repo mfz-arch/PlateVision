@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '../config/mongodb';
 import User from '../models/User';
+import { isAdminEmail } from '../auth/session';
 import {
   sanitizeEmail,
   sanitizeString,
@@ -98,6 +99,7 @@ export async function registerUser(data: any) {
     carbsGoalGrams: Math.max(carbsGrams, 50),
     fatsGoalGrams: fatsGrams,
     waterGoalLiters: waterLiters,
+    role: (isAdminEmail(normalizedEmail) ? 'admin' : 'user') as 'admin' | 'user',
     acceptedTermsAt: new Date()
   };
 
@@ -111,6 +113,7 @@ export async function registerUser(data: any) {
       const user = await User.create(userPayload);
       const userObj = user.toObject();
       delete userObj.password;
+      userObj.role = isAdminEmail(userObj.email) ? 'admin' : (userObj.role || 'user');
       return userObj;
     } catch (err: any) {
       if (err.message && err.message.includes('already exists')) throw err;
@@ -120,8 +123,9 @@ export async function registerUser(data: any) {
 
   // Fallback to in-memory store
   fallbackUserMap.set(normalizedEmail, userPayload);
-  const userCopy = { ...userPayload };
-  delete (userCopy as any).password;
+  const userCopy: any = { ...userPayload };
+  delete userCopy.password;
+  userCopy.role = isAdminEmail(userCopy.email) ? 'admin' : 'user';
   return userCopy;
 }
 
@@ -164,6 +168,7 @@ export async function loginUser(data: { email?: string; password?: string }) {
 
   const userObj = { ...foundUser };
   delete userObj.password;
+  userObj.role = isAdminEmail(userObj.email) ? 'admin' : (userObj.role || 'user');
   return userObj;
 }
 
@@ -178,6 +183,7 @@ export async function getUserProfile(email?: string) {
       if (user) {
         const userObj = user.toObject();
         delete userObj.password;
+        userObj.role = isAdminEmail(userObj.email) ? 'admin' : (userObj.role || 'user');
         return userObj;
       }
     } catch (err) {
@@ -188,6 +194,7 @@ export async function getUserProfile(email?: string) {
   if (fallbackUserMap.has(normalizedEmail)) {
     const userCopy = { ...fallbackUserMap.get(normalizedEmail) };
     delete userCopy.password;
+    userCopy.role = isAdminEmail(userCopy.email) ? 'admin' : 'user';
     return userCopy;
   }
 

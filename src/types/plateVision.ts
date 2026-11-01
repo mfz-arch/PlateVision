@@ -19,6 +19,8 @@ export interface OnboardingData {
 }
 
 export interface UserProfile extends OnboardingData {
+  _id?: string;
+  role?: 'user' | 'admin';
   dailyCaloriesGoal: number;
   proteinGoalGrams: number;
   carbsGoalGrams: number;

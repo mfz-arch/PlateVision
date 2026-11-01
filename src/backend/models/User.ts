@@ -4,6 +4,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   name: string;
+  role: 'user' | 'admin';
   goal: 'lose' | 'gain' | 'maintain';
   gender: 'male' | 'female' | 'other';
   age: number;
@@ -27,6 +28,7 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   name: { type: String, required: true, default: 'Athlete' },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   goal: { type: String, enum: ['lose', 'gain', 'maintain'], default: 'maintain' },
   gender: { type: String, enum: ['male', 'female', 'other'], default: 'male' },
   age: { type: Number, default: 25 },

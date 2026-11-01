@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard } from 'lucide-react';
+import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
@@ -9,10 +9,11 @@ interface NavbarProps {
   onOpenRegister: () => void;
   onOpenScanner: () => void;
   onSignOut: () => void;
-  activeTab: 'home' | 'dashboard' | 'scanner' | 'macros';
-  setActiveTab: (tab: 'home' | 'dashboard' | 'scanner' | 'macros') => void;
+  activeTab: 'home' | 'dashboard' | 'scanner' | 'macros' | 'admin';
+  setActiveTab: (tab: 'home' | 'dashboard' | 'scanner' | 'macros' | 'admin') => void;
   hasProfile: boolean;
   userName?: string;
+  userRole?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,7 +24,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   hasProfile,
-  userName
+  userName,
+  userRole
 }) => {
   const { language, toggleLanguage, t } = useLanguage();
 
@@ -98,6 +100,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Camera className="w-4 h-4 text-[#b6ff2e]" />
               {t('navScanPlate')}
             </button>
+
+            {/* Admin Management Portal Link (Admins Only) */}
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  activeTab === 'admin'
+                    ? 'bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.35)]'
+                    : 'text-[#b6ff2e] bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 hover:bg-[#b6ff2e]/20'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#b6ff2e]" />
+                <span>Admin</span>
+              </button>
+            )}
           </div>
 
           {/* Action Controls & Language Switcher */}
@@ -161,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Bottom Navigation Bar — Clean 3-tab layout */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 max-w-full overflow-x-hidden">
         <div className="bg-[#14171d] border-t border-[rgba(255,255,255,0.12)] shadow-[0_-10px_30px_rgba(0,0,0,0.95)] px-4 pb-[env(safe-area-inset-bottom)] pt-1">
-          <div className="grid grid-cols-3 items-center">
+          <div className={`grid ${userRole === 'admin' ? 'grid-cols-4' : 'grid-cols-3'} items-center`}>
 
             {/* 1 — Home */}
             <button
@@ -199,6 +216,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Camera className="w-[22px] h-[22px]" />
               <span className="text-[10px] font-semibold">{t('navScanPlate')}</span>
             </button>
+
+            {/* 4 — Admin Portal (Mobile) */}
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl transition-all ${
+                  activeTab === 'admin' ? 'text-[#b6ff2e]' : 'text-[#9ea3b0]'
+                }`}
+              >
+                <ShieldCheck className="w-[22px] h-[22px]" />
+                <span className="text-[10px] font-semibold">Admin</span>
+              </button>
+            )}
 
           </div>
         </div>

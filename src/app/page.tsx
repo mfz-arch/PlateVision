@@ -9,11 +9,12 @@ import { OnboardingModal } from '../components/OnboardingModal';
 import { SignInModal } from '../components/SignInModal';
 import { ScannerZone } from '../components/ScannerZone';
 import { AccountDataControls } from '../components/AccountDataControls';
+import { AdminDashboard } from '../components/AdminDashboard';
 import { UserProfile } from '../types/plateVision';
 import { toLocalDateStr } from '../lib/date';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'scanner' | 'macros'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'scanner' | 'macros' | 'admin'>('home');
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -99,6 +100,7 @@ export default function Home() {
         setActiveTab={setActiveTab}
         hasProfile={!!userProfile}
         userName={userProfile?.name}
+        userRole={userProfile?.role}
       />
 
       {/* Main Body Content */}
@@ -160,6 +162,11 @@ export default function Home() {
           <div className="p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
             <ScannerZone onMealScanned={() => { setMealsRefreshKey((k) => k + 1); setActiveTab('dashboard'); }} />
           </div>
+        )}
+
+        {/* VIEW 4: ADMIN MANAGEMENT DASHBOARD */}
+        {activeTab === 'admin' && userProfile?.role === 'admin' && (
+          <AdminDashboard />
         )}
 
       </div>

@@ -102,6 +102,25 @@ export function unauthorized(message = 'Please sign in to continue.') {
   return NextResponse.json({ success: false, error: message }, { status: 401 });
 }
 
+export const DEFAULT_ADMIN_EMAILS = [
+  'aimfizahmedibrahim@gmail.com',
+  'aimfizahmed7@gmail.com'
+];
+
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  const configured = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  return DEFAULT_ADMIN_EMAILS.includes(normalized) || configured.includes(normalized);
+}
+
+export function forbidden(message = 'Access denied. Administrator privileges required.') {
+  return NextResponse.json({ success: false, error: message }, { status: 403 });
+}
+
 /** Resolve the owner id for a user document returned by the user controller. */
 export function getUserOwnerId(user: any): string {
   if (user?._id) return String(user._id);
