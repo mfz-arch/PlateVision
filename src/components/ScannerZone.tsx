@@ -403,7 +403,6 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               src={dish.imageUrl} 
               alt={dish.title}
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src = '/icons/icon-192x192.png';

@@ -347,7 +347,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         src={meal.imageUrl || '/icons/icon-192x192.png'} 
                         alt={meal.title}
                         referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = '/icons/icon-192x192.png';
@@ -616,7 +615,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         src={meal.imageUrl || '/icons/icon-192x192.png'} 
                         alt={meal.title}
                         referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = '/icons/icon-192x192.png';
