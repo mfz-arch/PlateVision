@@ -103,7 +103,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <div className="relative rounded-2xl overflow-hidden">
               <img 
                 src={sampleDish.imageUrl} 
-                alt="PlateVision Preview"
+                alt="Demonstration of PlateVision AI scanning salmon fillet with detected nutritional macro breakdown"
                 className="w-full h-80 object-cover"
               />
 

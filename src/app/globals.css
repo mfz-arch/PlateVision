@@ -22,6 +22,48 @@ body {
   min-height: 100vh;
 }
 
+/* Accessible Keyboard Navigation Focus Indicator (WCAG 2.2 Level AA 2.4.7 & 2.4.11) */
+:focus-visible {
+  outline: 2px solid var(--lime-spark) !important;
+  outline-offset: 3px !important;
+}
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0.625rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Respect user's system "reduce motion" setting (WCAG 2.2 Level AA 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -91,4 +133,3 @@ body {
   box-shadow: 0 0 15px #b6ff2e;
   animation: scan-line 2.5s ease-in-out infinite alternate;
 }
-

@@ -19,6 +19,7 @@ export interface IUser extends Document {
   fatsGoalGrams: number;
   waterGoalLiters: number;
   
+  acceptedTermsAt?: Date;
   updatedAt: Date;
 }
 
@@ -41,6 +42,7 @@ const UserSchema = new Schema<IUser>({
   fatsGoalGrams: { type: Number, default: 65 },
   waterGoalLiters: { type: Number, default: 3.0 },
 
+  acceptedTermsAt: { type: Date },
   updatedAt: { type: Date, default: Date.now }
 });
 

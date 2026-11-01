@@ -14,6 +14,8 @@ export interface OnboardingData {
   workoutDaysPerWeek: number;
   timeframeMonths: number;
   hasChildren?: boolean;
+  acceptedTerms?: boolean;
+  acceptedTermsAt?: Date;
 }
 
 export interface UserProfile extends OnboardingData {

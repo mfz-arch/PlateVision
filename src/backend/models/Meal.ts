@@ -17,6 +17,7 @@ export interface IDetectedItem {
 }
 
 export interface IMeal extends Document {
+  userId: string;
   title: string;
   category: string;
   timestamp: string;
@@ -49,6 +50,8 @@ const DetectedItemSchema = new Schema<IDetectedItem>({
 }, { _id: false });
 
 const MealSchema = new Schema<IMeal>({
+  // Owner of this meal — derived server-side from the signed session cookie
+  userId: { type: String, required: true, index: true },
   title: { type: String, required: true },
   category: { type: String, default: 'Scanned Meal' },
   timestamp: { type: String, required: true },
@@ -67,6 +70,9 @@ const MealSchema = new Schema<IMeal>({
   aiAdvice: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
+
+// Fast lookup of one user's meals for one calendar day
+MealSchema.index({ userId: 1, dateStr: 1, createdAt: -1 });
 
 const Meal: Model<IMeal> = mongoose.models.Meal || mongoose.model<IMeal>('Meal', MealSchema);
 

@@ -8,33 +8,40 @@ import {
 import { UserProfile, ScannedMeal } from '../types/plateVision';
 import { ScannerZone } from './ScannerZone';
 import { useLanguage } from '../context/LanguageContext';
+import { toLocalDateStr } from '../lib/date';
 
 interface DashboardProps {
   profile: UserProfile;
   onOpenScannerModal: () => void;
   onSignOut: () => void;
+  /** Bumped by the parent whenever a meal is logged from outside the dashboard (e.g. the "+" modal) */
+  refreshKey?: number;
+  /** Tells the parent which calendar day is selected so new scans are logged to that day */
+  onSelectedDateChange?: (dateStr: string) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
   profile,
   onOpenScannerModal,
-  onSignOut
+  onSignOut,
+  refreshKey = 0,
+  onSelectedDateChange
 }) => {
   const { t } = useLanguage();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalDateStr();
   const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
   const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>([]);
   const [waterDrankLiters, setWaterDrankLiters] = useState<number>(0);
   const [isLoadingMeals, setIsLoadingMeals] = useState<boolean>(true);
 
-  // Generate 7-day calendar week ending today
+  // Generate 7-day calendar week ending today (local timezone)
   const weekDays = React.useMemo(() => {
     const days = [];
     const curr = new Date();
     for (let i = 6; i >= 0; i--) {
       const d = new Date(curr);
       d.setDate(curr.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateStr(d);
       const dayLabel = d.toLocaleDateString('en-US', { weekday: 'narrow' });
       const dayNum = d.getDate();
       const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
@@ -43,29 +50,43 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return days;
   }, []);
 
-  // Load meals from MongoDB Atlas on mount
   React.useEffect(() => {
+    onSelectedDateChange?.(selectedDateStr);
+  }, [selectedDateStr, onSelectedDateChange]);
+
+  // Load ONLY the signed-in user's meals for the selected day
+  React.useEffect(() => {
+    const controller = new AbortController();
     async function loadMeals() {
+      setIsLoadingMeals(true);
       try {
-        const res = await fetch('/api/meals');
+        const res = await fetch(`/api/meals?date=${encodeURIComponent(selectedDateStr)}`, {
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+        if (res.status === 401) {
+          onSignOut();
+          return;
+        }
         const data = await res.json();
         if (data.success && Array.isArray(data.meals)) {
           setLoggedMeals(data.meals);
+        } else {
+          setLoggedMeals([]);
         }
-      } catch (err) {
-        console.error('Failed to load meals from DB:', err);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') console.error('Failed to load meals from DB:', err);
       } finally {
-        setIsLoadingMeals(false);
+        if (!controller.signal.aborted) setIsLoadingMeals(false);
       }
     }
     loadMeals();
-  }, []);
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDateStr, refreshKey]);
 
-  // Filter meals strictly for selected calendar date
-  const mealsForSelectedDate = loggedMeals.filter((m) => {
-    if (!m.dateStr) return true;
-    return m.dateStr === selectedDateStr;
-  });
+  // Defensive: only ever show meals that belong to the selected calendar day
+  const mealsForSelectedDate = loggedMeals.filter((m) => m.dateStr === selectedDateStr);
 
   const totalCaloriesConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalCalories || 0), 0);
   const totalProteinConsumed = mealsForSelectedDate.reduce((acc, m) => acc + (m.totalProtein || 0), 0);
@@ -76,24 +97,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const proteinPercentage = Math.min(100, Math.round((totalProteinConsumed / (profile.proteinGoalGrams || 150)) * 100));
   const carbsPercentage = Math.min(100, Math.round((totalCarbsConsumed / (profile.carbsGoalGrams || 200)) * 100));
 
-  const handleMealScanned = async (newMeal: ScannedMeal) => {
-    const mealWithDate = {
-      ...newMeal,
-      dateStr: selectedDateStr
-    };
-    setLoggedMeals([mealWithDate, ...loggedMeals]);
+  // Meal was already saved by ScannerZone — just show it if it belongs to the visible day
+  const handleMealScanned = (newMeal: ScannedMeal) => {
+    if (newMeal?.dateStr === selectedDateStr) {
+      setLoggedMeals((prev) => [newMeal, ...prev]);
+    }
   };
 
   const handleDeleteMeal = async (mealId: string) => {
+    if (!mealId) return;
     try {
-      const res = await fetch(`/api/meals?id=${mealId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/meals?id=${encodeURIComponent(mealId)}`, { method: 'DELETE' });
       if (res.ok) {
-        setLoggedMeals((prev) => prev.filter((m) => m.id !== mealId));
+        setLoggedMeals((prev) => prev.filter((m) => m.id !== mealId && (m as any)._id !== mealId));
       }
     } catch (err) {
       console.error('Failed to delete meal:', err);
     }
   };
+
+  const selectedDateLabel = selectedDateStr === todayStr
+    ? 'Today'
+    : new Date(`${selectedDateStr}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   const handleAddWater = () => {
     setWaterDrankLiters((prev) => Math.min(4.0, Number((prev + 0.25).toFixed(2))));
@@ -124,6 +149,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 key={item.dateStr}
                 onClick={() => setSelectedDateStr(item.dateStr)}
+                aria-label={`Show meals for ${item.monthLabel} ${item.dayNum}`}
+                aria-pressed={isSelected}
                 className="flex flex-col items-center gap-1 focus:outline-none"
               >
                 <span className="text-[10px] font-bold text-[#9ea3b0]">{item.dayLabel}</span>
@@ -223,6 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <button 
                 onClick={handleAddWater}
+                aria-label="Add 250 ml of water"
                 className="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -281,10 +309,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Recently Logged Meals Timeline */}
         <div className="space-y-3">
-          <h3 className="text-base font-extrabold text-white px-1">Recently</h3>
-          {loggedMeals.length === 0 ? (
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-base font-extrabold text-white">Recently</h3>
+            <span className="text-[11px] font-semibold text-[#9ea3b0]">{selectedDateLabel}</span>
+          </div>
+          {isLoadingMeals ? (
+            <div className="p-5 glass-card rounded-2xl border border-white/5 text-center text-xs text-[#9ea3b0]">Loading meals...</div>
+          ) : mealsForSelectedDate.length === 0 ? (
             <div className="p-5 glass-card rounded-2xl border border-dashed border-white/10 text-center space-y-2">
-              <p className="text-xs text-[#9ea3b0]">No meals logged yet today.</p>
+              <p className="text-xs text-[#9ea3b0]">No meals logged for {selectedDateStr === todayStr ? 'today' : 'this day'}.</p>
               <button
                 onClick={onOpenScannerModal}
                 className="px-4 py-2 rounded-xl bg-[#b6ff2e] text-[#14171d] text-xs font-bold"
@@ -294,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
-              {loggedMeals.map((meal, index) => {
+              {mealsForSelectedDate.map((meal, index) => {
                 const mealKey = (meal as any)._id || meal.id || `mob-m-${index}`;
                 const mealIdToDelete = (meal as any)._id || meal.id;
                 return (
@@ -306,6 +339,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     <button
                       onClick={() => handleDeleteMeal(mealIdToDelete)}
+                      aria-label={`Delete ${meal.title}`}
                       className="p-1.5 text-[#9ea3b0] hover:text-rose-400"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -349,6 +383,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <button
                     key={item.dateStr}
                     onClick={() => setSelectedDateStr(item.dateStr)}
+                    aria-label={`Show meals for ${item.monthLabel} ${item.dayNum}`}
+                    aria-pressed={isSelected}
                     className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl transition-all ${
                       isSelected
                         ? 'bg-[#b6ff2e] text-[#14171d] font-extrabold shadow-[0_0_12px_#b6ff2e]'
@@ -500,7 +536,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Embedded Scanner Workspace */}
         <div className="p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
-          <ScannerZone onMealScanned={handleMealScanned} />
+          <ScannerZone onMealScanned={handleMealScanned} targetDateStr={selectedDateStr} />
         </div>
 
         {/* Logged Meals History Timeline */}
@@ -510,10 +546,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <Clock className="w-5 h-5 text-[#b6ff2e]" />
               <span>{t('loggedMealsTitle')}</span>
             </h3>
-            <span className="text-xs text-[#9ea3b0] font-semibold">{t('loggedMealsCount', { count: loggedMeals.length })}</span>
+            <span className="text-xs text-[#9ea3b0] font-semibold">{selectedDateLabel} • {t('loggedMealsCount', { count: mealsForSelectedDate.length })}</span>
           </div>
 
-          {loggedMeals.length === 0 ? (
+          {isLoadingMeals ? (
+            <div className="p-8 glass-card rounded-3xl border border-white/5 text-center text-xs text-[#9ea3b0]">Loading meals...</div>
+          ) : mealsForSelectedDate.length === 0 ? (
             <div className="p-8 glass-card rounded-3xl border border-dashed border-white/10 text-center space-y-3">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
                 <Utensils className="w-6 h-6" />
@@ -530,7 +568,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {loggedMeals.map((meal, index) => {
+              {mealsForSelectedDate.map((meal, index) => {
                 const mealKey = (meal as any)._id || meal.id || `meal-${index}`;
                 const mealIdToDelete = (meal as any)._id || meal.id;
 
@@ -553,6 +591,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <button
                             onClick={() => handleDeleteMeal(mealIdToDelete)}
                             title="Delete meal"
+                            aria-label={`Delete ${meal.title}`}
                             className="p-1 rounded-lg text-[#9ea3b0] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

@@ -36,9 +36,11 @@ Return your response strictly in raw valid JSON format adhering to this structur
 }`;
 
 export async function analyzeFoodImageWithGemini(cleanBase64: string, mimeType = 'image/jpeg') {
-  // Use environment API key or base64 decoded fallback key
-  const fallbackKey = Buffer.from('QVEuQWI4Uk42TGRkLS00dlc1ME5SWXBKY2xzREd1X3k1U2xvTW5QYXpWMzJ2Q3pWdHZPSVE=', 'base64').toString('utf-8');
-  const apiKey = process.env.GEMINI_API_KEY?.trim() || fallbackKey;
+  // API key must come from server-side environment only — never hardcode secrets
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error('AI service is not configured. Please contact support.');
+  }
 
   const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
   let lastError: any = null;

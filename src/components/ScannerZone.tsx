@@ -7,17 +7,21 @@ import {
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { SampleDish, ScannedMeal, DetectedItem } from '../types/plateVision';
 import { useLanguage } from '../context/LanguageContext';
+import { toLocalDateStr } from '../lib/date';
 
 interface ScannerZoneProps {
   onMealScanned: (meal: ScannedMeal) => void;
   onClose?: () => void;
   isModal?: boolean;
+  /** Calendar day (YYYY-MM-DD, local) the meal should be logged to. Defaults to today. */
+  targetDateStr?: string;
 }
 
 export const ScannerZone: React.FC<ScannerZoneProps> = ({
   onMealScanned,
   onClose,
-  isModal = false
+  isModal = false,
+  targetDateStr
 }) => {
   const { t } = useLanguage();
   const [selectedDish, setSelectedDish] = useState<SampleDish | null>(null);
@@ -27,6 +31,8 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [showSourceChoiceModal, setShowSourceChoiceModal] = useState<boolean>(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Fix Result states
   const [showFixPanel, setShowFixPanel] = useState<boolean>(false);
@@ -39,9 +45,19 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  React.useEffect(() => {
+    if (!isModal || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModal, onClose]);
+
   const handleSelectSample = (dish: SampleDish) => {
     setSelectedDish(dish);
     setCustomImage(null);
+    setUploadedImageUrl(null);
     setApiError(null);
     triggerScanAnimation();
   };
@@ -150,10 +166,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       setIsScanning(false);
 
       if (!res.ok) {
+        if (res.status === 401) throw new Error('Your session has expired. Please sign in again.');
         throw new Error(data.error || 'Failed to analyze plate with Gemini Vision AI.');
       }
 
       if (data.dish) {
+        // Keep the hosted (Cloudinary) URL for saving, show the local preview for speed
+        setUploadedImageUrl(typeof data.dish.imageUrl === 'string' && data.dish.imageUrl.startsWith('https://') ? data.dish.imageUrl : null);
         const customDish: SampleDish = {
           ...data.dish,
           imageUrl: compressedBase64
@@ -279,13 +298,17 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
     }
   };
 
-  const handleLogMeal = () => {
-    if (!selectedDish) return;
-    const newMeal: ScannedMeal = {
-      id: 'meal-' + Date.now(),
+  const handleLogMeal = async () => {
+    if (!selectedDish || isSaving || isScanning || selectedDish.id === 'scanning-temp') return;
+    setIsSaving(true);
+    setApiError(null);
+
+    const payload = {
       title: selectedDish.title,
+      category: selectedDish.category,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      imageUrl: selectedDish.imageUrl,
+      dateStr: targetDateStr || toLocalDateStr(),
+      imageUrl: uploadedImageUrl || selectedDish.imageUrl,
       totalCalories: selectedDish.totalCalories,
       totalProtein: selectedDish.totalProtein,
       totalCarbs: selectedDish.totalCarbs,
@@ -294,8 +317,24 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       aiAdvice: selectedDish.aiAdvice
     };
 
-    onMealScanned(newMeal);
-    if (onClose) onClose();
+    try {
+      const res = await fetch('/api/meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        if (res.status === 401) throw new Error('Please sign in to log meals to your journal.');
+        throw new Error(data.error || 'Failed to save meal.');
+      }
+      onMealScanned(data.meal as ScannedMeal);
+      if (onClose) onClose();
+    } catch (err: any) {
+      setApiError(err?.message || 'Failed to save meal.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const content = (
@@ -321,6 +360,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         {isModal && onClose && (
           <button
             onClick={onClose}
+            aria-label="Close scanner"
             className="p-2 rounded-full text-[#9ea3b0] hover:text-white hover:bg-white/10 transition-all"
           >
             <X className="w-5 h-5" />
@@ -348,7 +388,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       )}
 
       {/* Preset Dish Selector & Upload Trigger */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className={`grid grid-cols-1 gap-3 ${selectedDish ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
         {SAMPLE_DISHES.map((dish) => (
           <button
             key={dish.id}
@@ -388,14 +428,17 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           className="hidden" 
         />
 
-        {/* Upload Custom File Trigger */}
-        <button 
-          onClick={() => setShowSourceChoiceModal(true)}
-          className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5"
-        >
-          <Camera className="w-4 h-4 text-[#b6ff2e]" />
-          <span>{t('uploadPhoto')}</span>
-        </button>
+        {/* Upload Custom File Trigger — only shown once a dish is displayed.
+            When nothing is selected, the big dropzone below already handles uploads (no duplicate button). */}
+        {selectedDish && (
+          <button 
+            onClick={() => setShowSourceChoiceModal(true)}
+            className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5"
+          >
+            <Camera className="w-4 h-4 text-[#b6ff2e]" />
+            <span>{t('uploadPhoto')}</span>
+          </button>
+        )}
       </div>
 
       {/* Choice Modal for Upload Source (Gallery vs Camera) */}
@@ -442,7 +485,11 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       {/* Main Image Viewport with Bounding Boxes OR Empty State Upload Dropzone */}
       {!selectedDish ? (
         <div 
+          role="button"
+          tabIndex={0}
+          aria-label="Upload a meal photo or open the camera"
           onClick={() => setShowSourceChoiceModal(true)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSourceChoiceModal(true); } }}
           className="p-10 sm:p-14 text-center border-2 border-dashed border-[#b6ff2e]/40 hover:border-[#b6ff2e] bg-[#14171d]/80 glass-card rounded-3xl cursor-pointer space-y-4 hover:bg-[#b6ff2e]/5 transition-all group"
         >
           <div className="w-16 h-16 mx-auto rounded-3xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e] group-hover:scale-110 transition-all shadow-[0_0_25px_rgba(182,255,46,0.2)]">
@@ -454,10 +501,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               Upload a meal photo from your Galerie or take a picture directly to calculate calories, protein, carbs & fats with automatic green box overlays.
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_20px_rgba(182,255,46,0.3)]">
+          <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_20px_rgba(182,255,46,0.3)]">
             <Upload className="w-4 h-4" />
             <span>Upload Photo / Open Camera</span>
-          </button>
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -697,11 +744,16 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
               <button
                 onClick={handleLogMeal}
-                className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2"
+                disabled={isSaving || isScanning || selectedDish.id === 'scanning-temp'}
+                className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{t('logMealCTA')}</span>
+                {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>{isSaving ? 'Saving...' : t('logMealCTA')}</span>
               </button>
+
+              <p className="text-[10px] leading-relaxed text-[#9ea3b0] text-center">
+                AI nutrition values are estimates and may be inaccurate. They are not medical or dietary advice.
+              </p>
             </div>
           </div>
         </div>
@@ -711,7 +763,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Plate scanner dialog"
+      >
         <div className="relative w-full max-w-5xl p-6 sm:p-8 glass-card rounded-3xl border border-[rgba(255,255,255,0.12)] shadow-[0_25px_60px_rgba(0,0,0,0.9)] my-8">
           {content}
         </div>

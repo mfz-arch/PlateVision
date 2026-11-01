@@ -1,6 +1,12 @@
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '../config/mongodb';
 import User from '../models/User';
+import {
+  sanitizeEmail,
+  sanitizeString,
+  validatePasswordStrength,
+  sanitizeNumber
+} from '../security/sanitize';
 
 // In-memory fallback cache if MONGODB_URI is not set in environment
 const fallbackUserMap = new Map<string, any>();
@@ -16,6 +22,10 @@ async function safeConnectDB(): Promise<boolean> {
 }
 
 export async function registerUser(data: any) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid registration data');
+  }
+
   const {
     email,
     password,
@@ -34,44 +44,61 @@ export async function registerUser(data: any) {
     throw new Error('Email and password are required');
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = sanitizeEmail(email);
+  const validatedPassword = validatePasswordStrength(password);
+
+  if (data.acceptedTerms !== true) {
+    throw new Error('You must accept the Terms of Service and Privacy Policy to create an account');
+  }
+
+  const cleanName = sanitizeString(name, 60, 'Athlete');
+  const cleanGoal = ['lose', 'gain', 'maintain'].includes(goal) ? goal : 'lose';
+  const cleanGender = ['male', 'female', 'other'].includes(gender) ? gender : 'male';
+  const cleanAge = sanitizeNumber(age, 16, 120, 25);
+  const cleanHeight = sanitizeNumber(heightCm, 100, 250, 175);
+  const cleanCurrentWeight = sanitizeNumber(currentWeightKg, 30, 300, 75);
+  const cleanTargetWeight = sanitizeNumber(targetWeightKg, 30, 300, 70);
+  const cleanWorkoutDays = sanitizeNumber(workoutDaysPerWeek, 0, 7, 4);
+  const cleanTimeframe = sanitizeNumber(timeframeMonths, 1, 36, 3);
+
   const isDbConnected = await safeConnectDB();
 
-  // Calculate macros
-  let bmr = (10 * currentWeightKg) + (6.25 * heightCm) - (5 * age);
-  bmr += gender === 'male' ? 5 : -161;
+  // Calculate macros using Mifflin-St Jeor equation
+  let bmr = (10 * cleanCurrentWeight) + (6.25 * cleanHeight) - (5 * cleanAge);
+  bmr += cleanGender === 'male' ? 5 : -161;
 
-  const activityMultiplier = 1.2 + (workoutDaysPerWeek * 0.08);
-  let tdee = Math.round(bmr * activityMultiplier);
+  const activityMultiplier = 1.2 + (cleanWorkoutDays * 0.08);
+  const tdee = Math.round(bmr * activityMultiplier);
 
   let dailyCalories = tdee;
-  if (goal === 'lose') dailyCalories = Math.round(tdee * 0.82);
-  else if (goal === 'gain') dailyCalories = Math.round(tdee * 1.15);
+  if (cleanGoal === 'lose') dailyCalories = Math.round(tdee * 0.82);
+  else if (cleanGoal === 'gain') dailyCalories = Math.round(tdee * 1.15);
 
-  const proteinGrams = Math.round(currentWeightKg * (goal === 'lose' ? 2.2 : 2.0));
+  const proteinGrams = Math.round(cleanCurrentWeight * (cleanGoal === 'lose' ? 2.2 : 2.0));
   const fatsGrams = Math.round((dailyCalories * 0.25) / 9);
   const carbsGrams = Math.round((dailyCalories - (proteinGrams * 4) - (fatsGrams * 9)) / 4);
-  const waterLiters = Number((currentWeightKg * 0.04).toFixed(1));
+  const waterLiters = Number((cleanCurrentWeight * 0.04).toFixed(1));
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(validatedPassword, 10);
 
   const userPayload = {
     email: normalizedEmail,
     password: hashedPassword,
-    name,
-    goal,
-    gender,
-    age,
-    heightCm,
-    currentWeightKg,
-    targetWeightKg,
-    workoutDaysPerWeek,
-    timeframeMonths,
+    name: cleanName,
+    goal: cleanGoal,
+    gender: cleanGender,
+    age: cleanAge,
+    heightCm: cleanHeight,
+    currentWeightKg: cleanCurrentWeight,
+    targetWeightKg: cleanTargetWeight,
+    workoutDaysPerWeek: cleanWorkoutDays,
+    timeframeMonths: cleanTimeframe,
     dailyCaloriesGoal: dailyCalories,
     proteinGoalGrams: proteinGrams,
     carbsGoalGrams: Math.max(carbsGrams, 50),
     fatsGoalGrams: fatsGrams,
-    waterGoalLiters: waterLiters
+    waterGoalLiters: waterLiters,
+    acceptedTermsAt: new Date()
   };
 
   if (isDbConnected) {
@@ -86,7 +113,7 @@ export async function registerUser(data: any) {
       delete userObj.password;
       return userObj;
     } catch (err: any) {
-      if (err.message.includes('already exists')) throw err;
+      if (err.message && err.message.includes('already exists')) throw err;
       console.warn('[Backend] MongoDB create failed, using in-memory store:', err);
     }
   }
@@ -99,12 +126,16 @@ export async function registerUser(data: any) {
 }
 
 export async function loginUser(data: { email?: string; password?: string }) {
-  const { email, password } = data;
-  if (!email || !password) {
+  if (!data || typeof data !== 'object') {
     throw new Error('Incorrect email or password');
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const { email, password } = data;
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    throw new Error('Incorrect email or password');
+  }
+
+  const normalizedEmail = sanitizeEmail(email);
   const isDbConnected = await safeConnectDB();
 
   let foundUser: any = null;
@@ -137,17 +168,13 @@ export async function loginUser(data: { email?: string; password?: string }) {
 }
 
 export async function getUserProfile(email?: string) {
+  if (!email || typeof email !== 'string') return null;
+  const normalizedEmail = sanitizeEmail(email);
   const isDbConnected = await safeConnectDB();
 
   if (isDbConnected) {
     try {
-      let query = email ? { email: email.trim().toLowerCase() } : {};
-      let user = await User.findOne(query).sort({ updatedAt: -1 });
-
-      if (!user && !email) {
-        user = await User.findOne().sort({ updatedAt: -1 });
-      }
-
+      const user = await User.findOne({ email: normalizedEmail });
       if (user) {
         const userObj = user.toObject();
         delete userObj.password;
@@ -158,15 +185,8 @@ export async function getUserProfile(email?: string) {
     }
   }
 
-  if (email && fallbackUserMap.has(email.toLowerCase())) {
-    const userCopy = { ...fallbackUserMap.get(email.toLowerCase()) };
-    delete userCopy.password;
-    return userCopy;
-  }
-
-  if (fallbackUserMap.size > 0) {
-    const firstUser = Array.from(fallbackUserMap.values())[0];
-    const userCopy = { ...firstUser };
+  if (fallbackUserMap.has(normalizedEmail)) {
+    const userCopy = { ...fallbackUserMap.get(normalizedEmail) };
     delete userCopy.password;
     return userCopy;
   }
@@ -174,16 +194,41 @@ export async function getUserProfile(email?: string) {
   return null;
 }
 
-export async function updateUserProfile(data: any) {
+// Only these profile fields may be changed by the user through the API
+const EDITABLE_FIELDS = [
+  'name', 'goal', 'gender', 'age', 'heightCm', 'currentWeightKg', 'targetWeightKg',
+  'workoutDaysPerWeek', 'timeframeMonths', 'dailyCaloriesGoal', 'proteinGoalGrams',
+  'carbsGoalGrams', 'fatsGoalGrams', 'waterGoalLiters'
+] as const;
+
+function pickEditable(data: any) {
+  const out: Record<string, any> = {};
+  for (const key of EDITABLE_FIELDS) {
+    if (data?.[key] === undefined) continue;
+    const value = data[key];
+    if (key === 'name') out[key] = sanitizeString(value, 60, 'Athlete');
+    else if (key === 'goal') { if (['lose', 'gain', 'maintain'].includes(value)) out[key] = value; }
+    else if (key === 'gender') { if (['male', 'female', 'other'].includes(value)) out[key] = value; }
+    else {
+      const n = Number(value);
+      if (Number.isFinite(n) && n >= 0 && n < 100000) out[key] = n;
+    }
+  }
+  return out;
+}
+
+/** Update the profile of the user identified by `email` (taken from the session, not the body). */
+export async function updateUserProfile(email: string, data: any) {
+  if (!email || typeof email !== 'string') return null;
+  const normalizedEmail = sanitizeEmail(email);
+  const updates = pickEditable(data);
   const isDbConnected = await safeConnectDB();
-  const { email } = data;
 
   if (isDbConnected) {
     try {
-      let query = email ? { email: email.trim().toLowerCase() } : {};
-      let user = await User.findOne(query);
+      const user = await User.findOne({ email: normalizedEmail });
       if (user) {
-        Object.assign(user, data);
+        Object.assign(user, updates);
         user.updatedAt = new Date();
         await user.save();
         const userObj = user.toObject();
@@ -195,13 +240,29 @@ export async function updateUserProfile(data: any) {
     }
   }
 
-  if (email && fallbackUserMap.has(email.toLowerCase())) {
-    const existing = fallbackUserMap.get(email.toLowerCase());
-    const updated = { ...existing, ...data };
-    fallbackUserMap.set(email.toLowerCase(), updated);
-    delete updated.password;
-    return updated;
+  if (fallbackUserMap.has(normalizedEmail)) {
+    const existing = fallbackUserMap.get(normalizedEmail);
+    const updated = { ...existing, ...updates };
+    fallbackUserMap.set(normalizedEmail, updated);
+    const copy = { ...updated };
+    delete copy.password;
+    return copy;
   }
 
   return null;
+}
+
+/** GDPR right to erasure — permanently delete the account. */
+export async function deleteUserAccount(email: string) {
+  if (!email || typeof email !== 'string') return;
+  const normalizedEmail = sanitizeEmail(email);
+  const isDbConnected = await safeConnectDB();
+  if (isDbConnected) {
+    try {
+      await User.deleteOne({ email: normalizedEmail });
+    } catch (err) {
+      console.warn('[Backend] DB deleteUserAccount failed:', err);
+    }
+  }
+  fallbackUserMap.delete(normalizedEmail);
 }

@@ -24,21 +24,32 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [calcProgress, setCalcProgress] = useState<number>(0);
 
   const [showPassword, setShowPassword] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
   const [formData, setFormData] = useState<OnboardingData>({
     goal: 'lose',
-    name: "Aim'fiz",
+    name: "Athlete",
     email: "",
     password: "",
-    age: 18,
+    age: 25,
     gender: 'male',
-    heightCm: 178,
-    currentWeightKg: 78,
-    targetWeightKg: 72,
+    heightCm: 175,
+    currentWeightKg: 75,
+    targetWeightKg: 70,
     workoutDaysPerWeek: 4,
     timeframeMonths: 3,
-    hasChildren: false
+    hasChildren: false,
+    acceptedTerms: false
   });
   const [authError, setAuthError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -51,6 +62,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     if (step === 2) {
       if (!formData.email || !formData.password) {
         setAuthError('Please provide both email and password to create your account.');
+        return;
+      }
+      if (formData.password.length < 8 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) {
+        setAuthError('Password must be at least 8 characters long and include both letters and numbers.');
+        return;
+      }
+      if (!formData.acceptedTerms) {
+        setAuthError('You must accept the Terms of Service and Privacy Policy to proceed.');
         return;
       }
       setAuthError(null);
@@ -123,7 +142,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profile)
+          body: JSON.stringify({
+            ...profile,
+            acceptedTerms: true,
+            website: honeypot
+          })
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -146,22 +169,30 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-modal-title"
+    >
       <div className="relative w-full max-w-2xl p-6 sm:p-8 glass-card rounded-3xl border border-[rgba(255,255,255,0.12)] shadow-[0_25px_60px_rgba(0,0,0,0.9)]">
         
         {/* Top Header Progress Bar */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center">
-              <Target className="w-4 h-4 text-[#b6ff2e]" />
+              <Target className="w-4 h-4 text-[#b6ff2e]" aria-hidden="true" />
             </div>
-            <span className="text-sm font-extrabold text-white">{t('onboardingTitle')}</span>
+            <h2 id="onboarding-modal-title" className="text-sm font-extrabold text-white">
+              {t('onboardingTitle')}
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-[#9ea3b0] hover:text-white hover:bg-white/10 transition-all"
+            aria-label="Close onboarding wizard"
+            className="p-2 rounded-full text-[#9ea3b0] hover:text-white hover:bg-white/10 transition-all focus-visible:outline-none"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -314,6 +345,56 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, targetWeightKg: Number(e.target.value) })}
                   className="w-full accent-[#b6ff2e]"
                 />
+              </div>
+
+              {/* Honeypot field for anti-bot spam protection */}
+              <input
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                className="sr-only"
+                aria-hidden="true"
+              />
+
+              {/* Legal Consent & Terms Acceptance Checkbox (GDPR / CCPA / ADA compliance) */}
+              <div className="sm:col-span-2 pt-2">
+                <label className="flex items-start gap-3 cursor-pointer select-none group">
+                  <input
+                    type="checkbox"
+                    id="consent-checkbox"
+                    required
+                    checked={!!formData.acceptedTerms}
+                    onChange={(e) => {
+                      setFormData({ ...formData, acceptedTerms: e.target.checked });
+                      if (authError) setAuthError(null);
+                    }}
+                    className="mt-1 w-4 h-4 rounded border-white/20 bg-[#14171d] text-[#b6ff2e] focus:ring-2 focus:ring-[#b6ff2e] accent-[#b6ff2e] shrink-0"
+                  />
+                  <span className="text-xs text-[#c4c8d2] leading-relaxed">
+                    I agree to the{' '}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#b6ff2e] underline underline-offset-2 hover:text-[#a3f01b] font-bold"
+                    >
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#b6ff2e] underline underline-offset-2 hover:text-[#a3f01b] font-bold"
+                    >
+                      Privacy Policy
+                    </a>
+                    , and I consent to the processing of my nutrition and fitness journal data.
+                  </span>
+                </label>
               </div>
             </div>
           </div>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { getSession, unauthorized } from '@/backend/auth/session';
+import { rateLimit } from '@/backend/security/rateLimit';
 
 const FIX_PROMPT = `You are an expert AI clinical dietitian. The user previously scanned a food image and you identified the items below. However, the user is telling you that some items were incorrectly identified or their nutritional values are wrong.
 
@@ -35,25 +37,34 @@ Return your response strictly in raw valid JSON format:
 }`;
 
 export async function POST(req: NextRequest) {
+  const session = getSession(req);
+  if (!session) return unauthorized();
+
+  const limited = rateLimit(`fix:${session.uid}`, 10, 60 * 60 * 1000);
+  if (limited) return limited;
+
   try {
     const body = await req.json();
-    const { imageBase64, mimeType = 'image/jpeg', previousResult, userCorrection } = body;
+    const { imageBase64, mimeType = 'image/jpeg', previousResult } = body;
+    const userCorrection = typeof body.userCorrection === 'string' ? body.userCorrection.trim().slice(0, 500) : '';
 
-    if (!imageBase64 || !userCorrection) {
+    if (!imageBase64 || typeof imageBase64 !== 'string' || !userCorrection) {
       return NextResponse.json(
         { error: 'Missing imageBase64 or userCorrection' },
         { status: 400 }
       );
     }
+    if (imageBase64.length > 8_000_000) {
+      return NextResponse.json({ error: 'Image is too large.' }, { status: 413 });
+    }
 
-    const fallbackKey = Buffer.from(
-      'QVEuQWI4Uk42TGRkLS00dlc1ME5SWXBKY2xzREd1X3k1U2xvTW5QYXpWMzJ2Q3pWdHZPSVE=',
-      'base64'
-    ).toString('utf-8');
-    const apiKey = process.env.GEMINI_API_KEY?.trim() || fallbackKey;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    if (!apiKey) {
+      return NextResponse.json({ error: 'AI service is not configured.' }, { status: 503 });
+    }
 
     const prompt = FIX_PROMPT
-      .replace('{PREVIOUS_RESULT}', JSON.stringify(previousResult || {}, null, 2))
+      .replace('{PREVIOUS_RESULT}', JSON.stringify(previousResult || {}, null, 2).slice(0, 6000))
       .replace('{USER_CORRECTION}', userCorrection);
 
     const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
