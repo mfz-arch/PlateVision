@@ -130,16 +130,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>{language === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'}</span>
             </button>
 
-            {/* Quick Admin Portal Link */}
-            <a
-              href="/admin"
-              title="SaaS Executive Admin Portal"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 hover:bg-[#b6ff2e]/20 text-[11px] sm:text-xs font-bold text-[#b6ff2e] transition-all shadow-md"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#b6ff2e]" />
-              <span className="hidden sm:inline">Admin</span>
-            </a>
-
             {hasProfile ? (
               <button
                 onClick={onSignOut}
