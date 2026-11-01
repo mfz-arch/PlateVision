@@ -10,6 +10,7 @@ import { SignInModal } from '../components/SignInModal';
 import { ScannerZone } from '../components/ScannerZone';
 import { AccountDataControls } from '../components/AccountDataControls';
 import { AdminDashboard } from '../components/AdminDashboard';
+import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { UserProfile } from '../types/plateVision';
 import { toLocalDateStr } from '../lib/date';
 
@@ -32,18 +33,24 @@ export default function Home() {
     async function loadUser() {
       try {
         const storedJson = localStorage.getItem('platevision_user');
-        if (storedJson) setUserProfile(JSON.parse(storedJson));
+        if (storedJson) {
+          const parsed = JSON.parse(storedJson);
+          setUserProfile(parsed);
+          setActiveTab('dashboard');
+        }
 
         const res = await fetch('/api/user', { cache: 'no-store' });
         if (res.status === 401) {
           localStorage.removeItem('platevision_user');
           setUserProfile(null);
+          setActiveTab('home');
           return;
         }
         const data = await res.json();
         if (data.success && data.user) {
           setUserProfile(data.user);
           localStorage.setItem('platevision_user', JSON.stringify(data.user));
+          setActiveTab('dashboard');
         }
       } catch (err) {
         console.error('Failed to load user session:', err);
@@ -133,6 +140,8 @@ export default function Home() {
               onSelectedDateChange={handleSelectedDateChange}
             />
             <AccountDataControls onAccountDeleted={handleSignOut} />
+            {/* PWA Install Suggestion ONLY appears when user is in their dashboard */}
+            <PWAInstallPrompt />
           </>
         )}
 

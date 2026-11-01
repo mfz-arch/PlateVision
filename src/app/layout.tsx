@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "../context/LanguageContext";
 import { CookieBanner } from "../components/CookieBanner";
-import { PWAInstallPrompt } from "../components/PWAInstallPrompt";
 
 export const viewport: Viewport = {
   themeColor: "#14171d",
@@ -77,7 +76,6 @@ export default function RootLayout({
         </a>
         <LanguageProvider>
           {children}
-          <PWAInstallPrompt />
           <CookieBanner />
         </LanguageProvider>
       </body>

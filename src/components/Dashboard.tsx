@@ -332,7 +332,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 const mealIdToDelete = (meal as any)._id || meal.id;
                 return (
                   <div key={mealKey} className="p-3 glass-card rounded-2xl border border-white/5 flex items-center gap-3">
-                    <img src={meal.imageUrl} alt={meal.title} className="w-12 h-12 rounded-xl object-cover" />
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-[#23262f] border border-white/10 flex items-center justify-center">
+                      <img 
+                        src={meal.imageUrl || '/icons/icon-192x192.png'} 
+                        alt={meal.title}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/icons/icon-192x192.png';
+                          e.currentTarget.className = 'w-8 h-8 object-contain opacity-80';
+                        }}
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
                     <div className="flex-1 overflow-hidden">
                       <h4 className="text-xs font-bold text-white truncate">{meal.title}</h4>
                       <p className="text-[10px] text-[#b6ff2e] font-semibold">{meal.totalCalories} Calories • {meal.timestamp}</p>
@@ -577,11 +590,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     key={mealKey}
                     className="p-4 glass-card rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center gap-4 hover:border-[#b6ff2e]/40 transition-all group"
                   >
-                    <img 
-                      src={meal.imageUrl} 
-                      alt={meal.title}
-                      className="w-20 h-20 rounded-xl object-cover shrink-0 border border-white/10 group-hover:scale-105 transition-all"
-                    />
+                    <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#23262f] border border-white/10 flex items-center justify-center">
+                      <img 
+                        src={meal.imageUrl || '/icons/icon-192x192.png'} 
+                        alt={meal.title}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/icons/icon-192x192.png';
+                          e.currentTarget.className = 'w-10 h-10 object-contain opacity-80';
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all"
+                      />
+                    </div>
 
                     <div className="flex-1 overflow-hidden">
                       <div className="flex items-center justify-between mb-1">

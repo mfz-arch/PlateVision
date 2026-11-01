@@ -402,6 +402,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             <img 
               src={dish.imageUrl} 
               alt={dish.title}
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/icons/icon-192x192.png';
+                e.currentTarget.className = 'w-12 h-12 rounded-xl object-contain p-1 shrink-0 bg-[#23262f] border border-white/10';
+              }}
               className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10"
             />
             <div className="overflow-hidden">
