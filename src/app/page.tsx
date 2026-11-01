@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../components/Navbar';
-import { LandingHero } from '../components/LandingHero';
+
 import { Dashboard } from '../components/Dashboard';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { SignInModal } from '../components/SignInModal';
@@ -11,11 +11,11 @@ import { ScannerZone } from '../components/ScannerZone';
 import { AccountDataControls } from '../components/AccountDataControls';
 import { AdminDashboard } from '../components/AdminDashboard';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
-import { UserProfile } from '../types/plateVision';
+import { SplashScreen } from '../components/SplashScreen';
 import { toLocalDateStr } from '../lib/date';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'scanner' | 'macros' | 'admin'>('home');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'scanner' | 'macros' | 'admin'>('dashboard');
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -92,6 +92,7 @@ export default function Home() {
     <main id="main-content" className="min-h-screen bg-[#14171d] text-white flex flex-col selection:bg-[#b6ff2e] selection:text-[#14171d]">
       
       {/* Top Fixed Header */}
+      <SplashScreen />
       <Navbar
         onOpenSignIn={() => setIsSignInOpen(true)}
         onOpenRegister={() => setIsRegisterOpen(true)}
@@ -113,21 +114,7 @@ export default function Home() {
       {/* Main Body Content */}
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* VIEW 1: HOME LANDING PAGE */}
-        {activeTab === 'home' && (
-          <LandingHero
-            onStartAssessment={() => setIsRegisterOpen(true)}
-            onOpenScanner={() => {
-              if (!userProfile) {
-                setIsSignInOpen(true);
-              } else {
-                setIsScannerOpen(true);
-              }
-            }}
-            hasProfile={!!userProfile}
-            onOpenSignIn={() => setIsSignInOpen(true)}
-          />
-        )}
+
 
         {/* VIEW 2: DASHBOARD */}
         {activeTab === 'dashboard' && userProfile && (
