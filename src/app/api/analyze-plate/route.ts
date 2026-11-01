@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzePlateImage } from '@/backend/controllers/mealController';
-import { getSession, unauthorized } from '@/backend/auth/session';
-import { rateLimit } from '@/backend/security/rateLimit';
+import { getSession } from '@/backend/auth/session';
+import { rateLimit, getClientIp } from '@/backend/security/rateLimit';
 
 // POST /api/analyze-plate — analyze a meal photo (does NOT save it to the log)
 export async function POST(req: NextRequest) {
   const session = getSession(req);
-  if (!session) return unauthorized();
+  const clientIp = getClientIp(req);
+  const userId = session?.uid || `guest:${clientIp}`;
 
-  // 30 AI scans per hour per user
-  const limited = rateLimit(`scan:${session.uid}`, 30, 60 * 60 * 1000);
+  // 40 AI scans per hour for authenticated users, 20 for guests
+  const limitKey = session ? `scan:user:${session.uid}` : `scan:ip:${clientIp}`;
+  const maxLimit = session ? 40 : 20;
+  const limited = rateLimit(limitKey, maxLimit, 60 * 60 * 1000);
   if (limited) return limited;
 
   try {
@@ -26,12 +29,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unsupported image type.' }, { status: 415 });
     }
 
-    const dish = await analyzePlateImage(imageBase64, mimeType);
+    const dish = await analyzePlateImage(imageBase64, mimeType, userId);
     return NextResponse.json({ isMock: false, dish });
   } catch (error: any) {
     console.error('[API /api/analyze-plate Error]:', error?.message || error);
     return NextResponse.json(
-      { error: 'Failed to analyze plate. Please try again.' },
+      { error: error?.message || 'Failed to analyze plate. Please try again.' },
       { status: 500 }
     );
   }

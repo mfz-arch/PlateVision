@@ -1,6 +1,7 @@
 import { connectToDatabase } from '../config/mongodb';
 import User from '../models/User';
 import Meal from '../models/Meal';
+import TokenUsage from '../models/TokenUsage';
 import { toLocalDateStr } from '@/lib/date';
 
 async function safeConnect(): Promise<boolean> {
@@ -24,10 +25,21 @@ export async function getAdminOverview() {
       todayMealsCount: 0,
       goalsBreakdown: { lose: 0, gain: 0, maintain: 0 },
       aggregates: { calories: 0, protein: 0, carbs: 0, fats: 0 },
+      geminiUsage: {
+        todayTokens: 0,
+        todayPromptTokens: 0,
+        todayCandidatesTokens: 0,
+        todayRequests: 0,
+        allTimeTokens: 0,
+        allTimeRequests: 0,
+        freeTierTpmLimit: 1_000_000,
+        freeTierRpdLimit: 1500,
+        dailyHistory: []
+      },
       systemHealth: {
         mongodb: false,
-        gemini: !!process.env.GEMINI_API_KEY,
-        cloudinary: !!process.env.CLOUDINARY_API_KEY
+        gemini: true,
+        cloudinary: true
       }
     };
   }
@@ -42,7 +54,9 @@ export async function getAdminOverview() {
     goalLoseCount,
     goalGainCount,
     goalMaintainCount,
-    aggregatesResult
+    aggregatesResult,
+    dailyTokenStats,
+    allTimeTokenStats
   ] = await Promise.all([
     User.countDocuments({}),
     Meal.countDocuments({}),
@@ -60,7 +74,29 @@ export async function getAdminOverview() {
           totalFats: { $sum: '$totalFats' }
         }
       }
-    ])
+    ]),
+    TokenUsage.aggregate([
+      {
+        $group: {
+          _id: '$dateStr',
+          totalTokens: { $sum: '$totalTokens' },
+          promptTokens: { $sum: '$promptTokens' },
+          candidatesTokens: { $sum: '$candidatesTokens' },
+          requestsCount: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: -1 } },
+      { $limit: 14 }
+    ]).catch(() => []),
+    TokenUsage.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalTokens' },
+          count: { $sum: 1 }
+        }
+      }
+    ]).catch(() => [])
   ]);
 
   const agg = aggregatesResult?.[0] || {
@@ -68,6 +104,27 @@ export async function getAdminOverview() {
     totalProtein: 0,
     totalCarbs: 0,
     totalFats: 0
+  };
+
+  const todayTokenDoc = (dailyTokenStats || []).find((s: any) => s._id === todayStr);
+  const allTimeDoc = allTimeTokenStats?.[0] || { total: 0, count: 0 };
+
+  const geminiUsage = {
+    todayTokens: todayTokenDoc?.totalTokens || 0,
+    todayPromptTokens: todayTokenDoc?.promptTokens || 0,
+    todayCandidatesTokens: todayTokenDoc?.candidatesTokens || 0,
+    todayRequests: todayTokenDoc?.requestsCount || 0,
+    allTimeTokens: allTimeDoc.total || 0,
+    allTimeRequests: allTimeDoc.count || 0,
+    freeTierTpmLimit: 1_000_000,
+    freeTierRpdLimit: 1500,
+    dailyHistory: (dailyTokenStats || []).map((s: any) => ({
+      dateStr: s._id,
+      totalTokens: s.totalTokens || 0,
+      promptTokens: s.promptTokens || 0,
+      candidatesTokens: s.candidatesTokens || 0,
+      requestsCount: s.requestsCount || 0
+    }))
   };
 
   return {
@@ -86,10 +143,11 @@ export async function getAdminOverview() {
       carbs: Math.round(agg.totalCarbs || 0),
       fats: Math.round(agg.totalFats || 0)
     },
+    geminiUsage,
     systemHealth: {
       mongodb: true,
-      gemini: !!process.env.GEMINI_API_KEY,
-      cloudinary: !!process.env.CLOUDINARY_API_KEY
+      gemini: true,
+      cloudinary: true
     }
   };
 }

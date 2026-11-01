@@ -22,7 +22,7 @@ async function safeConnectDB(): Promise<boolean> {
  * nutrition breakdown. Nothing is saved to the user's log here: the meal is only
  * persisted when the user confirms it (after optionally fixing the result).
  */
-export async function analyzePlateImage(imageBase64: string, mimeType = 'image/jpeg') {
+export async function analyzePlateImage(imageBase64: string, mimeType = 'image/jpeg', userId = 'guest') {
   const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
   let uploadedImageUrl = '';
@@ -33,7 +33,7 @@ export async function analyzePlateImage(imageBase64: string, mimeType = 'image/j
     uploadedImageUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:${mimeType};base64,${cleanBase64}`;
   }
 
-  const parsedDish = await analyzeFoodImageWithGemini(cleanBase64, mimeType);
+  const parsedDish = await analyzeFoodImageWithGemini(cleanBase64, mimeType, userId);
 
   return {
     id: 'scan-' + Date.now(),

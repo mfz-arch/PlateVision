@@ -7,6 +7,14 @@ import {
   AlertTriangle, Sparkles, TrendingUp, Calendar, ArrowUpRight
 } from 'lucide-react';
 
+interface DailyTokenRecord {
+  dateStr: string;
+  totalTokens: number;
+  promptTokens: number;
+  candidatesTokens: number;
+  requestsCount: number;
+}
+
 interface AdminStats {
   connected: boolean;
   totalUsers: number;
@@ -14,6 +22,17 @@ interface AdminStats {
   todayMealsCount: number;
   goalsBreakdown: { lose: number; gain: number; maintain: number };
   aggregates: { calories: number; protein: number; carbs: number; fats: number };
+  geminiUsage?: {
+    todayTokens: number;
+    todayPromptTokens: number;
+    todayCandidatesTokens: number;
+    todayRequests: number;
+    allTimeTokens: number;
+    allTimeRequests: number;
+    freeTierTpmLimit: number;
+    freeTierRpdLimit: number;
+    dailyHistory: DailyTokenRecord[];
+  };
   systemHealth: { mongodb: boolean; gemini: boolean; cloudinary: boolean };
 }
 
@@ -51,7 +70,7 @@ interface ActivityMeal {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'users' | 'activity' | 'diagnostics'>('analytics');
+  const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'gemini' | 'users' | 'activity' | 'diagnostics'>('analytics');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [activity, setActivity] = useState<ActivityMeal[]>([]);
@@ -156,8 +175,8 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 5 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="p-5 glass-card rounded-2xl border border-white/10 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#9ea3b0] font-bold uppercase tracking-wider">Registered Athletes</span>
@@ -190,7 +209,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
           <p className="text-3xl font-black text-amber-400">{stats?.todayMealsCount || 0}</p>
-          <p className="text-[10px] text-[#9ea3b0]">Processed in the current local day</p>
+          <p className="text-[10px] text-[#9ea3b0]">Processed in current day</p>
         </div>
 
         <div className="p-5 glass-card rounded-2xl border border-white/10 space-y-2">
@@ -203,7 +222,26 @@ export const AdminDashboard: React.FC = () => {
           <p className="text-3xl font-black text-rose-400">
             {stats?.aggregates?.calories ? stats.aggregates.calories.toLocaleString() : 0}
           </p>
-          <p className="text-[10px] text-[#9ea3b0]">Cumulative platform nutritional intake</p>
+          <p className="text-[10px] text-[#9ea3b0]">Cumulative platform intake</p>
+        </div>
+
+        <div 
+          onClick={() => setActiveSubTab('gemini')}
+          className="p-5 glass-card rounded-2xl border border-[#b6ff2e]/30 space-y-2 cursor-pointer hover:border-[#b6ff2e] transition-all bg-[#b6ff2e]/5"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#b6ff2e] font-extrabold uppercase tracking-wider">Gemini Tokens (Today)</span>
+            <div className="w-8 h-8 rounded-xl bg-[#b6ff2e]/20 border border-[#b6ff2e]/40 flex items-center justify-center text-[#b6ff2e]">
+              <Cpu className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-white">
+            {stats?.geminiUsage?.todayTokens ? stats.geminiUsage.todayTokens.toLocaleString() : '0'}
+          </p>
+          <p className="text-[10px] text-[#9ea3b0] flex items-center justify-between">
+            <span>Free Tier ({stats?.geminiUsage?.todayRequests || 0} req)</span>
+            <span className="text-[#b6ff2e] font-bold">$0.00 spent</span>
+          </p>
         </div>
       </div>
 
@@ -218,6 +256,20 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           Analytics &amp; Targets
+        </button>
+        <button
+          onClick={() => setActiveSubTab('gemini')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeSubTab === 'gemini'
+              ? 'bg-[#b6ff2e] text-[#14171d] shadow-[0_0_15px_rgba(182,255,46,0.3)]'
+              : 'text-[#9ea3b0] hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Cpu className="w-3.5 h-3.5" />
+          <span>Gemini Tokens &amp; Quota</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 font-black text-[#b6ff2e]">
+            Free Tier
+          </span>
         </button>
         <button
           onClick={() => setActiveSubTab('users')}
@@ -342,6 +394,138 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-xs text-[#9ea3b0] leading-relaxed">
               Every logged meal is computed server-side using Gemini AI computer vision models with real-time calorie calculation.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: GEMINI AI TOKENS CONSUMPTION */}
+      {activeSubTab === 'gemini' && (
+        <div className="space-y-6">
+          {/* Top Token Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 glass-card rounded-2xl border border-[#b6ff2e]/30 space-y-2 bg-[#b6ff2e]/5">
+              <span className="text-xs text-[#b6ff2e] font-extrabold uppercase tracking-wider">Today's Token Consumption</span>
+              <p className="text-3xl font-black text-white">
+                {stats?.geminiUsage?.todayTokens ? stats.geminiUsage.todayTokens.toLocaleString() : 0}
+              </p>
+              <p className="text-[11px] text-[#9ea3b0]">
+                Input: {stats?.geminiUsage?.todayPromptTokens?.toLocaleString() || 0} | Output: {stats?.geminiUsage?.todayCandidatesTokens?.toLocaleString() || 0}
+              </p>
+            </div>
+
+            <div className="p-5 glass-card rounded-2xl border border-white/10 space-y-2">
+              <span className="text-xs text-[#9ea3b0] font-bold uppercase tracking-wider">Daily Request Quota</span>
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-black text-white">{stats?.geminiUsage?.todayRequests || 0}</p>
+                <span className="text-xs text-[#9ea3b0] font-mono">/ 1,500 RPD</span>
+              </div>
+              <div className="w-full bg-[#14171d] h-2 rounded-full overflow-hidden border border-white/5">
+                <div 
+                  className="bg-[#b6ff2e] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(2, ((stats?.geminiUsage?.todayRequests || 0) / 1500) * 100))}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="p-5 glass-card rounded-2xl border border-white/10 space-y-2">
+              <span className="text-xs text-[#9ea3b0] font-bold uppercase tracking-wider">All-Time Cumulative Tokens</span>
+              <p className="text-3xl font-black text-white">
+                {stats?.geminiUsage?.allTimeTokens ? stats.geminiUsage.allTimeTokens.toLocaleString() : 0}
+              </p>
+              <p className="text-[11px] text-[#9ea3b0]">
+                Across {stats?.geminiUsage?.allTimeRequests || 0} total AI model invocations
+              </p>
+            </div>
+
+            <div className="p-5 glass-card rounded-2xl border border-white/10 space-y-2">
+              <span className="text-xs text-[#9ea3b0] font-bold uppercase tracking-wider">Pricing Tier</span>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-md bg-[#b6ff2e]/20 text-[#b6ff2e] font-black text-xs border border-[#b6ff2e]/40">
+                  FREE TIER
+                </span>
+                <span className="text-xs text-white font-bold">$0.00 / mo</span>
+              </div>
+              <p className="text-[11px] text-[#9ea3b0]">1M Tokens/Min TPM Limit</p>
+            </div>
+          </div>
+
+          {/* Daily Consumption History Table */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#b6ff2e]" />
+                  <span>Day-by-Day Token Consumption History</span>
+                </h3>
+                <p className="text-xs text-[#9ea3b0]">Detailed audit of daily Gemini API token usage per calendar date:</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-white/10 glass-card">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-white/5 text-[#9ea3b0] border-b border-white/10">
+                  <tr>
+                    <th className="p-3.5 font-bold">Date (YYYY-MM-DD)</th>
+                    <th className="p-3.5 font-bold">Total Tokens</th>
+                    <th className="p-3.5 font-bold">Prompt (Vision + Input)</th>
+                    <th className="p-3.5 font-bold">Candidate (JSON Output)</th>
+                    <th className="p-3.5 font-bold">Scans / Fixes</th>
+                    <th className="p-3.5 font-bold">Free Tier Status</th>
+                    <th className="p-3.5 font-bold">Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {stats?.geminiUsage?.dailyHistory && stats.geminiUsage.dailyHistory.length > 0 ? (
+                    stats.geminiUsage.dailyHistory.map((day) => (
+                      <tr key={day.dateStr} className="hover:bg-white/5 transition-colors">
+                        <td className="p-3.5 font-mono font-bold text-white flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5 text-[#b6ff2e]" />
+                          <span>{day.dateStr}</span>
+                        </td>
+                        <td className="p-3.5 font-extrabold text-[#b6ff2e]">
+                          {day.totalTokens.toLocaleString()} tokens
+                        </td>
+                        <td className="p-3.5 text-[#c4c8d2] font-mono">
+                          {day.promptTokens.toLocaleString()}
+                        </td>
+                        <td className="p-3.5 text-[#c4c8d2] font-mono">
+                          {day.candidatesTokens.toLocaleString()}
+                        </td>
+                        <td className="p-3.5">
+                          <span className="font-bold text-white">{day.requestsCount}</span> requests
+                        </td>
+                        <td className="p-3.5">
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
+                            Normal (Within Free Tier)
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-bold text-white font-mono">
+                          $0.00
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="p-6 text-center text-[#9ea3b0]">
+                        No historical token usage recorded yet. Start scanning meals to see real-time daily metrics!
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Educational Note on Free Tier */}
+          <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10 flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-[#b6ff2e] shrink-0 mt-0.5" />
+            <div className="text-xs text-[#9ea3b0] space-y-1">
+              <p className="font-bold text-white">Google Gemini Free-Tier Quota Guidelines:</p>
+              <p>
+                PlateVision runs on Google Gemini's generous Free Tier: up to 15 Requests Per Minute (RPM), 1,000,000 Tokens Per Minute (TPM), and 1,500 Requests Per Day (RPD).
+                High-resolution images are automatically compressed before analysis to minimize token overhead and guarantee lightning-fast response times.
+              </p>
+            </div>
           </div>
         </div>
       )}
