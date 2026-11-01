@@ -13,7 +13,9 @@ export const PWAInstallPrompt: React.FC = () => {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
-  const [dismissed, setDismissed] = useState(true); // default true until verified in useEffect
+  const [showAndroidGuide, setShowAndroidGuide] = useState(false);
+  const [showDesktopGuide, setShowDesktopGuide] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     // Register Service Worker
@@ -36,13 +38,18 @@ export const PWAInstallPrompt: React.FC = () => {
     const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIos(isAppleDevice);
 
-    // Check if user previously dismissed prompt (expires after 7 days)
-    const dismissedTime = localStorage.getItem('platevision_pwa_dismissed');
-    if (dismissedTime && Date.now() - Number(dismissedTime) < 7 * 24 * 60 * 60 * 1000) {
-      setDismissed(true);
-    } else {
-      setDismissed(false);
+    // Check if dismissed in this session
+    const sessionDismissed = sessionStorage.getItem('platevision_pwa_dismissed_session');
+    if (sessionDismissed) {
+      setIsDismissed(true);
     }
+
+    // Listen for manual trigger from Dashboard button
+    const handleOpenInstall = () => {
+      setIsDismissed(false);
+      handleInstallClick();
+    };
+    window.addEventListener('platevision-open-install', handleOpenInstall);
 
     // Listen for Chrome / Android beforeinstallprompt
     const handleBeforeInstall = (e: Event) => {
@@ -53,33 +60,40 @@ export const PWAInstallPrompt: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
+      window.removeEventListener('platevision-open-install', handleOpenInstall);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        console.log('[PWA] User accepted the install prompt');
-        setDeferredPrompt(null);
+      try {
+        await deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+          setDeferredPrompt(null);
+          setIsDismissed(true);
+        }
+      } catch (e) {
+        console.warn('Install prompt error:', e);
       }
     } else if (isIos) {
       setShowIosGuide(true);
+    } else if (/android/.test(navigator.userAgent.toLowerCase())) {
+      setShowAndroidGuide(true);
+    } else {
+      setShowDesktopGuide(true);
     }
   };
 
   const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem('platevision_pwa_dismissed', Date.now().toString());
+    setIsDismissed(true);
+    sessionStorage.setItem('platevision_pwa_dismissed_session', 'true');
   };
 
-  // Don't show if already running in standalone app or dismissed
-  if (isStandalone || dismissed) return null;
-
-  // Only show if deferredPrompt is available (Android/Chrome) OR if on iOS Safari
-  if (!deferredPrompt && !isIos) return null;
+  // Don't show if already running inside installed standalone app or dismissed in this session
+  if (isStandalone || isDismissed) return null;
 
   return (
     <>
@@ -167,6 +181,101 @@ export const PWAInstallPrompt: React.FC = () => {
 
             <button
               onClick={() => setShowIosGuide(false)}
+              className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Android Chrome "Install app" Guide Modal */}
+      {showAndroidGuide && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
+          <div className="w-full max-w-sm p-6 glass-card rounded-3xl border border-[#b6ff2e]/30 bg-[#14171d] space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-[#b6ff2e]" />
+                <h3 className="text-base font-extrabold text-white">Install on Android</h3>
+              </div>
+              <button
+                onClick={() => setShowAndroidGuide(false)}
+                className="p-1 rounded-lg text-[#9ea3b0] hover:text-white hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#9ea3b0] leading-relaxed">
+              Install PlateVision on your phone in 2 simple steps:
+            </p>
+
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#23262f] border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/20 text-[#b6ff2e] flex items-center justify-center font-bold text-sm shrink-0">
+                  ⋮
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-white">1. Tap the three dots (⋮)</p>
+                  <p className="text-[10px] text-[#9ea3b0]">In the top-right corner of Chrome</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#23262f] border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/20 text-[#b6ff2e] flex items-center justify-center shrink-0">
+                  <Download className="w-4 h-4" />
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-white">2. Tap "Install app" or "Add to Home screen"</p>
+                  <p className="text-[10px] text-[#9ea3b0]">PlateVision will install instantly without Play Store</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAndroidGuide(false)}
+              className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Chrome "Install app" Guide Modal */}
+      {showDesktopGuide && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-sm p-6 glass-card rounded-3xl border border-[#b6ff2e]/30 bg-[#14171d] space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Download className="w-5 h-5 text-[#b6ff2e]" />
+                <h3 className="text-base font-extrabold text-white">Install PlateVision</h3>
+              </div>
+              <button
+                onClick={() => setShowDesktopGuide(false)}
+                className="p-1 rounded-lg text-[#9ea3b0] hover:text-white hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#9ea3b0] leading-relaxed">
+              Install PlateVision as a desktop app on your computer:
+            </p>
+
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#23262f] border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/20 text-[#b6ff2e] flex items-center justify-center shrink-0">
+                  <Download className="w-4 h-4" />
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-white">Look at your address bar</p>
+                  <p className="text-[10px] text-[#9ea3b0]">Click the install icon (⊕ or computer) at the right end of the URL bar</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowDesktopGuide(false)}
               className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
             >
               Got it!

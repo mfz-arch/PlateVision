@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { 
   Flame, Dumbbell, Wheat, Droplets, Plus, Sparkles, 
-  Clock, TrendingUp, Award, Calendar, LogOut, Utensils, Trash2
+  Clock, TrendingUp, Award, Calendar, LogOut, Utensils, Trash2, Download
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../types/plateVision';
 import { ScannerZone } from './ScannerZone';
@@ -131,7 +131,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* MOBILE VIEW (CalZen Arrangement for Mobile Phones ONLY) */}
       <div className="block md:hidden space-y-5 pb-20">
         
-        {/* Header with Title */}
+        {/* Header with Title & Install Button */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#14171d] border border-white/10 flex items-center justify-center text-xs font-bold text-white">
@@ -139,6 +139,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <span className="text-2xl font-black text-white tracking-tight">PlateVision</span>
           </div>
+          <button
+            onClick={() => {
+              sessionStorage.removeItem('platevision_pwa_dismissed_session');
+              window.dispatchEvent(new CustomEvent('platevision-open-install'));
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/40 text-[#b6ff2e] text-xs font-bold hover:bg-[#b6ff2e]/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(182,255,46,0.15)]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Install App</span>
+          </button>
         </div>
 
         {/* Days of Week Row (CalZen style - Interactive Date Selector) */}
@@ -410,6 +420,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 );
               })}
             </div>
+
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('platevision_pwa_dismissed_session');
+                window.dispatchEvent(new CustomEvent('platevision-open-install'));
+              }}
+              className="flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-[#23262f] border border-[#b6ff2e]/30 text-[#b6ff2e] font-extrabold text-sm hover:bg-[#b6ff2e]/10 transition-all shrink-0"
+            >
+              <Download className="w-4 h-4" />
+              <span>Install App</span>
+            </button>
 
             <button
               onClick={onOpenScannerModal}

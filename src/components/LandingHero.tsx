@@ -102,15 +102,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             {/* Image Preview with Bounding Box Overlay */}
             <div className="relative rounded-2xl overflow-hidden">
               <img 
-                src={sampleDish.imageUrl} 
+                src={sampleDish.imageUrl || '/images/salmon-bowl.jpg'} 
                 alt="Demonstration of PlateVision AI scanning salmon fillet with detected nutritional macro breakdown"
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/icons/icon-512x512.png';
-                  e.currentTarget.className = 'w-full h-80 object-contain p-8 bg-[#1a1d24]';
-                }}
                 className="w-full h-80 object-cover"
               />
 
