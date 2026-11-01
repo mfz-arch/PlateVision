@@ -48,8 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0"
           >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden border border-[#b6ff2e]/40 flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(182,255,46,0.25)] bg-[#14171d]">
-              <img src="/logo.svg" alt="PlateVision Logo" className="w-full h-full object-cover p-1" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden border border-white/20 flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-[0_0_15px_rgba(182,255,46,0.25)] bg-white">
+              <img src="/logo.svg" alt="PlateVision Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="flex items-center gap-1">

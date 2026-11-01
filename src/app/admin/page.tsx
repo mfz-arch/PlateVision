@@ -72,8 +72,8 @@ export default function AdminPage() {
       <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#14171d]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group" aria-label="PlateVision home">
-            <span className="w-9 h-9 rounded-xl overflow-hidden border border-[#b6ff2e]/40 flex items-center justify-center bg-[#14171d]">
-              <img src="/logo.svg" alt="PlateVision Logo" className="w-full h-full object-cover p-1" />
+            <span className="w-9 h-9 rounded-xl overflow-hidden border border-white/20 flex items-center justify-center bg-white shadow-md">
+              <img src="/logo.svg" alt="PlateVision Logo" className="w-full h-full object-cover" />
             </span>
             <span className="text-base font-extrabold tracking-wider">
               PLATE<span className="text-[#b6ff2e]">VISION</span>
