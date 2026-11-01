@@ -215,6 +215,7 @@ export default function Home() {
             <Link href="/cookies" className="hover:text-[#b6ff2e] transition-colors">Cookie Policy</Link>
             <Link href="/accessibility" className="hover:text-[#b6ff2e] transition-colors">Accessibility Statement</Link>
             <Link href="/terms#dmca" className="hover:text-[#b6ff2e] transition-colors">DMCA / Copyright</Link>
+            <Link href="/admin" className="text-[#b6ff2e] hover:underline font-bold">Admin Portal</Link>
             <button
               type="button"
               onClick={() => {

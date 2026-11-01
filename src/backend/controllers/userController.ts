@@ -148,13 +148,17 @@ export async function loginUser(data: { email?: string; password?: string }) {
     try {
       foundUser = await User.findOne({ email: normalizedEmail });
       if (foundUser) foundUser = foundUser.toObject();
-    } catch (err) {
+    } catch (err: any) {
       console.warn('[Backend] DB find failed during login, checking fallback store:', err);
     }
   }
 
   if (!foundUser) {
     foundUser = fallbackUserMap.get(normalizedEmail);
+  }
+
+  if (!isDbConnected && !foundUser) {
+    throw new Error('Database connection unavailable. Please ensure MongoDB Atlas Network Access allows 0.0.0.0/0.');
   }
 
   if (!foundUser || !foundUser.password) {

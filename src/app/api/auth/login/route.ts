@@ -16,10 +16,11 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (error: any) {
     console.error('[API /api/auth/login Error]:', error?.message || error);
-    // Generic message — don't reveal whether the email exists
+    const msg = error?.message || 'Incorrect email or password';
+    const isDb = msg.toLowerCase().includes('database') || msg.toLowerCase().includes('mongo');
     return NextResponse.json(
-      { success: false, error: 'Incorrect email or password' },
-      { status: 401 }
+      { success: false, error: isDb ? msg : 'Incorrect email or password' },
+      { status: isDb ? 503 : 401 }
     );
   }
 }

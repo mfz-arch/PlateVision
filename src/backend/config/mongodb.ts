@@ -23,13 +23,15 @@ export async function connectToDatabase() {
 
   const mongodbUri = process.env.MONGODB_URI?.trim() || fallbackUri;
 
-  if (cached.conn) {
+  if (cached.conn && cached.conn.connection.readyState === 1) {
     return cached.conn;
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 6000,
+      connectTimeoutMS: 8000,
     };
 
     cached.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
@@ -42,6 +44,7 @@ export async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    cached.conn = null;
     throw e;
   }
 

@@ -205,8 +205,8 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
         {/* Link to Registration Modal */}
         {onSwitchToRegister && (
-          <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.08)] text-center">
-            <p className="text-xs text-[#9ea3b0] mb-2">{t('noAccountPrompt')}</p>
+          <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.08)] text-center space-y-2">
+            <p className="text-xs text-[#9ea3b0]">{t('noAccountPrompt')}</p>
             <button
               onClick={() => {
                 onClose();
@@ -217,6 +217,14 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               <UserPlus className="w-4 h-4" aria-hidden="true" />
               <span>{t('createAccountLink')}</span>
             </button>
+            <div className="pt-2">
+              <a
+                href="/admin"
+                className="text-[11px] text-[#9ea3b0] hover:text-[#b6ff2e] underline transition-colors"
+              >
+                Administrator? Open Admin Portal &rarr;
+              </a>
+            </div>
           </div>
         )}
 
