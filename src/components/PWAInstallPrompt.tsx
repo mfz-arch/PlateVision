@@ -27,11 +27,17 @@ export const PWAInstallPrompt: React.FC = () => {
       });
     }
 
-    // Check if already running as installed standalone app
+    // Check if already running as installed standalone app or was already installed
     const checkStandalone = 
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+      (window.navigator as any).standalone === true ||
+      localStorage.getItem('platevision_pwa_installed') === 'true';
     setIsStandalone(checkStandalone);
+
+    if (checkStandalone) {
+      setIsDismissed(true);
+      return;
+    }
 
     // Detect iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -43,6 +49,14 @@ export const PWAInstallPrompt: React.FC = () => {
     if (sessionDismissed) {
       setIsDismissed(true);
     }
+
+    // Official browser event fired when app is installed
+    const handleAppInstalled = () => {
+      localStorage.setItem('platevision_pwa_installed', 'true');
+      setIsDismissed(true);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     // Listen for manual trigger from Dashboard button
     const handleOpenInstall = () => {
@@ -60,6 +74,7 @@ export const PWAInstallPrompt: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
+      window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('platevision-open-install', handleOpenInstall);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
@@ -72,6 +87,7 @@ export const PWAInstallPrompt: React.FC = () => {
         const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult.outcome === 'accepted') {
           console.log('[PWA] User accepted the install prompt');
+          localStorage.setItem('platevision_pwa_installed', 'true');
           setDeferredPrompt(null);
           setIsDismissed(true);
         }
