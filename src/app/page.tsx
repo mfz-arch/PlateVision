@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../components/Navbar';
 import { LandingHero } from '../components/LandingHero';
@@ -11,7 +11,6 @@ import { ScannerZone } from '../components/ScannerZone';
 import { AccountDataControls } from '../components/AccountDataControls';
 import { AdminDashboard } from '../components/AdminDashboard';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
-import { SplashScreen } from '../components/SplashScreen';
 import { UserProfile } from '../types/plateVision';
 import { toLocalDateStr } from '../lib/date';
 
@@ -20,7 +19,6 @@ export default function Home() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isAppMode, setIsAppMode] = useState(false);
 
   // Day selected on the dashboard calendar — the "+" scanner logs meals to this day
   const [scanDateStr, setScanDateStr] = useState<string>(() => toLocalDateStr());
@@ -29,29 +27,9 @@ export default function Home() {
   // User Profile state (null = not signed in)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // Detect PWA / standalone installed App vs Website
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true ||
-        window.location.search.includes('source=pwa') ||
-        window.location.search.includes('mode=app') ||
-        document.referrer.includes('android-app://');
-
-      if (isStandalone) {
-        localStorage.setItem('platevision_pwa_mode', 'true');
-        setIsAppMode(true);
-        setActiveTab('dashboard');
-      } else if (localStorage.getItem('platevision_pwa_mode') === 'true') {
-        setIsAppMode(true);
-        setActiveTab('dashboard');
-      }
-    }
-  }, []);
-
-  // Restore session
-  useEffect(() => {
+  // Restore the session. Identity is verified server-side via the HttpOnly cookie;
+  // localStorage only caches the profile for a faster first paint.
+  React.useEffect(() => {
     async function loadUser() {
       try {
         const storedJson = localStorage.getItem('platevision_user');
@@ -65,12 +43,7 @@ export default function Home() {
         if (res.status === 401) {
           localStorage.removeItem('platevision_user');
           setUserProfile(null);
-          // If not in App mode, go to home landing
-          if (!localStorage.getItem('platevision_pwa_mode')) {
-            setActiveTab('home');
-          } else {
-            setActiveTab('dashboard');
-          }
+          setActiveTab('home');
           return;
         }
         const data = await res.json();
@@ -103,17 +76,13 @@ export default function Home() {
   const handleSignOut = useCallback(async () => {
     localStorage.removeItem('platevision_user');
     setUserProfile(null);
-    if (!isAppMode) {
-      setActiveTab('home');
-    } else {
-      setActiveTab('dashboard');
-    }
+    setActiveTab('home');
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
-  }, [isAppMode]);
+  }, []);
 
   const handleSelectedDateChange = useCallback((dateStr: string) => {
     setScanDateStr(dateStr);
@@ -122,10 +91,7 @@ export default function Home() {
   return (
     <main id="main-content" className="min-h-screen bg-[#14171d] text-white flex flex-col selection:bg-[#b6ff2e] selection:text-[#14171d]">
       
-      {/* Welcome Splash Screen */}
-      <SplashScreen />
-
-      {/* Top Header (Adapts automatically between App Mode and Website Mode) */}
+      {/* Top Fixed Header */}
       <Navbar
         onOpenSignIn={() => setIsSignInOpen(true)}
         onOpenRegister={() => setIsRegisterOpen(true)}
@@ -142,14 +108,13 @@ export default function Home() {
         hasProfile={!!userProfile}
         userName={userProfile?.name}
         userRole={userProfile?.role}
-        isAppMode={isAppMode}
       />
 
       {/* Main Body Content */}
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* VIEW 1: HOME LANDING PAGE (Website only) */}
-        {activeTab === 'home' && !isAppMode && (
+        {/* VIEW 1: HOME LANDING PAGE */}
+        {activeTab === 'home' && (
           <LandingHero
             onStartAssessment={() => setIsRegisterOpen(true)}
             onOpenScanner={() => {
@@ -164,7 +129,7 @@ export default function Home() {
           />
         )}
 
-        {/* VIEW 2: DASHBOARD (Active in App Mode or when selected on Website) */}
+        {/* VIEW 2: DASHBOARD */}
         {activeTab === 'dashboard' && userProfile && (
           <>
             <Dashboard
@@ -175,8 +140,8 @@ export default function Home() {
               onSelectedDateChange={handleSelectedDateChange}
             />
             <AccountDataControls onAccountDeleted={handleSignOut} />
-            {/* PWA Install Suggestion ONLY appears when in dashboard and not already in app mode */}
-            {!isAppMode && <PWAInstallPrompt />}
+            {/* PWA Install Suggestion ONLY appears when user is in their dashboard */}
+            <PWAInstallPrompt />
           </>
         )}
 
@@ -232,51 +197,66 @@ export default function Home() {
         onComplete={handleCompleteOnboarding}
       />
 
-      {/* Scanner Popup Modal (from Dashboard "+") */}
+      {/* Scanner Popup Modal */}
       {isScannerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-2xl bg-[#14171d] border border-white/15 rounded-3xl p-6 overflow-y-auto max-h-[90vh] shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <span>📸 Scan Food Plate</span>
-                {scanDateStr && (
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
-                    Logging for {scanDateStr}
-                  </span>
-                )}
-              </h3>
-              <button
-                onClick={() => setIsScannerOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            <ScannerZone
-              targetDateStr={scanDateStr}
-              onMealScanned={() => {
-                setMealsRefreshKey((k) => k + 1);
-                setIsScannerOpen(false);
-              }}
-            />
-          </div>
-        </div>
+        <ScannerZone
+          isModal={true}
+          targetDateStr={activeTab === 'dashboard' ? scanDateStr : undefined}
+          onClose={() => setIsScannerOpen(false)}
+          onMealScanned={() => {
+            setIsScannerOpen(false);
+            if (!userProfile) {
+              setIsSignInOpen(true);
+            } else {
+              setMealsRefreshKey((k) => k + 1);
+              setActiveTab('dashboard');
+            }
+          }}
+        />
       )}
 
-      {/* Footer (Website only) */}
-      {!isAppMode && (
-        <footer className="border-t border-white/5 py-8 text-center text-xs text-[#9ea3b0]">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-              <Link href="/accessibility" className="hover:text-white transition-colors">Accessibility</Link>
-              <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
-            </div>
+      {/* Footer with legal links (extra bottom padding on mobile for the tab bar) */}
+      <footer className="mt-16 pt-10 pb-28 md:pb-10 border-t border-[rgba(255,255,255,0.06)] bg-[#14171d]">
+        <div className="max-w-7xl mx-auto px-4 text-xs text-[#9ea3b0] space-y-6">
+          <nav aria-label="Legal & Policies" className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 font-semibold">
+            <Link href="/privacy" className="hover:text-[#b6ff2e] transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-[#b6ff2e] transition-colors">Terms of Service</Link>
+            <Link href="/cookies" className="hover:text-[#b6ff2e] transition-colors">Cookie Policy</Link>
+            <Link href="/accessibility" className="hover:text-[#b6ff2e] transition-colors">Accessibility Statement</Link>
+            <Link href="/terms#dmca" className="hover:text-[#b6ff2e] transition-colors">DMCA / Copyright</Link>
+            <Link href="/admin" className="text-[#b6ff2e] hover:underline font-bold">Admin Portal</Link>
+            <button
+              type="button"
+              onClick={() => {
+                try { localStorage.removeItem('pv_cookie_consent_v1'); } catch {}
+                if (typeof window !== 'undefined') window.dispatchEvent(new Event('pv:open-cookie-settings'));
+              }}
+              className="text-[#9ea3b0] hover:text-[#b6ff2e] transition-colors underline underline-offset-2 cursor-pointer"
+            >
+              Cookie Preferences
+            </button>
+          </nav>
+
+          {/* FTC & Medical Compliance Disclaimers */}
+          <div className="max-w-3xl mx-auto text-center space-y-2 text-[11px] leading-relaxed text-[#9ea3b0]">
+            <p>
+              <strong className="text-white">Health &amp; Medical Disclaimer:</strong> PlateVision AI provides automated nutrition{' '}
+              <strong className="text-white">estimates</strong> for wellness journaling and general informational purposes only. It is not
+              a medical device, does not provide medical or dietary diagnosis/treatment, and should never replace qualified professional advice.
+              Always consult a physician or registered dietitian before changing your diet or fitness routine.
+            </p>
+            <p className="text-[10px] text-[#838896]">
+              All calculations rely on standard nutritional reference equations (Mifflin-St Jeor). Individual results vary.
+              Sample food photography licensed under Unsplash License. User interface icons provided under ISC License (Lucide).
+            </p>
           </div>
-        </footer>
-      )}
+
+          <div className="text-center space-y-1">
+            <p className="font-semibold text-white">© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
+            <p className="text-[11px]">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Google Gemini.</p>
+          </div>
+        </div>
+      </footer>
 
     </main>
   );
