@@ -5,10 +5,10 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'PlateVision AI — Smart Nutrition & Macro Scanner',
     short_name: 'PlateVision',
     description: 'Instant AI food scanner. Calculate calories, protein, and macros from a photo in seconds.',
-    start_url: '/',
+    start_url: '/app',
     display: 'standalone',
-    background_color: '#14171d',
-    theme_color: '#14171d',
+    background_color: '#FFFFFF',
+    theme_color: '#FFFFFF',
     orientation: 'portrait',
     categories: ['health', 'fitness', 'lifestyle', 'food'],
     icons: [
@@ -40,13 +40,13 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: 'Scan Meal',
-        url: '/?tab=scanner',
+        url: '/app',
         description: 'Open AI scanner directly',
         icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
       },
       {
         name: 'Nutrition Dashboard',
-        url: '/?tab=dashboard',
+        url: '/app',
         description: 'View daily calorie and macro journal',
         icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
       }
