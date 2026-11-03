@@ -37,6 +37,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   const [isNutritionReportOpen, setIsNutritionReportOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [dismissGlp1, setDismissGlp1] = useState(false);
 
   // Selected meal category for scanning (auto-detected by time of day)
   const getAutoMealCategory = () => {
@@ -395,6 +396,32 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
           </div>
         </section>
 
+        {/* GLP-1 DIARY CARD (Screenshot 9) */}
+        {!dismissGlp1 && (
+          <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3">
+            <div>
+              <h4 className="text-sm font-black text-[#14171d]">GLP-1 diary</h4>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                If you&apos;ve been prescribed Ozempic, Mounjaro or a similar medication, log your shots and how you feel alongside your meals.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setDismissGlp1(true)}
+                className="flex-1 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-[#14171d] font-bold text-xs transition-colors"
+              >
+                Not now
+              </button>
+              <button
+                onClick={() => alert('GLP-1 diary enabled for your daily logs!')}
+                className="flex-1 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-[#14171d] font-bold text-xs transition-colors"
+              >
+                Try it
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* LOG MEAL BY CATEGORY SLOTS */}
         <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
           <div className="grid grid-cols-4 gap-2 text-center">
@@ -446,9 +473,9 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             </div>
           ) : mealsForDate.length === 0 ? (
             <div className="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-sm space-y-2">
-              <p className="text-base font-bold text-gray-800">No meals yet!</p>
-              <p className="text-xs text-gray-500 max-w-xs mx-auto">
-                Grab something tasty, tap the <strong>+</strong> button below to scan your plate in 2 seconds!
+              <p className="text-base font-extrabold text-[#14171d]">No meals yet!</p>
+              <p className="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
+                Grab something tasty, log it here, and check out our Instagram <strong>@platevision.ai</strong>!
               </p>
             </div>
           ) : (
@@ -668,56 +695,103 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* STREAK MODAL (Screenshot 48)                                              */}
+      {/* STREAK MODAL (Screenshot 7)                                               */}
       {/* ========================================================================= */}
       {isStreakModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 text-center space-y-5 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-[#FAFAFA] rounded-3xl p-6 text-center space-y-4 shadow-2xl relative">
             <button
               onClick={() => setIsStreakModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 stroke-[2.5]" />
             </button>
 
-            <div className="w-16 h-16 rounded-full bg-orange-50 mx-auto flex items-center justify-center">
-              <Flame className="w-9 h-9 text-orange-500 fill-orange-500 animate-pulse" />
+            {/* Big Metallic Flame */}
+            <div className="pt-2">
+              <div className="w-20 h-20 mx-auto flex items-center justify-center text-gray-300">
+                <Flame className="w-16 h-16 fill-gray-300 text-gray-400 drop-shadow-sm" />
+              </div>
+              <h2 className="text-4xl font-black text-[#14171d] mt-1">0</h2>
+              <p className="text-sm font-extrabold text-[#14171d]">days streak</p>
             </div>
 
-            <div>
-              <h2 className="text-4xl font-black text-[#14171d]">0</h2>
-              <p className="text-base font-extrabold text-gray-700">days streak</p>
-            </div>
-
-            {/* Weekdays Row */}
-            <div className="flex items-center justify-center gap-2 pt-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
-                <div key={d} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-bold text-gray-400">{d}</span>
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                    i === 1 ? 'border-orange-500 bg-orange-500 text-white font-bold text-xs' : 'border-gray-200 bg-gray-50'
-                  }`}>
+            {/* Weekdays Row Mon-Sun */}
+            <div className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-2 px-1">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
+                  <span key={d} className={d === 'Tue' ? 'text-black font-extrabold' : ''}>{d}</span>
+                ))}
+              </div>
+              <div className="flex items-center justify-between px-1">
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                      i === 1 ? 'bg-black text-white font-black text-xs' : 'bg-gray-100 text-transparent'
+                    }`}
+                  >
                     {i === 1 ? '✓' : ''}
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Twin cards: Nov 3 / Streak started & 0% / Better than 0% PlateVision users */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+                <p className="text-sm font-black text-[#14171d]">
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Streak started</p>
+              </div>
+              <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+                <p className="text-sm font-black text-[#84cc16]">0%</p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Better than 0% PlateVision users</p>
+              </div>
+            </div>
+
+            {/* Milestone Card */}
+            <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-xs font-black text-gray-700">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Flame className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
+                  </div>
+                  <span className="text-xs">0</span>
                 </div>
-              ))}
+                <div className="text-center">
+                  <p className="text-[11px] font-black text-[#14171d]">3 more days</p>
+                  <p className="text-[9px] font-bold text-gray-400">to next milestone</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400">3</span>
+                  <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
+                    <Flame className="w-3.5 h-3.5 fill-gray-400 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-[#b6ff2e] h-full rounded-full w-[15%]" />
+              </div>
             </div>
 
             {/* Streak Savers */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center justify-between">
+            <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm flex items-center justify-between">
               <div className="text-left">
-                <p className="text-xs font-black text-gray-800">Streak saver x2</p>
-                <p className="text-[10px] text-gray-400">Automatically applies if you miss a day</p>
+                <p className="text-xs font-black text-[#14171d]">Streak saver <span className="text-[#84cc16]">×2</span></p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Automatically applies if you miss a day</p>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-lg">🛡️</span>
-                <span className="text-lg">🛡️</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-6 h-6 rounded-full bg-lime-100 text-lime-700 flex items-center justify-center text-xs">🛡️</span>
+                <span className="w-6 h-6 rounded-full bg-lime-100 text-lime-700 flex items-center justify-center text-xs">🛡️</span>
               </div>
             </div>
 
+            {/* Button */}
             <button
               onClick={() => setIsStreakModalOpen(false)}
-              className="w-full py-3.5 rounded-2xl bg-[#14171d] text-white font-black text-sm active:scale-95 transition-all shadow-md"
+              className="w-full py-4 rounded-2xl bg-[#14171d] text-white font-black text-sm active:scale-98 transition-all shadow-md"
             >
               Keep it going
             </button>
@@ -780,62 +854,141 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* PROFILE & SETTINGS MODAL (Screenshots 46, 47, 50)                          */}
+      {/* PROFILE & SETTINGS MODAL (Screenshots 5 & 6)                              */}
       {/* ========================================================================= */}
       {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#F8F9FA] overflow-y-auto">
-          <div className="max-w-md mx-auto p-4 space-y-5 pb-16">
+        <div className="fixed inset-0 z-50 bg-[#F7F7F8] overflow-y-auto">
+          <div className="max-w-md mx-auto p-4 space-y-4 pb-16">
             
             {/* Top Bar */}
             <div className="flex items-center justify-between py-2">
               <button 
                 onClick={() => setIsProfileModalOpen(false)} 
-                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 active:scale-95"
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 active:scale-95 shadow-sm"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h2 className="text-lg font-black text-gray-900">Profile & Settings</h2>
+              <h2 className="text-base font-extrabold text-[#14171d]">Profile</h2>
               <div className="w-10" />
             </div>
 
-            {/* User Biometrics Summary Card */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm divide-y divide-gray-100">
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Your goal</span>
-                <span className="text-xs font-black text-gray-900 capitalize">{profile.goal || 'Gain weight'}</span>
+            {/* Group 1: Notifications & Units */}
+            <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+              <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                <div>
+                  <p className="text-xs font-black text-[#14171d]">Notifications</p>
+                  <p className="text-[10px] font-semibold text-gray-400">Manage meal reminders</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
               </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Goal weight</span>
-                <span className="text-xs font-black text-gray-900">{profile.targetWeightKg || 65} kg</span>
-              </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Current weight</span>
-                <span className="text-xs font-black text-gray-900">{currentWeight} kg</span>
-              </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Gender</span>
-                <span className="text-xs font-black text-gray-900 capitalize">{profile.gender || 'Male'}</span>
-              </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Age</span>
-                <span className="text-xs font-black text-gray-900">{profile.age || 22}</span>
-              </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">Height</span>
-                <span className="text-xs font-black text-gray-900">{profile.heightCm || 175} cm</span>
+              <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                <span className="text-xs font-black text-[#14171d]">Measurement Units</span>
+                <div className="flex items-center gap-1 text-gray-400">
+                  <span className="text-xs font-semibold text-gray-500">metric</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
             </div>
 
-            {/* Daily Goals Section */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm divide-y divide-gray-100">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Goals</h3>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700">Daily Water Goal</span>
-                <span className="text-xs font-black text-gray-900">2,000 ml</span>
+            {/* Section: Goals */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">Goals</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Daily Water Goal</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">2000 ml</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Daily Steps Goal</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">10,000</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Health Connect</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">Connected</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
-              <div className="py-2.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700">Daily Steps Goal</span>
-                <span className="text-xs font-black text-gray-900">8,000</span>
+            </div>
+
+            {/* Section: PlateVision Pro */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">PlateVision Pro</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+                <div className="py-1 flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-xs font-black text-[#14171d]">Choose a plan</p>
+                    <p className="text-[10px] font-semibold text-gray-400">Monthly or yearly</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: About us */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">About us</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Our Instagram</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="https://tiktok.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Our TikTok</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Section: Support */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">Support</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <button 
+                  onClick={() => alert('Subscription status checked.')}
+                  className="w-full py-2.5 flex items-center justify-between text-xs font-bold text-gray-800 text-left"
+                >
+                  <span>Restore subscription</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+                <a 
+                  href="mailto:contact@platevision.ai"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Support</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="/terms"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Terms of Use</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="/privacy"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Privacy Policy</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
               </div>
             </div>
 
@@ -863,12 +1016,16 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                   onSignOut();
                 }
               }}
-              className="w-full py-4 rounded-3xl bg-rose-50 text-rose-600 font-black text-xs hover:bg-rose-100 active:scale-95 transition-all border border-rose-100"
+              className="w-full py-3.5 rounded-3xl bg-rose-50 text-rose-600 font-black text-xs hover:bg-rose-100 active:scale-95 transition-all border border-rose-100"
             >
               Sign Out
             </button>
 
-            <p className="text-[10px] text-center text-gray-400">PlateVision AI • Version 1.0.0</p>
+            {/* Version footer */}
+            <p className="text-center text-[10px] font-semibold text-gray-400 pt-2">
+              version: 1.3.97 (675)
+            </p>
+
           </div>
         </div>
       )}
@@ -923,3 +1080,4 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     </div>
   );
 };
+

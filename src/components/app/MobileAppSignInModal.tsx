@@ -142,3 +142,4 @@ export const MobileAppSignInModal: React.FC<MobileAppSignInModalProps> = ({
     </div>
   );
 };
+

@@ -17,7 +17,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
   onOpenSignIn
 }) => {
   const [step, setStep] = useState<number>(1);
-  const totalSteps = 15;
+  const totalSteps = 18;
 
   // Onboarding Form Data
   const [formData, setFormData] = useState<OnboardingData>({
@@ -40,6 +40,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
   const [currentProgressState, setCurrentProgressState] = useState<string>('Just getting started');
   const [secondaryMotivations, setSecondaryMotivations] = useState<string[]>(['Have more energy every day']);
   const [specialOccasion, setSpecialOccasion] = useState<string>('Sports competition');
+  const [hasChildren, setHasChildren] = useState<boolean | null>(null);
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
   const [feetInput, setFeetInput] = useState<number>(5);
   const [inchesInput, setInchesInput] = useState<number>(9);
@@ -72,9 +73,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
   // Handle next / prev step
   const handleNext = () => {
     setAuthError(null);
-    if (step === 12) {
+    if (step === 14) {
       // Run AI calculation loader
-      setStep(13);
+      setStep(15);
       runLoader();
     } else {
       setStep((prev) => Math.min(totalSteps, prev + 1));
@@ -92,7 +93,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
       setCalcPercent((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setStep(14), 600);
+          setTimeout(() => setStep(16), 600);
           return 100;
         }
         return prev + 15;
@@ -513,9 +514,95 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 8: ACTIVITY LEVEL (Screenshot 12)                        */}
+        {/* STEP 8: DO YOU HAVE CHILDREN? (Screenshot 2)                   */}
         {/* ============================================================== */}
         {step === 8 && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div>
+              <h2 className="text-2xl font-black text-[#14171d]">Do you have children?</h2>
+              <p className="text-xs text-gray-500 mt-1">Studies show parents often put their own nutrition last</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setHasChildren(true);
+                  handleNext();
+                }}
+                className={`py-8 rounded-3xl text-center font-black text-base transition-all border shadow-sm ${
+                  hasChildren === true
+                    ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
+                    : 'bg-white border-gray-100 hover:border-gray-300 text-gray-900'
+                }`}
+              >
+                Yes
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHasChildren(false);
+                  handleNext();
+                }}
+                className={`py-8 rounded-3xl text-center font-black text-base transition-all border shadow-sm ${
+                  hasChildren === false
+                    ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
+                    : 'bg-white border-gray-100 hover:border-gray-300 text-gray-900'
+                }`}
+              >
+                No
+              </button>
+            </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full mt-8 py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* STEP 9: THANK YOU FOR TRUSTING US (Screenshot 3)               */}
+        {/* ============================================================== */}
+        {step === 9 && (
+          <div className="space-y-6 text-center animate-in fade-in duration-300 pt-4">
+            <div className="w-16 h-16 rounded-full bg-[#b6ff2e]/20 mx-auto flex items-center justify-center">
+              <Heart className="w-8 h-8 fill-[#84cc16] text-[#84cc16]" />
+            </div>
+
+            <div className="space-y-1">
+              <h2 className="text-2xl font-black text-[#14171d]">Thank you for trusting us</h2>
+              <p className="text-xs text-gray-500">Now let&apos;s personalize PlateVision for you</p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-2 text-center max-w-sm mx-auto">
+              <div className="w-10 h-10 rounded-full bg-gray-100 mx-auto flex items-center justify-center text-gray-700 mb-2">
+                <Lock className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <h4 className="text-sm font-black text-[#14171d]">Your privacy and security matter to us</h4>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                We promise to always keep your personal information private and secure
+              </p>
+            </div>
+
+            <div className="pt-8">
+              <button
+                onClick={handleNext}
+                className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* STEP 10: ACTIVITY LEVEL (Screenshot 12)                        */}
+        {/* ============================================================== */}
+        {step === 10 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">How active are you?</h2>
@@ -550,9 +637,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 9: GENDER (Screenshot 16)                                */}
+        {/* STEP 11: GENDER (Screenshot 16)                                */}
         {/* ============================================================== */}
-        {step === 9 && (
+        {step === 11 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Choose your gender</h2>
@@ -581,9 +668,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 10: AGE, HEIGHT, WEIGHT (Screenshots 15, 17, 18)          */}
+        {/* STEP 12: AGE, HEIGHT, WEIGHT (Screenshots 15, 17, 18)          */}
         {/* ============================================================== */}
-        {step === 10 && (
+        {step === 12 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Your body measurements</h2>
@@ -687,47 +774,65 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 11: GOAL WEIGHT (Screenshots 19, 22, 25)                  */}
+        {/* STEP 13: SET YOUR GOAL WEIGHT (Screenshot 1)                   */}
         {/* ============================================================== */}
-        {step === 11 && (
+        {step === 13 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Set your goal weight</h2>
               <p className="text-xs text-gray-500 mt-1">This will help us customize your plan to reach it.</p>
             </div>
 
-            <div className="bg-gray-50 rounded-3xl p-6 text-center border border-gray-200 space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <input
-                  type="number"
-                  step="0.5"
-                  value={formData.targetWeightKg}
-                  onChange={(e) => setFormData({ ...formData, targetWeightKg: parseFloat(e.target.value) || 65 })}
-                  className="w-32 text-4xl font-black text-center text-[#14171d] bg-transparent border-b-2 border-[#84cc16] focus:outline-none"
-                />
-                <span className="text-lg font-black text-gray-500">kg</span>
-              </div>
+            {/* Vertical Wheel / Weight Picker (Screenshot 1) */}
+            <div className="py-2 flex flex-col items-center justify-center space-y-1.5 select-none">
+              {[-3, -2, -1, 0, 1, 2, 3].map((offset) => {
+                const val = Math.round(formData.targetWeightKg + offset);
+                const isSelected = offset === 0;
+                return (
+                  <button
+                    key={offset}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, targetWeightKg: val })}
+                    className={`transition-all duration-200 text-center ${
+                      isSelected
+                        ? 'w-4/5 py-3 rounded-2xl bg-gray-100 text-[#14171d] font-black text-xl shadow-sm border border-gray-200'
+                        : Math.abs(offset) === 1
+                        ? 'text-gray-400 font-bold text-sm hover:text-gray-700 py-1'
+                        : Math.abs(offset) === 2
+                        ? 'text-gray-300 font-semibold text-xs py-0.5'
+                        : 'text-gray-200 font-medium text-[10px] py-0.5'
+                    }`}
+                  >
+                    {val} kg
+                  </button>
+                );
+              })}
+            </div>
 
-              {/* Dynamic Badge Feedback */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-xs font-black text-gray-800">
-                    {formData.goal === 'lose' ? 'Weight loss' : 'Weight change'}: {weightDiffPercent}%
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    {goalBadge === 'Realistic' && 'A safe and achievable goal with noticeable benefits.'}
-                    {goalBadge === 'Ambitious' && 'Requires consistent effort and works best with guidance.'}
-                    {goalBadge === 'Challenging' && 'A demanding target recommended with steady pacing.'}
-                  </p>
-                </div>
+            {/* Weight difference & Badge card (Screenshot 1) */}
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-black text-[#14171d]">
+                  {formData.targetWeightKg >= formData.currentWeightKg ? 'Weight gain' : 'Weight loss'}:{' '}
+                  <span className="text-[#fe7258]">{weightDiffPercent}%</span>
+                </p>
                 <span className={`px-3 py-1 rounded-full text-xs font-black ${
-                  goalBadge === 'Realistic' ? 'bg-[#b6ff2e]/30 text-emerald-800' :
-                  goalBadge === 'Ambitious' ? 'bg-amber-100 text-amber-800' :
-                  'bg-rose-100 text-rose-800'
+                  goalBadge === 'Realistic' 
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                    : goalBadge === 'Ambitious' 
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                    : 'bg-[#ffefe8] text-[#fe7258] border border-[#ffded4]'
                 }`}>
                   {goalBadge}
                 </span>
               </div>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {goalBadge === 'Challenging' 
+                  ? 'A demanding goal recommended with steady pacing and proper hydration.' 
+                  : goalBadge === 'Ambitious' 
+                  ? 'Requires consistent effort and works best with guided macro tracking.' 
+                  : 'A safe and achievable goal with high probability of lasting success.'}
+              </p>
             </div>
 
             <button
@@ -740,9 +845,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 12: BASELINE BMI GAUGE (Screenshot 20)                    */}
+        {/* STEP 14: BASELINE BMI GAUGE (Screenshot 20)                    */}
         {/* ============================================================== */}
-        {step === 12 && (
+        {step === 14 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Here is your baseline</h2>
@@ -774,11 +879,11 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 text-left">
-                <p className="text-xs font-black text-gray-900">Your BMI is computed</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">
-                  Great baseline! PlateVision AI will personalize your macronutrient distribution to reach your target sustainably.
-                </p>
+              {/* Baseline advice summary */}
+              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-xs font-semibold text-gray-600 leading-relaxed">
+                {parseFloat(bmi) < 18.5 && 'Your baseline BMI suggests a light weight. A calorie surplus with ample protein will fuel healthy muscle growth.'}
+                {parseFloat(bmi) >= 18.5 && parseFloat(bmi) < 25 && 'Your baseline BMI is within the healthy zone. Focus on balanced macros to fine-tune your body composition.'}
+                {parseFloat(bmi) >= 25 && 'Your baseline indicates an opportunity for progressive fat loss with sustained daily calorie management.'}
               </div>
             </div>
 
@@ -792,9 +897,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 13: ANIMATED AI PLAN LOADER (Screenshots 37 & 38)         */}
+        {/* STEP 15: ANIMATED AI PLAN LOADER (Screenshots 37 & 38)         */}
         {/* ============================================================== */}
-        {step === 13 && (
+        {step === 15 && (
           <div className="text-center space-y-6 animate-in fade-in duration-300">
             {/* Animated Circular Progress */}
             <div className="w-36 h-36 rounded-full border-8 border-gray-100 mx-auto relative flex items-center justify-center">
@@ -835,9 +940,96 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 14: ROADMAP TIMELINE (Screenshot 39)                      */}
+        {/* STEP 16: NOT ALL MASS IS EQUAL & TARGETS (Screenshot 4)         */}
         {/* ============================================================== */}
-        {step === 14 && (
+        {step === 16 && (
+          <div className="space-y-5 animate-in fade-in duration-300 pb-4">
+            
+            {/* Top insight card (Screenshot 4) */}
+            <div className="bg-[#f4f7f4] rounded-3xl p-5 border border-gray-200/70 space-y-3">
+              <h3 className="text-base font-black text-[#14171d]">Not all mass is equal</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                On a surplus, you can just pack on fat. Or you can get those same calories from protein and complex carbs and build muscle, not belly fat.
+              </p>
+              <div className="bg-white rounded-2xl p-3 border border-gray-100 flex items-center gap-3">
+                <span className="text-2xl font-black text-[#65a30d]">2×</span>
+                <span className="text-xs font-bold text-gray-700">
+                  more muscle instead of fat with enough protein and strength training
+                </span>
+              </div>
+            </div>
+
+            {/* Target numbers heading (Screenshot 4) */}
+            <div>
+              <h3 className="text-base font-black text-[#14171d]">What else we calculated</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Six more numbers, tuned to your body and goals.</p>
+            </div>
+
+            {/* Target Cards */}
+            <div className="space-y-2.5">
+              {[
+                {
+                  title: 'Protein target',
+                  sub: 'Builds muscle and speeds recovery',
+                  val: `${Math.round(formData.currentWeightKg * 1.6)} g`,
+                  icon: '🍴'
+                },
+                {
+                  title: 'Fat target',
+                  sub: 'Supports hormones and vitamin absorption.',
+                  val: `${Math.round(formData.currentWeightKg * 0.9)} g`,
+                  icon: '💧'
+                },
+                {
+                  title: 'Carbs target',
+                  sub: 'Fuel for growth and training',
+                  val: `${Math.round(formData.currentWeightKg * 4.2)} g`,
+                  icon: '🌾'
+                },
+                {
+                  title: 'Fiber target',
+                  sub: 'Digestion and appetite',
+                  val: '47 g',
+                  icon: '🥗'
+                },
+                {
+                  title: 'Water target',
+                  sub: 'Tuned to your weight and training',
+                  val: `${(formData.currentWeightKg * 0.035).toFixed(1)} L`,
+                  icon: '🥤'
+                }
+              ].map((t) => (
+                <div 
+                  key={t.title}
+                  className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-lime-50 flex items-center justify-center text-lg">
+                      {t.icon}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#14171d]">{t.title}</p>
+                      <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{t.sub}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-black text-[#65a30d]">{t.val}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md mt-4"
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* STEP 17: ROADMAP TIMELINE (Screenshot 39)                      */}
+        {/* ============================================================== */}
+        {step === 17 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Your personal plan</h2>
@@ -895,9 +1087,9 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 15: CREATE ACCOUNT / REGISTER (Final Step)                */}
+        {/* STEP 18: CREATE ACCOUNT / REGISTER (Final Step)                */}
         {/* ============================================================== */}
-        {step === 15 && (
+        {step === 18 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-black text-[#14171d]">Save your plan</h2>
@@ -977,3 +1169,4 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
     </div>
   );
 };
+
