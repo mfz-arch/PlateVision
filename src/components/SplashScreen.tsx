@@ -26,20 +26,20 @@ export const SplashScreen: React.FC = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#14171d] text-white px-6 text-center transition-opacity duration-700 ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white text-[#14171d] px-6 text-center transition-opacity duration-700 ${
         fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      <div className="w-20 h-20 rounded-2xl bg-white p-1 mb-6 shadow-[0_0_35px_rgba(182,255,46,0.35)] flex items-center justify-center">
+      <div className="w-24 h-24 rounded-3xl bg-[#f7fdf0] border-2 border-[#b6ff2e]/40 p-3 mb-6 shadow-[0_8px_30px_rgba(182,255,46,0.2)] flex items-center justify-center">
         <img src="/logo.svg" alt="PlateVision Logo" className="w-full h-full object-contain" />
       </div>
-      <h1 className="text-2xl sm:text-3xl font-extrabold text-[#b6ff2e] mb-2 tracking-wide">
-        Welcome to PLATEVISION AI
+      <h1 className="text-2xl sm:text-3xl font-black text-[#14171d] mb-2 tracking-tight">
+        Welcome to PlateVision
       </h1>
-      <p className="text-sm text-[#9ea3b0] font-medium tracking-wide">
-        Reach or achieve your nutrition goals
+      <p className="text-sm text-gray-500 font-semibold tracking-wide">
+        Achieve your nutrition goals
       </p>
-      <div className="mt-8 w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+      <div className="mt-8 w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div className="w-full h-full bg-[#b6ff2e] animate-pulse" />
       </div>
     </div>

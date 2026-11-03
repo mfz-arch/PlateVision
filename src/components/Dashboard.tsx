@@ -33,6 +33,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [loggedMeals, setLoggedMeals] = useState<ScannedMeal[]>([]);
   const [waterDrankLiters, setWaterDrankLiters] = useState<number>(0);
   const [isLoadingMeals, setIsLoadingMeals] = useState<boolean>(true);
+  const [isAppInstalled, setIsAppInstalled] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkInstalled = () => {
+        const isStandalone = 
+          window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone === true ||
+          localStorage.getItem('platevision_pwa_installed') === 'true';
+        setIsAppInstalled(isStandalone);
+      };
+
+      checkInstalled();
+
+      const handleAppInstalled = () => {
+        localStorage.setItem('platevision_pwa_installed', 'true');
+        setIsAppInstalled(true);
+      };
+
+      const handlePwaUpdate = () => {
+        checkInstalled();
+      };
+
+      window.addEventListener('appinstalled', handleAppInstalled);
+      window.addEventListener('platevision-pwa-updated', handlePwaUpdate);
+
+      return () => {
+        window.removeEventListener('appinstalled', handleAppInstalled);
+        window.removeEventListener('platevision-pwa-updated', handlePwaUpdate);
+      };
+    }
+  }, []);
 
   // Generate 7-day calendar week ending today (local timezone)
   const weekDays = React.useMemo(() => {
@@ -139,16 +171,34 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <span className="text-2xl font-black text-white tracking-tight">PlateVision</span>
           </div>
-          <button
-            onClick={() => {
-              sessionStorage.removeItem('platevision_pwa_dismissed_session');
-              window.dispatchEvent(new CustomEvent('platevision-open-install'));
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/40 text-[#b6ff2e] text-xs font-bold hover:bg-[#b6ff2e]/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(182,255,46,0.15)]"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Install App</span>
-          </button>
+          {!isAppInstalled && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem('platevision_pwa_dismissed_session');
+                  window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/40 text-[#b6ff2e] text-xs font-bold hover:bg-[#b6ff2e]/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(182,255,46,0.15)]"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Install App</span>
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('platevision_pwa_installed', 'true');
+                  setIsAppInstalled(true);
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('platevision-pwa-updated'));
+                  }
+                }}
+                title="Already installed? Hide"
+                aria-label="Hide install button"
+                className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white flex items-center justify-center text-[10px] font-bold transition-all"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Days of Week Row (CalZen style - Interactive Date Selector) */}
@@ -420,16 +470,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
               })}
             </div>
 
-            <button
-              onClick={() => {
-                sessionStorage.removeItem('platevision_pwa_dismissed_session');
-                window.dispatchEvent(new CustomEvent('platevision-open-install'));
-              }}
-              className="flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-[#23262f] border border-[#b6ff2e]/30 text-[#b6ff2e] font-extrabold text-sm hover:bg-[#b6ff2e]/10 transition-all shrink-0"
-            >
-              <Download className="w-4 h-4" />
-              <span>Install App</span>
-            </button>
+            {!isAppInstalled && (
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem('platevision_pwa_dismissed_session');
+                  window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                }}
+                className="flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-[#23262f] border border-[#b6ff2e]/30 text-[#b6ff2e] font-extrabold text-sm hover:bg-[#b6ff2e]/10 transition-all shrink-0"
+              >
+                <Download className="w-4 h-4" />
+                <span>Install App</span>
+              </button>
+            )}
 
             <button
               onClick={onOpenScannerModal}

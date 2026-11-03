@@ -55,6 +55,9 @@ export const PWAInstallPrompt: React.FC = () => {
       localStorage.setItem('platevision_pwa_installed', 'true');
       setIsDismissed(true);
       setDeferredPrompt(null);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('platevision-pwa-updated'));
+      }
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
@@ -80,6 +83,17 @@ export const PWAInstallPrompt: React.FC = () => {
     };
   }, []);
 
+  const markAsInstalled = () => {
+    localStorage.setItem('platevision_pwa_installed', 'true');
+    setIsDismissed(true);
+    setShowIosGuide(false);
+    setShowAndroidGuide(false);
+    setShowDesktopGuide(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('platevision-pwa-updated'));
+    }
+  };
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       try {
@@ -87,9 +101,8 @@ export const PWAInstallPrompt: React.FC = () => {
         const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult.outcome === 'accepted') {
           console.log('[PWA] User accepted the install prompt');
-          localStorage.setItem('platevision_pwa_installed', 'true');
+          markAsInstalled();
           setDeferredPrompt(null);
-          setIsDismissed(true);
         }
       } catch (e) {
         console.warn('Install prompt error:', e);
@@ -104,8 +117,7 @@ export const PWAInstallPrompt: React.FC = () => {
   };
 
   const handleDismiss = () => {
-    setIsDismissed(true);
-    sessionStorage.setItem('platevision_pwa_dismissed_session', 'true');
+    markAsInstalled();
   };
 
   // Don't show if already running inside installed standalone app or dismissed in this session
@@ -196,7 +208,7 @@ export const PWAInstallPrompt: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setShowIosGuide(false)}
+              onClick={markAsInstalled}
               className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
             >
               Got it!
@@ -248,7 +260,7 @@ export const PWAInstallPrompt: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setShowAndroidGuide(false)}
+              onClick={markAsInstalled}
               className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
             >
               Got it!
@@ -291,7 +303,7 @@ export const PWAInstallPrompt: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setShowDesktopGuide(false)}
+              onClick={markAsInstalled}
               className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
             >
               Got it!
