@@ -27,11 +27,10 @@ export const PWAInstallPrompt: React.FC = () => {
       });
     }
 
-    // Check if already running as installed standalone app or was already installed
+    // Check if already running as installed standalone app
     const checkStandalone = 
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      localStorage.getItem('platevision_pwa_installed') === 'true';
+      (window.navigator as any).standalone === true;
     setIsStandalone(checkStandalone);
 
     if (checkStandalone) {

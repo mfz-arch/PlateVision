@@ -18,6 +18,7 @@ interface DashboardProps {
   refreshKey?: number;
   /** Tells the parent which calendar day is selected so new scans are logged to that day */
   onSelectedDateChange?: (dateStr: string) => void;
+  onOpenInstallModal?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -25,7 +26,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onOpenScannerModal,
   onSignOut,
   refreshKey = 0,
-  onSelectedDateChange
+  onSelectedDateChange,
+  onOpenInstallModal
 }) => {
   const { t } = useLanguage();
   const todayStr = toLocalDateStr();
@@ -40,8 +42,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const checkInstalled = () => {
         const isStandalone = 
           window.matchMedia('(display-mode: standalone)').matches ||
-          (window.navigator as any).standalone === true ||
-          localStorage.getItem('platevision_pwa_installed') === 'true';
+          (window.navigator as any).standalone === true;
         setIsAppInstalled(isStandalone);
       };
 
@@ -175,8 +176,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => {
-                  sessionStorage.removeItem('platevision_pwa_dismissed_session');
-                  window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                  if (onOpenInstallModal) {
+                    onOpenInstallModal();
+                  } else {
+                    sessionStorage.removeItem('platevision_pwa_dismissed_session');
+                    window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                  }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/40 text-[#b6ff2e] text-xs font-bold hover:bg-[#b6ff2e]/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(182,255,46,0.15)]"
               >
@@ -185,13 +190,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
               <button
                 onClick={() => {
-                  localStorage.setItem('platevision_pwa_installed', 'true');
                   setIsAppInstalled(true);
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('platevision-pwa-updated'));
-                  }
                 }}
-                title="Already installed? Hide"
+                title="Hide install button"
                 aria-label="Hide install button"
                 className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white flex items-center justify-center text-[10px] font-bold transition-all"
               >
@@ -473,8 +474,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {!isAppInstalled && (
               <button
                 onClick={() => {
-                  sessionStorage.removeItem('platevision_pwa_dismissed_session');
-                  window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                  if (onOpenInstallModal) {
+                    onOpenInstallModal();
+                  } else {
+                    sessionStorage.removeItem('platevision_pwa_dismissed_session');
+                    window.dispatchEvent(new CustomEvent('platevision-open-install'));
+                  }
                 }}
                 className="flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-[#23262f] border border-[#b6ff2e]/30 text-[#b6ff2e] font-extrabold text-sm hover:bg-[#b6ff2e]/10 transition-all shrink-0"
               >

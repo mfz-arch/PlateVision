@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard, ShieldCheck, QrCode } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenRegister: () => void;
   onOpenScanner: () => void;
   onSignOut: () => void;
+  onOpenInstallModal?: () => void;
   activeTab: 'home' | 'dashboard' | 'scanner' | 'macros' | 'admin';
   setActiveTab: (tab: 'home' | 'dashboard' | 'scanner' | 'macros' | 'admin') => void;
   hasProfile: boolean;
@@ -21,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenRegister,
   onOpenScanner,
   onSignOut,
+  onOpenInstallModal,
   activeTab,
   setActiveTab,
   hasProfile,
@@ -120,6 +122,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Action Controls & Language Switcher */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             
+            {/* Get App / QR Code Button */}
+            {onOpenInstallModal && (
+              <button
+                onClick={onOpenInstallModal}
+                title="Télécharger l'App Mobile / Code QR"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#23262f] border border-[#b6ff2e]/40 hover:border-[#b6ff2e] text-[11px] sm:text-xs font-extrabold text-[#b6ff2e] transition-all hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(182,255,46,0.15)]"
+              >
+                <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#b6ff2e]" />
+                <span className="hidden xs:inline">App</span>
+              </button>
+            )}
+
             {/* Language Switcher Button */}
             <button
               onClick={toggleLanguage}

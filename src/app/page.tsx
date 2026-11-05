@@ -11,6 +11,7 @@ import { ScannerZone } from '../components/ScannerZone';
 import { AccountDataControls } from '../components/AccountDataControls';
 import { AdminDashboard } from '../components/AdminDashboard';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
+import { InstallAppModal } from '../components/InstallAppModal';
 import { UserProfile } from '../types/plateVision';
 import { toLocalDateStr } from '../lib/date';
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   // Day selected on the dashboard calendar — the "+" scanner logs meals to this day
   const [scanDateStr, setScanDateStr] = useState<string>(() => toLocalDateStr());
@@ -103,6 +105,7 @@ export default function Home() {
           }
         }}
         onSignOut={handleSignOut}
+        onOpenInstallModal={() => setIsInstallModalOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         hasProfile={!!userProfile}
@@ -138,6 +141,7 @@ export default function Home() {
               onSignOut={handleSignOut}
               refreshKey={mealsRefreshKey}
               onSelectedDateChange={handleSelectedDateChange}
+              onOpenInstallModal={() => setIsInstallModalOpen(true)}
             />
             <AccountDataControls onAccountDeleted={handleSignOut} />
             {/* PWA Install Suggestion ONLY appears when user is in their dashboard */}
@@ -214,6 +218,12 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* QR Code & Mobile Install Modal */}
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+      />
 
       {/* Footer with legal links (extra bottom padding on mobile for the tab bar) */}
       <footer className="mt-16 pt-10 pb-28 md:pb-10 border-t border-[rgba(255,255,255,0.06)] bg-[#14171d]">
