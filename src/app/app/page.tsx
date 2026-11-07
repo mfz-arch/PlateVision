@@ -6,6 +6,7 @@ import { MobileAppDashboard } from '../../components/app/MobileAppDashboard';
 import { MobileAppOnboarding } from '../../components/app/MobileAppOnboarding';
 import { MobileAppSignInModal } from '../../components/app/MobileAppSignInModal';
 import { SplashScreen } from '../../components/SplashScreen';
+import { PWAInstallPrompt } from '../../components/PWAInstallPrompt';
 
 export default function MobileAppPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -68,6 +69,9 @@ export default function MobileAppPage() {
       
       {/* App Splash Screen on first launch */}
       <SplashScreen />
+
+      {/* PWA Floating Install Prompt & Platform Guides */}
+      <PWAInstallPrompt />
 
       {/* Conditional Rendering: Dashboard vs Onboarding */}
       {isLoadingSession ? (

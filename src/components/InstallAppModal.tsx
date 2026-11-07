@@ -9,17 +9,18 @@ interface InstallAppModalProps {
 }
 
 export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'qr' | 'guide'>('qr');
+  const isMobile = typeof window !== 'undefined' && (/iphone|ipad|ipod|android/.test(navigator.userAgent.toLowerCase()) || window.innerWidth < 768);
+  const [activeTab, setActiveTab] = useState<'qr' | 'guide'>(() => isMobile ? 'guide' : 'qr');
   const [isCopied, setIsCopied] = useState(false);
 
   if (!isOpen) return null;
 
   const appUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/app` 
-    : 'https://platevision.app/app';
+    ? `${window.location.origin}/app?install=1` 
+    : 'https://platevision.app/app?install=1';
 
-  // High-resolution crisp QR code URL
-  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=${encodeURIComponent(appUrl)}`;
+  // High-resolution crisp QR code URL pointing directly to /app?install=1
+  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${encodeURIComponent(appUrl)}`;
 
   const handleCopyLink = async () => {
     try {
@@ -113,7 +114,7 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
             </div>
 
             <a
-              href="/app"
+              href="/app?install=1"
               className="w-full py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs flex items-center justify-center gap-2 hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] active:scale-98"
             >
               <span>Ouvrir directement l&apos;application (/app)</span>
@@ -154,10 +155,10 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
             </div>
 
             <a
-              href="/app"
-              className="w-full py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs flex items-center justify-center gap-2 hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] active:scale-98"
+              href="/app?install=1"
+              className="w-full py-4 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs flex items-center justify-center gap-2 hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] active:scale-98"
             >
-              <span>Lancer l&apos;application maintenant</span>
+              <span>Lancer l&apos;application & Installer (/app)</span>
               <ExternalLink className="w-4 h-4" />
             </a>
 

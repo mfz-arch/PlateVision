@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard, ShieldCheck, QrCode } from 'lucide-react';
+import { Camera, LogIn, UserPlus, Globe, LogOut, Home, Plus, LayoutDashboard, ShieldCheck, QrCode, Smartphone } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
@@ -126,11 +126,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onOpenInstallModal && (
               <button
                 onClick={onOpenInstallModal}
-                title="Télécharger l'App Mobile / Code QR"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#23262f] border border-[#b6ff2e]/40 hover:border-[#b6ff2e] text-[11px] sm:text-xs font-extrabold text-[#b6ff2e] transition-all hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(182,255,46,0.15)]"
+                title="Installer l'Application Mobile / Code QR"
+                className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#b6ff2e] text-[#14171d] hover:bg-[#a3f01b] text-[11px] sm:text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(182,255,46,0.3)] shrink-0"
               >
-                <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#b6ff2e]" />
-                <span className="hidden xs:inline">App</span>
+                <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                <span>Installer App</span>
               </button>
             )}
 

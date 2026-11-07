@@ -75,6 +75,17 @@ export const PWAInstallPrompt: React.FC = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
+    // If URL contains ?install=1 (e.g. from scanning QR code or clicking install button), auto-trigger prompt
+    const hasInstallQuery = typeof window !== 'undefined' && 
+      (window.location.search.includes('install=1') || window.location.search.includes('install=true'));
+
+    if (hasInstallQuery && !checkStandalone) {
+      setIsDismissed(false);
+      setTimeout(() => {
+        handleInstallClick();
+      }, 750);
+    }
+
     return () => {
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('platevision-open-install', handleOpenInstall);
@@ -83,12 +94,12 @@ export const PWAInstallPrompt: React.FC = () => {
   }, []);
 
   const markAsInstalled = () => {
-    localStorage.setItem('platevision_pwa_installed', 'true');
     setIsDismissed(true);
     setShowIosGuide(false);
     setShowAndroidGuide(false);
     setShowDesktopGuide(false);
     if (typeof window !== 'undefined') {
+      sessionStorage.setItem('platevision_pwa_dismissed_session', 'true');
       window.dispatchEvent(new CustomEvent('platevision-pwa-updated'));
     }
   };
@@ -116,7 +127,10 @@ export const PWAInstallPrompt: React.FC = () => {
   };
 
   const handleDismiss = () => {
-    markAsInstalled();
+    setIsDismissed(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('platevision_pwa_dismissed_session', 'true');
+    }
   };
 
   // Don't show if already running inside installed standalone app or dismissed in this session
