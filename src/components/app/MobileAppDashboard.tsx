@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../../types/plateVision';
 import { toLocalDateStr } from '../../lib/date';
-import { ScannerZone } from '../ScannerZone';
+import { MobileAppScannerModal } from './MobileAppScannerModal';
+import { MealDetailModal } from './MealDetailModal';
 
 interface MobileAppDashboardProps {
   profile: UserProfile;
@@ -33,12 +34,73 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   // Modals & Bottom Sheets
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [selectedImageForScan, setSelectedImageForScan] = useState<string | null>(null);
+  const [selectedMealForDetail, setSelectedMealForDetail] = useState<ScannedMeal | null>(null);
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isNutritionReportOpen, setIsNutritionReportOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [dismissGlp1, setDismissGlp1] = useState(false);
   const [isStandalone, setIsStandalone] = useState(true);
+
+  // Hidden native file inputs for Camera and Album
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const albumInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to compress camera/album photo before opening the scanner
+  const compressImage = (file: File, maxWidth = 900): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawDataUrl = e.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth || height > maxWidth) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          } catch {
+            resolve(rawDataUrl);
+          }
+        };
+        img.onerror = () => resolve(rawDataUrl);
+        img.src = rawDataUrl;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImagePicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await compressImage(file, 900);
+      if (base64) {
+        setSelectedImageForScan(base64);
+        setIsActionSheetOpen(false);
+        setIsScannerModalOpen(true);
+      }
+    } catch (err) {
+      console.error('Failed to process image file:', err);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -550,7 +612,8 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                 return (
                   <div 
                     key={mealId}
-                    className="bg-white rounded-2xl p-3 border-2 border-slate-200/90 shadow-sm flex items-center gap-3 hover:border-slate-300 transition-all"
+                    onClick={() => setSelectedMealForDetail(meal)}
+                    className="bg-white rounded-2xl p-3 border-2 border-slate-200/90 shadow-sm flex items-center gap-3 hover:border-[#0f172a] transition-all cursor-pointer active:scale-98"
                   >
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 relative">
                       {photo ? (
@@ -578,7 +641,10 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                       </p>
                     </div>
                     <button
-                      onClick={() => handleDeleteMeal(mealId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteMeal(mealId);
+                      }}
                       aria-label="Delete meal"
                       className="p-2 text-slate-300 hover:text-rose-500 active:scale-90 transition-all"
                     >
@@ -636,98 +702,65 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
               })}
             </div>
 
-            {/* List of Actions */}
+            {/* Hidden native file inputs for Camera and Album */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleImagePicked}
+            />
+            <input
+              ref={albumInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImagePicked}
+            />
+
+            {/* List of Actions: Only Camera & Album as requested */}
             <div className="divide-y divide-gray-100 text-sm font-extrabold text-[#14171d]">
               
               {/* 1. Camera */}
               <button
+                type="button"
                 onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsScannerModalOpen(true);
+                  cameraInputRef.current?.click();
                 }}
                 className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <Camera className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-[#0f172a] border border-slate-200">
+                  <Camera className="w-6 h-6 stroke-[2.2]" />
                 </div>
-                <span>Camera</span>
+                <div className="text-left">
+                  <p className="text-sm font-black text-[#0f172a]">Camera</p>
+                  <p className="text-xs font-semibold text-slate-400">Take a photo of your meal directly</p>
+                </div>
               </button>
 
               {/* 2. Album / Gallery */}
               <button
+                type="button"
                 onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsScannerModalOpen(true);
+                  albumInputRef.current?.click();
                 }}
                 className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <ImageIcon className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-[#0f172a] border border-slate-200">
+                  <ImageIcon className="w-6 h-6 stroke-[2.2]" />
                 </div>
-                <span>Album</span>
-              </button>
-
-              {/* 3. Text or Voice */}
-              <button
-                onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsScannerModalOpen(true);
-                }}
-                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <Mic className="w-5 h-5" />
+                <div className="text-left">
+                  <p className="text-sm font-black text-[#0f172a]">Album</p>
+                  <p className="text-xs font-semibold text-slate-400">Choose meal picture from gallery</p>
                 </div>
-                <span>Text or voice</span>
-              </button>
-
-              {/* 4. Barcode */}
-              <button
-                onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsScannerModalOpen(true);
-                }}
-                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <Barcode className="w-5 h-5" />
-                </div>
-                <span>Barcode</span>
-              </button>
-
-              {/* 5. Favorites */}
-              <button
-                onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsScannerModalOpen(true);
-                }}
-                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <Heart className="w-5 h-5" />
-                </div>
-                <span>Favorites</span>
-              </button>
-
-              {/* 6. Log Weight */}
-              <button
-                onClick={() => {
-                  setIsActionSheetOpen(false);
-                  setIsWeightModalOpen(true);
-                }}
-                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800">
-                  <Scale className="w-5 h-5" />
-                </div>
-                <span>Log weight</span>
               </button>
 
             </div>
 
             <button
               onClick={() => setIsActionSheetOpen(false)}
-              className="mt-4 w-full py-3 rounded-2xl bg-gray-100 text-gray-700 font-extrabold text-xs hover:bg-gray-200"
+              className="mt-4 w-full py-3.5 rounded-2xl bg-gray-100 text-gray-700 font-extrabold text-xs hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
@@ -736,37 +769,39 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* SCANNER MODAL (PlateVision AI Computer Vision)                            */}
+      {/* BRIGHT MOBILE SCANNER MODAL                                               */}
       {/* ========================================================================= */}
-      {isScannerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-[#14171d] text-white border border-white/10 rounded-3xl p-6 max-h-[92vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-extrabold text-white">📸 Scan Plate</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-[10px]">
-                  {selectedCategory}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsScannerModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <ScannerZone
-              targetDateStr={selectedDateStr}
-              defaultCategory={selectedCategory}
-              onMealScanned={() => {
-                setMealsRefreshKey((k) => k + 1);
-                setIsScannerModalOpen(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
+      <MobileAppScannerModal
+        isOpen={isScannerModalOpen && !!selectedImageForScan}
+        onClose={() => {
+          setIsScannerModalOpen(false);
+          setSelectedImageForScan(null);
+        }}
+        initialImageBase64={selectedImageForScan}
+        category={selectedCategory}
+        targetDateStr={selectedDateStr}
+        onMealSaved={() => {
+          setMealsRefreshKey((k) => k + 1);
+          setIsScannerModalOpen(false);
+          setSelectedImageForScan(null);
+        }}
+        onRetakePhoto={() => {
+          albumInputRef.current?.click();
+        }}
+      />
+
+      {/* ========================================================================= */}
+      {/* MEAL DETAIL MODAL (Opens when clicking any meal card in Today's logs)      */}
+      {/* ========================================================================= */}
+      <MealDetailModal
+        isOpen={selectedMealForDetail !== null}
+        meal={selectedMealForDetail}
+        onClose={() => setSelectedMealForDetail(null)}
+        onDelete={(id) => {
+          handleDeleteMeal(id);
+          setSelectedMealForDetail(null);
+        }}
+      />
 
       {/* ========================================================================= */}
       {/* STREAK MODAL (Screenshot 7)                                               */}

@@ -19,28 +19,31 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
   const [step, setStep] = useState<number>(1);
   const totalSteps = 18;
 
-  // Onboarding Form Data
+  // Onboarding Form Data - starts completely clean without preselection
   const [formData, setFormData] = useState<OnboardingData>({
-    goal: 'gain',
+    goal: '' as any,
     name: 'Athlete',
     email: '',
     password: '',
     age: 22,
-    gender: 'male',
+    gender: '' as any,
     heightCm: 175,
     currentWeightKg: 60,
     targetWeightKg: 64,
-    workoutDaysPerWeek: 4,
+    workoutDaysPerWeek: 0,
     timeframeMonths: 3,
     acceptedTerms: true
   });
 
-  // Secondary selections
-  const [obstacles, setObstacles] = useState<string[]>(['Not enough protein']);
-  const [currentProgressState, setCurrentProgressState] = useState<string>('Just getting started');
-  const [secondaryMotivations, setSecondaryMotivations] = useState<string[]>(['Have more energy every day']);
-  const [specialOccasion, setSpecialOccasion] = useState<string>('Sports competition');
+  // Secondary selections - initialized EMPTY so the user makes their own choices
+  const [selectedGoalKey, setSelectedGoalKey] = useState<string>('');
+  const [obstacles, setObstacles] = useState<string[]>([]);
+  const [currentProgressState, setCurrentProgressState] = useState<string>('');
+  const [secondaryMotivations, setSecondaryMotivations] = useState<string[]>([]);
+  const [specialOccasion, setSpecialOccasion] = useState<string>('');
   const [hasChildren, setHasChildren] = useState<boolean | null>(null);
+  const [selectedActivityDays, setSelectedActivityDays] = useState<number | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female' | ''>('');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
   const [feetInput, setFeetInput] = useState<number>(5);
   const [inchesInput, setInchesInput] = useState<number>(9);
@@ -350,12 +353,15 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 { key: 'gain', label: 'Gain weight' },
                 { key: 'muscle', label: 'Build muscle' }
               ].map((opt) => {
-                const isSelected = formData.goal === (opt.key === 'muscle' ? 'gain' : opt.key);
+                const isSelected = selectedGoalKey === opt.key;
                 return (
                   <button
                     key={opt.key}
                     type="button"
-                    onClick={() => setFormData({ ...formData, goal: (opt.key === 'muscle' ? 'gain' : opt.key) as any })}
+                    onClick={() => {
+                      setSelectedGoalKey(opt.key);
+                      setFormData((prev) => ({ ...prev, goal: (opt.key === 'muscle' ? 'gain' : opt.key) as any }));
+                    }}
                     className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-sm transition-all border-2 ${
                       isSelected
                         ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
@@ -377,7 +383,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm shadow-[0_4px_16px_rgba(182,255,46,0.3)] active:scale-98 transition-all"
+              disabled={!selectedGoalKey}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm shadow-[0_4px_16px_rgba(182,255,46,0.3)] active:scale-98 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -432,7 +439,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={obstacles.length === 0}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -483,7 +491,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={!currentProgressState}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -538,7 +547,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={secondaryMotivations.length === 0}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -594,7 +604,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={!specialOccasion}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -639,7 +650,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full mt-4 py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={hasChildren === null}
+              className="w-full mt-4 py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -698,12 +710,15 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 { title: 'Moderately active', sub: 'Exercise 3-4 times a week', days: 4 },
                 { title: 'Very active', sub: 'Intense exercise 5+ times a week', days: 6 }
               ].map((item) => {
-                const isSelected = formData.workoutDaysPerWeek === item.days;
+                const isSelected = selectedActivityDays === item.days;
                 return (
                   <button
                     key={item.title}
                     type="button"
-                    onClick={() => setFormData({ ...formData, workoutDaysPerWeek: item.days })}
+                    onClick={() => {
+                      setSelectedActivityDays(item.days);
+                      setFormData((prev) => ({ ...prev, workoutDaysPerWeek: item.days }));
+                    }}
                     className={`w-full p-4 rounded-2xl flex items-center justify-between text-left border-2 transition-all ${
                       isSelected
                         ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
@@ -728,7 +743,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={selectedActivityDays === null}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>
@@ -747,12 +763,15 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <div className="space-y-3">
               {(['male', 'female'] as const).map((g) => {
-                const isSelected = formData.gender === g;
+                const isSelected = selectedGender === g;
                 return (
                   <button
                     key={g}
                     type="button"
-                    onClick={() => setFormData({ ...formData, gender: g })}
+                    onClick={() => {
+                      setSelectedGender(g);
+                      setFormData((prev) => ({ ...prev, gender: g }));
+                    }}
                     className={`w-full py-5 px-6 rounded-2xl flex items-center justify-between font-black text-sm capitalize transition-all border-2 ${
                       isSelected
                         ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
@@ -774,7 +793,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+              disabled={!selectedGender}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </button>

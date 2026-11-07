@@ -1,4 +1,4 @@
-export type GoalType = 'lose' | 'gain' | 'maintain';
+export type GoalType = 'lose' | 'gain' | 'maintain' | 'muscle';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete';
 
 export interface OnboardingData {
