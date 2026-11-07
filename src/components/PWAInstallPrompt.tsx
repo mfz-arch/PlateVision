@@ -67,9 +67,22 @@ export const PWAInstallPrompt: React.FC = () => {
     };
     window.addEventListener('platevision-open-install', handleOpenInstall);
 
+    // Check if early interceptor in layout.tsx already caught beforeinstallprompt
+    if (typeof window !== 'undefined' && (window as any).__pwaPrompt) {
+      setDeferredPrompt((window as any).__pwaPrompt);
+    }
+
+    const handlePromptReady = () => {
+      if (typeof window !== 'undefined' && (window as any).__pwaPrompt) {
+        setDeferredPrompt((window as any).__pwaPrompt);
+      }
+    };
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
+
     // Listen for Chrome / Android beforeinstallprompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
+      (window as any).__pwaPrompt = e;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
@@ -90,6 +103,7 @@ export const PWAInstallPrompt: React.FC = () => {
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('platevision-open-install', handleOpenInstall);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
     };
   }, []);
 
@@ -105,19 +119,26 @@ export const PWAInstallPrompt: React.FC = () => {
   };
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
+    // Check both state and early window.__pwaPrompt from layout.tsx
+    const activePrompt = deferredPrompt || (typeof window !== 'undefined' ? (window as any).__pwaPrompt : null);
+
+    if (activePrompt) {
       try {
-        await deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
-        if (choiceResult.outcome === 'accepted') {
+        await activePrompt.prompt();
+        const choiceResult = await activePrompt.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
           console.log('[PWA] User accepted the install prompt');
           markAsInstalled();
           setDeferredPrompt(null);
+          if (typeof window !== 'undefined') (window as any).__pwaPrompt = null;
         }
+        return;
       } catch (e) {
         console.warn('Install prompt error:', e);
       }
-    } else if (isIos) {
+    }
+
+    if (isIos) {
       setShowIosGuide(true);
     } else if (/android/.test(navigator.userAgent.toLowerCase())) {
       setShowAndroidGuide(true);
@@ -220,12 +241,32 @@ export const PWAInstallPrompt: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={markAsInstalled}
-              className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
-            >
-              Got it!
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const prompt = (window as any).__pwaPrompt || deferredPrompt;
+                  if (prompt) {
+                    try {
+                      await prompt.prompt();
+                      setShowAndroidGuide(false);
+                      return;
+                    } catch (e) {
+                      console.warn('Install error:', e);
+                    }
+                  }
+                  setShowAndroidGuide(false);
+                }}
+                className="flex-1 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs hover:bg-[#a3f01b] transition-all shadow-md active:scale-95"
+              >
+                Installer l&apos;application
+              </button>
+              <button
+                onClick={() => setShowAndroidGuide(false)}
+                className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -272,12 +313,32 @@ export const PWAInstallPrompt: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={markAsInstalled}
-              className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
-            >
-              Got it!
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const prompt = (window as any).__pwaPrompt || deferredPrompt;
+                  if (prompt) {
+                    try {
+                      await prompt.prompt();
+                      setShowAndroidGuide(false);
+                      return;
+                    } catch (e) {
+                      console.warn('Install error:', e);
+                    }
+                  }
+                  setShowAndroidGuide(false);
+                }}
+                className="flex-1 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs hover:bg-[#a3f01b] transition-all shadow-md active:scale-95"
+              >
+                Installer l&apos;application
+              </button>
+              <button
+                onClick={() => setShowAndroidGuide(false)}
+                className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -315,12 +376,32 @@ export const PWAInstallPrompt: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={markAsInstalled}
-              className="w-full py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all"
-            >
-              Got it!
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const prompt = (window as any).__pwaPrompt || deferredPrompt;
+                  if (prompt) {
+                    try {
+                      await prompt.prompt();
+                      setShowAndroidGuide(false);
+                      return;
+                    } catch (e) {
+                      console.warn('Install error:', e);
+                    }
+                  }
+                  setShowAndroidGuide(false);
+                }}
+                className="flex-1 py-3.5 rounded-2xl bg-[#b6ff2e] text-[#14171d] font-black text-xs hover:bg-[#a3f01b] transition-all shadow-md active:scale-95"
+              >
+                Installer l&apos;application
+              </button>
+              <button
+                onClick={() => setShowAndroidGuide(false)}
+                className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}

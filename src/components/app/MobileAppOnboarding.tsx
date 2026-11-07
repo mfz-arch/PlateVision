@@ -46,6 +46,42 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
   const [inchesInput, setInchesInput] = useState<number>(9);
   const [streakCommitment, setStreakCommitment] = useState<number>(30);
 
+  // String input states to allow smooth typing & backspacing without snapping
+  const [ageInput, setAgeInput] = useState<string>('22');
+  const [heightInput, setHeightInput] = useState<string>('175');
+  const [currentWeightInput, setCurrentWeightInput] = useState<string>('60');
+
+  const adjustAge = (delta: number) => {
+    setFormData((prev) => {
+      const next = Math.max(14, Math.min(100, prev.age + delta));
+      setAgeInput(next.toString());
+      return { ...prev, age: next };
+    });
+  };
+
+  const adjustHeight = (delta: number) => {
+    setFormData((prev) => {
+      const next = Math.max(100, Math.min(230, prev.heightCm + delta));
+      setHeightInput(next.toString());
+      return { ...prev, heightCm: next };
+    });
+  };
+
+  const adjustCurrentWeight = (delta: number) => {
+    setFormData((prev) => {
+      const next = Math.max(30, Math.min(250, Math.round((prev.currentWeightKg + delta) * 10) / 10));
+      setCurrentWeightInput(next.toString());
+      return { ...prev, currentWeightKg: next };
+    });
+  };
+
+  const adjustTargetWeight = (delta: number) => {
+    setFormData((prev) => {
+      const next = Math.max(30, Math.min(250, Math.round((prev.targetWeightKg + delta) * 10) / 10));
+      return { ...prev, targetWeightKg: next };
+    });
+  };
+
   // AI Calculation loader animation
   const [calcPercent, setCalcPercent] = useState<number>(0);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -145,7 +181,12 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
           name: formData.name || 'PlateVision Athlete',
           email: formData.email,
           password: formData.password,
-          onboarding: finalProfile
+          acceptedTerms: true,
+          termsAccepted: true,
+          onboarding: {
+            ...finalProfile,
+            acceptedTerms: true
+          }
         })
       });
 
@@ -744,40 +785,69 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {/* STEP 12: AGE, HEIGHT, WEIGHT (Screenshots 15, 17, 18)          */}
         {/* ============================================================== */}
         {step === 12 && (
-          <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-5 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">Your body measurements</h2>
-              <p className="text-xs text-gray-500 mt-1">Used to compute your baseline metabolism (BMR).</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Your body measurements</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Used to compute your baseline metabolism (BMR).</p>
             </div>
 
-            {/* Age */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-              <label className="text-xs font-bold text-gray-400">Age</label>
-              <div className="flex items-center gap-2 mt-1">
+            {/* Age Card with Steppers & Free Text Input */}
+            <div className="bg-slate-50 rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm focus-within:border-[#0f172a] transition-all">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Age</label>
+                <span className="text-xs font-bold text-slate-400">years old</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
                 <input
                   type="number"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 20 })}
-                  className="w-24 text-2xl font-black text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none"
+                  inputMode="numeric"
+                  value={ageInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAgeInput(val);
+                    const n = parseInt(val, 10);
+                    if (!isNaN(n) && n > 0 && n < 120) {
+                      setFormData((prev) => ({ ...prev, age: n }));
+                    }
+                  }}
+                  className="w-full text-3xl font-black text-[#0f172a] bg-transparent outline-none"
+                  placeholder="22"
                 />
-                <span className="text-xs font-bold text-gray-500">years old</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => adjustAge(-1)}
+                    className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustAge(+1)}
+                    className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Height with cm / ft toggle */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-gray-400">Height</label>
-                <div className="flex bg-gray-200 rounded-lg p-0.5 text-[10px] font-black">
+            {/* Height Card with cm / ft toggle, Steppers & Free Text Input */}
+            <div className="bg-slate-50 rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm focus-within:border-[#0f172a] transition-all">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Height</label>
+                <div className="flex bg-slate-200 p-0.5 rounded-lg text-[10px] font-black">
                   <button
+                    type="button"
                     onClick={() => setHeightUnit('cm')}
-                    className={`px-2 py-1 rounded-md ${heightUnit === 'cm' ? 'bg-[#b6ff2e] text-black shadow-sm' : 'text-gray-600'}`}
+                    className={`px-2.5 py-1 rounded-md transition-all ${heightUnit === 'cm' ? 'bg-[#0f172a] text-[#b6ff2e] shadow-sm' : 'text-slate-600'}`}
                   >
                     cm
                   </button>
                   <button
+                    type="button"
                     onClick={() => setHeightUnit('ft')}
-                    className={`px-2 py-1 rounded-md ${heightUnit === 'ft' ? 'bg-[#b6ff2e] text-black shadow-sm' : 'text-gray-600'}`}
+                    className={`px-2.5 py-1 rounded-md transition-all ${heightUnit === 'ft' ? 'bg-[#0f172a] text-[#b6ff2e] shadow-sm' : 'text-slate-600'}`}
                   >
                     ft/in
                   </button>
@@ -785,61 +855,124 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
               </div>
 
               {heightUnit === 'cm' ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={formData.heightCm}
-                    onChange={(e) => setFormData({ ...formData, heightCm: parseInt(e.target.value) || 170 })}
-                    className="w-24 text-2xl font-black text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none"
-                  />
-                  <span className="text-xs font-bold text-gray-500">cm</span>
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div className="flex items-baseline gap-1.5 w-full">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={heightInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setHeightInput(val);
+                        const n = parseInt(val, 10);
+                        if (!isNaN(n) && n > 0 && n < 300) {
+                          setFormData((prev) => ({ ...prev, heightCm: n }));
+                        }
+                      }}
+                      className="w-full text-3xl font-black text-[#0f172a] bg-transparent outline-none"
+                      placeholder="175"
+                    />
+                    <span className="text-sm font-black text-slate-400">cm</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => adjustHeight(-1)}
+                      className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => adjustHeight(+1)}
+                      className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={feetInput}
-                    onChange={(e) => {
-                      const ft = parseInt(e.target.value) || 5;
-                      setFeetInput(ft);
-                      setFormData({ ...formData, heightCm: Math.round(ft * 30.48 + inchesInput * 2.54) });
-                    }}
-                    className="w-16 text-2xl font-black text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none"
-                  />
-                  <span className="text-xs font-bold text-gray-500">ft</span>
-                  <input
-                    type="number"
-                    value={inchesInput}
-                    onChange={(e) => {
-                      const inc = parseInt(e.target.value) || 0;
-                      setInchesInput(inc);
-                      setFormData({ ...formData, heightCm: Math.round(feetInput * 30.48 + inc * 2.54) });
-                    }}
-                    className="w-16 text-2xl font-black text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none"
-                  />
-                  <span className="text-xs font-bold text-gray-500">in</span>
+                <div className="flex items-center gap-4 pt-1">
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      value={feetInput}
+                      onChange={(e) => {
+                        const ft = parseInt(e.target.value) || 0;
+                        setFeetInput(ft);
+                        setFormData((prev) => ({ ...prev, heightCm: Math.round(ft * 30.48 + inchesInput * 2.54) }));
+                        setHeightInput(Math.round(ft * 30.48 + inchesInput * 2.54).toString());
+                      }}
+                      className="w-16 text-3xl font-black text-[#0f172a] bg-transparent outline-none"
+                    />
+                    <span className="text-sm font-black text-slate-400">ft</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      value={inchesInput}
+                      onChange={(e) => {
+                        const inc = parseInt(e.target.value) || 0;
+                        setInchesInput(inc);
+                        setFormData((prev) => ({ ...prev, heightCm: Math.round(feetInput * 30.48 + inc * 2.54) }));
+                        setHeightInput(Math.round(feetInput * 30.48 + inc * 2.54).toString());
+                      }}
+                      className="w-16 text-3xl font-black text-[#0f172a] bg-transparent outline-none"
+                    />
+                    <span className="text-sm font-black text-slate-400">in</span>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Current Weight */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-              <label className="text-xs font-bold text-gray-400">Current weight</label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="number"
-                  step="0.5"
-                  value={formData.currentWeightKg}
-                  onChange={(e) => setFormData({ ...formData, currentWeightKg: parseFloat(e.target.value) || 60 })}
-                  className="w-24 text-2xl font-black text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none"
-                />
-                <span className="text-xs font-bold text-gray-500">kg</span>
+            {/* Current Weight Card with Steppers & Free Text Input */}
+            <div className="bg-slate-50 rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm focus-within:border-[#0f172a] transition-all">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Current weight</label>
+                <span className="text-xs font-bold text-slate-400">kg</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="flex items-baseline gap-1.5 w-full">
+                  <input
+                    type="number"
+                    step="0.5"
+                    inputMode="decimal"
+                    value={currentWeightInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCurrentWeightInput(val);
+                      const n = parseFloat(val);
+                      if (!isNaN(n) && n > 0 && n < 400) {
+                        setFormData((prev) => ({ ...prev, currentWeightKg: n }));
+                      }
+                    }}
+                    className="w-full text-3xl font-black text-[#0f172a] bg-transparent outline-none"
+                    placeholder="60"
+                  />
+                  <span className="text-sm font-black text-slate-400">kg</span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => adjustCurrentWeight(-0.5)}
+                    className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustCurrentWeight(+0.5)}
+                    className="w-10 h-10 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 font-black text-lg flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
             >
               Continue
             </button>
@@ -847,45 +980,93 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
-        {/* STEP 13: SET YOUR GOAL WEIGHT (Screenshot 1)                   */}
+        {/* STEP 13: SET YOUR GOAL WEIGHT (Interactive Wheel & Stepper)   */}
         {/* ============================================================== */}
         {step === 13 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">Set your goal weight</h2>
-              <p className="text-xs text-gray-500 mt-1">This will help us customize your plan to reach it.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Set your goal weight</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">This will help us customize your plan to reach it.</p>
             </div>
 
-            {/* Vertical Wheel / Weight Picker (Screenshot 1) */}
-            <div className="py-2 flex flex-col items-center justify-center space-y-1.5 select-none">
-              {[-3, -2, -1, 0, 1, 2, 3].map((offset) => {
-                const val = Math.round(formData.targetWeightKg + offset);
-                const isSelected = offset === 0;
-                return (
-                  <button
-                    key={offset}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, targetWeightKg: val })}
-                    className={`transition-all duration-200 text-center ${
-                      isSelected
-                        ? 'w-4/5 py-3 rounded-2xl bg-gray-100 text-[#14171d] font-black text-xl shadow-sm border border-gray-200'
-                        : Math.abs(offset) === 1
-                        ? 'text-gray-400 font-bold text-sm hover:text-gray-700 py-1'
-                        : Math.abs(offset) === 2
-                        ? 'text-gray-300 font-semibold text-xs py-0.5'
-                        : 'text-gray-200 font-medium text-[10px] py-0.5'
-                    }`}
-                  >
-                    {val} kg
-                  </button>
-                );
-              })}
+            {/* Interactive Hero Weight Selector */}
+            <div className="bg-slate-50 rounded-3xl p-6 border-2 border-slate-200/90 shadow-sm space-y-5">
+              
+              {/* Stepper + Big Center Number */}
+              <div className="flex items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => adjustTargetWeight(-1)}
+                  aria-label="Decrease target weight"
+                  className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 text-3xl font-black flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                >
+                  -
+                </button>
+                <div className="text-center">
+                  <div className="flex items-baseline justify-center gap-1.5">
+                    <span className="text-5xl font-black text-[#0f172a] tracking-tight">
+                      {formData.targetWeightKg}
+                    </span>
+                    <span className="text-lg font-black text-slate-400">kg</span>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-400 mt-1">Target Weight</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => adjustTargetWeight(+1)}
+                  aria-label="Increase target weight"
+                  className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 text-3xl font-black flex items-center justify-center active:scale-90 shadow-sm transition-all"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Smooth interactive range slider */}
+              <div className="space-y-1.5 pt-2">
+                <input
+                  type="range"
+                  min={35}
+                  max={160}
+                  step={0.5}
+                  value={formData.targetWeightKg}
+                  onChange={(e) => setFormData({ ...formData, targetWeightKg: parseFloat(e.target.value) })}
+                  className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0f172a]"
+                />
+                <div className="flex justify-between text-[11px] font-extrabold text-slate-400 px-1">
+                  <span>35 kg</span>
+                  <span>Current: {formData.currentWeightKg} kg</span>
+                  <span>160 kg</span>
+                </div>
+              </div>
+
+              {/* Quick weight offsets roller chips */}
+              <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 no-scrollbar">
+                {[-3, -2, -1, 0, 1, 2, 3].map((offset) => {
+                  const val = Math.round(formData.targetWeightKg + offset);
+                  const isCenter = offset === 0;
+                  return (
+                    <button
+                      key={offset}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, targetWeightKg: val })}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                        isCenter
+                          ? 'bg-[#0f172a] text-[#b6ff2e] shadow-sm scale-105 border-2 border-[#0f172a]'
+                          : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      {val} kg
+                    </button>
+                  );
+                })}
+              </div>
+
             </div>
 
-            {/* Weight difference & Badge card (Screenshot 1) */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-2">
+            {/* Weight difference & Badge card */}
+            <div className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-black text-[#14171d]">
+                <p className="text-xs font-black text-[#0f172a]">
                   {formData.targetWeightKg >= formData.currentWeightKg ? 'Weight gain' : 'Weight loss'}:{' '}
                   <span className="text-[#fe7258]">{weightDiffPercent}%</span>
                 </p>
@@ -899,7 +1080,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                   {goalBadge}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 {goalBadge === 'Challenging' 
                   ? 'A demanding goal recommended with steady pacing and proper hydration.' 
                   : goalBadge === 'Ambitious' 
@@ -910,7 +1091,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
             >
               Continue
             </button>
@@ -1233,10 +1414,24 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
               </div>
             </div>
 
+            {/* Legal Terms of Service & Privacy Notice */}
+            <div className="pt-1 text-center">
+              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                By tapping Access My Dashboard, you agree to PlateVision&apos;s{' '}
+                <a href="/terms" target="_blank" className="underline font-bold text-[#0f172a] hover:underline">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="/privacy" target="_blank" className="underline font-bold text-[#0f172a] hover:underline">
+                  Privacy Policy
+                </a>.
+              </p>
+            </div>
+
             <button
               onClick={handleFinalSubmit}
               disabled={isSubmitting}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#14171d] font-black text-sm shadow-[0_4px_20px_rgba(182,255,46,0.35)] active:scale-98 transition-all disabled:opacity-50"
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm shadow-[0_4px_20px_rgba(182,255,46,0.35)] active:scale-98 transition-all disabled:opacity-50"
             >
               {isSubmitting ? 'Creating your account...' : 'Access My Dashboard →'}
             </button>

@@ -65,6 +65,19 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Early PWA install prompt interceptor — captures event before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__pwaPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__pwaPrompt = e;
+                window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+              });
+            `
+          }}
+        />
       </head>
       <body className="antialiased bg-[#14171d] text-white">
         {/* WCAG Skip to Main Content Link */}

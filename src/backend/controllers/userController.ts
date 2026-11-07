@@ -48,7 +48,8 @@ export async function registerUser(data: any) {
   const normalizedEmail = sanitizeEmail(email);
   const validatedPassword = validatePasswordStrength(password);
 
-  if (data.acceptedTerms !== true) {
+  const termsAccepted = data.acceptedTerms === true || data.onboarding?.acceptedTerms === true || data.termsAccepted === true;
+  if (!termsAccepted) {
     throw new Error('You must accept the Terms of Service and Privacy Policy to create an account');
   }
 
