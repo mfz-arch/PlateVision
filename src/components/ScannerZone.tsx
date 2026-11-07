@@ -15,13 +15,15 @@ interface ScannerZoneProps {
   isModal?: boolean;
   /** Calendar day (YYYY-MM-DD, local) the meal should be logged to. Defaults to today. */
   targetDateStr?: string;
+  defaultCategory?: 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner' | string;
 }
 
 export const ScannerZone: React.FC<ScannerZoneProps> = ({
   onMealScanned,
   onClose,
   isModal = false,
-  targetDateStr
+  targetDateStr,
+  defaultCategory
 }) => {
   const { t } = useLanguage();
   const [selectedDish, setSelectedDish] = useState<SampleDish | null>(null);
@@ -303,12 +305,15 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
     setIsSaving(true);
     setApiError(null);
 
+    const finalCategory = defaultCategory || selectedDish.category || 'Lunch';
+    const finalImage = uploadedImageUrl || customImage || selectedDish.imageUrl;
+
     const payload = {
       title: selectedDish.title,
-      category: selectedDish.category,
+      category: finalCategory,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       dateStr: targetDateStr || toLocalDateStr(),
-      imageUrl: uploadedImageUrl || selectedDish.imageUrl,
+      imageUrl: finalImage,
       totalCalories: selectedDish.totalCalories,
       totalProtein: selectedDish.totalProtein,
       totalCarbs: selectedDish.totalCarbs,
@@ -328,6 +333,17 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         if (res.status === 401) throw new Error('Please sign in to log meals to your journal.');
         throw new Error(data.error || 'Failed to save meal.');
       }
+
+      // Cache the captured photo locally on this device so it NEVER disappears
+      if (customImage && data.meal) {
+        const id = data.meal._id || data.meal.id;
+        try {
+          localStorage.setItem(`pv_photo_${id}`, customImage);
+        } catch (e) {
+          console.warn('Could not cache meal image locally:', e);
+        }
+      }
+
       onMealScanned(data.meal as ScannedMeal);
       if (onClose) onClose();
     } catch (err: any) {

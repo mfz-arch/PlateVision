@@ -166,21 +166,35 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     setIsActionSheetOpen(true);
   };
 
+  // Helper to reliably retrieve food photo (local camera capture cache, or DB imageUrl)
+  const getMealPhoto = (meal?: ScannedMeal | null): string | null => {
+    if (!meal) return null;
+    const id = (meal as any)._id || meal.id;
+    if (typeof window !== 'undefined' && id) {
+      const cached = localStorage.getItem(`pv_photo_${id}`);
+      if (cached) return cached;
+    }
+    if (meal.imageUrl && !meal.imageUrl.includes('placeholder')) {
+      return meal.imageUrl;
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#14171d] font-sans pb-28 selection:bg-[#b6ff2e] selection:text-[#14171d]">
       
       {/* TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200/80 px-4 py-3">
         <div className="max-w-md mx-auto flex items-center justify-between">
           
           {/* Left: Streak Flame Badge */}
           <button
             onClick={() => setIsStreakModalOpen(true)}
             aria-label="View Streak"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200/60 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 transition-all active:scale-95"
           >
             <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-            <span className="text-xs font-black text-gray-800">0</span>
+            <span className="text-xs font-black text-slate-800">0</span>
           </button>
 
           {/* Center: Brand Title */}
@@ -188,10 +202,10 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             onClick={() => setSelectedDateStr(todayStr)}
             className="flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
           >
-            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white p-0.5 border border-gray-200 shadow-sm">
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white p-0.5 border-2 border-slate-200 shadow-sm">
               <img src="/logo.svg" alt="PlateVision" className="w-full h-full object-contain" />
             </div>
-            <span className="text-xl font-black tracking-tight text-[#14171d]">
+            <span className="text-xl font-black tracking-tight text-[#0f172a]">
               Plate<span className="text-[#84cc16]">Vision</span>
             </span>
           </div>
@@ -201,14 +215,14 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             <button
               onClick={() => setIsNutritionReportOpen(true)}
               aria-label="Nutrition Report"
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 active:scale-95 transition-all"
+              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all border border-slate-200"
             >
               <FileText className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}
               aria-label="User Profile"
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-gray-800 active:scale-95 transition-all"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 flex items-center justify-center text-slate-800 active:scale-95 transition-all"
             >
               <User className="w-4 h-4" />
             </button>
@@ -221,7 +235,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       <main className="max-w-md mx-auto px-4 pt-4 space-y-4">
         
         {/* WEEKLY CALENDAR STRIP */}
-        <section className="bg-white rounded-3xl p-3 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <section className="bg-white rounded-3xl p-3 border-2 border-slate-200/90 shadow-sm">
           <div className="grid grid-cols-7 gap-1 text-center">
             {weekDays.map((d) => {
               const isSelected = d.dateStr === selectedDateStr;
@@ -229,16 +243,16 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                 <button
                   key={d.dateStr}
                   onClick={() => setSelectedDateStr(d.dateStr)}
-                  className={`flex flex-col items-center justify-center py-2 rounded-2xl transition-all ${
+                  className={`flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
                     isSelected 
-                      ? 'bg-[#14171d] text-white shadow-md' 
-                      : 'hover:bg-gray-50 text-gray-500'
+                      ? 'bg-[#0f172a] text-white shadow-md' 
+                      : 'hover:bg-slate-50 text-slate-500'
                   }`}
                 >
-                  <span className={`text-[10px] font-bold ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
                     {d.label}
                   </span>
-                  <span className={`text-sm font-extrabold mt-0.5 ${isSelected ? 'text-[#b6ff2e]' : 'text-gray-800'}`}>
+                  <span className={`text-sm font-black mt-0.5 ${isSelected ? 'text-[#b6ff2e]' : 'text-slate-800'}`}>
                     {d.dayNum}
                   </span>
                 </button>
@@ -248,86 +262,99 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         </section>
 
         {/* HERO CALORIES & MACROS CARD */}
-        <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] relative overflow-hidden">
+        <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-black text-[#14171d] tracking-tight">{caloriesLeft}</span>
-                <span className="text-sm font-bold text-gray-400">/{dailyCalorieTarget}</span>
+                <span className="text-4xl font-black text-[#0f172a] tracking-tight">{caloriesLeft}</span>
+                <span className="text-sm font-extrabold text-slate-400">/{dailyCalorieTarget}</span>
               </div>
-              <p className="text-xs font-semibold text-gray-400 mt-0.5">Calories left</p>
+              <p className="text-xs font-bold text-slate-400 mt-0.5">Calories left</p>
             </div>
 
-            {/* Circular Gauge Ring with Activity Fire */}
-            <div className="w-16 h-16 rounded-full border-4 border-gray-100 relative flex items-center justify-center shadow-inner">
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
+            {/* Circular Gauge Ring matching CalZen Reference (Concentric & Smooth) */}
+            <div className="w-18 h-18 relative flex items-center justify-center shrink-0">
+              <svg className="w-18 h-18 -rotate-90" viewBox="0 0 68 68" width="72" height="72">
+                {/* Complete background track */}
                 <circle
-                  cx="32"
-                  cy="32"
-                  r="26"
-                  stroke="#b6ff2e"
-                  strokeWidth="4"
+                  cx="34"
+                  cy="34"
+                  r="27"
+                  stroke="#f1f5f9"
+                  strokeWidth="5"
                   fill="none"
-                  strokeDasharray="163"
-                  strokeDashoffset={163 - (Math.min(1, totalCaloriesLogged / dailyCalorieTarget) * 163)}
+                />
+                {/* Active progress stroke */}
+                <circle
+                  cx="34"
+                  cy="34"
+                  r="27"
+                  stroke="#0f172a"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 27}
+                  strokeDashoffset={2 * Math.PI * 27 * (1 - Math.min(1, totalCaloriesLogged / dailyCalorieTarget))}
+                  strokeLinecap="round"
                   className="transition-all duration-700 ease-out"
                 />
               </svg>
-              <div className="flex flex-col items-center">
-                <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-                <span className="text-[10px] font-black text-gray-700">+120</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <Flame className="w-4 h-4 text-[#0f172a] fill-[#0f172a]" />
+                <span className="text-[10px] font-black text-[#0f172a] mt-0.5">
+                  +{totalCaloriesLogged > 0 ? totalCaloriesLogged : 6}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Macros Progress Rows */}
-          <div className="grid grid-cols-4 gap-2 pt-6 border-t border-gray-100 mt-5">
+          <div className="grid grid-cols-4 gap-2 pt-6 border-t-2 border-slate-100 mt-5">
             {/* Protein */}
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Protein</p>
-              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden my-1">
+              <p className="text-[11px] font-bold text-slate-500">Protein</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
                 <div 
-                  className="bg-[#b6ff2e] h-full rounded-full transition-all duration-500"
+                  className="bg-[#84cc16] h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (totalProteinLogged / (profile.proteinGoalGrams || 120)) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] font-black text-gray-700">{totalProteinLogged}/{profile.proteinGoalGrams || 120}g</p>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalProteinLogged}/{profile.proteinGoalGrams || 120}g</p>
             </div>
 
             {/* Fat */}
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Fat</p>
-              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden my-1">
+              <p className="text-[11px] font-bold text-slate-500">Fat</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
                 <div 
                   className="bg-amber-400 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (totalFatsLogged / (profile.fatsGoalGrams || 70)) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] font-black text-gray-700">{totalFatsLogged}/{profile.fatsGoalGrams || 70}g</p>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalFatsLogged}/{profile.fatsGoalGrams || 70}g</p>
             </div>
 
             {/* Carbs */}
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Carbs</p>
-              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden my-1">
+              <p className="text-[11px] font-bold text-slate-500">Carbs</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
                 <div 
                   className="bg-sky-400 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (totalCarbsLogged / (profile.carbsGoalGrams || 250)) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] font-black text-gray-700">{totalCarbsLogged}/{profile.carbsGoalGrams || 250}g</p>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalCarbsLogged}/{profile.carbsGoalGrams || 250}g</p>
             </div>
 
             {/* Fiber */}
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Fiber</p>
-              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden my-1">
+              <p className="text-[11px] font-bold text-slate-500">Fiber</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
                 <div 
                   className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (totalFiberLogged / 38) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] font-black text-gray-700">{totalFiberLogged}/38g</p>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalFiberLogged}/38g</p>
             </div>
           </div>
         </section>
@@ -336,14 +363,14 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         <section className="grid grid-cols-2 gap-3">
           
           {/* Steps */}
-          <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            <div className="flex items-center gap-1.5 text-rose-500 font-bold text-xs mb-2">
+          <div className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm">
+            <div className="flex items-center gap-1.5 text-rose-500 font-extrabold text-xs mb-2">
               <Footprints className="w-4 h-4" />
               <span>Steps</span>
             </div>
-            <div className="text-2xl font-black text-[#14171d]">{stepsCount}</div>
-            <p className="text-[10px] font-semibold text-gray-400 mt-0.5">of 8,000</p>
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mt-3">
+            <div className="text-2xl font-black text-[#0f172a]">{stepsCount}</div>
+            <p className="text-[10px] font-bold text-slate-400 mt-0.5">of 8,000</p>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
               <div 
                 className="bg-rose-400 h-full rounded-full"
                 style={{ width: `${Math.min(100, (stepsCount / 8000) * 100)}%` }}
@@ -352,23 +379,23 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
           </div>
 
           {/* Water */}
-          <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative">
+          <div className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm relative">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-sky-500 font-bold text-xs">
+              <div className="flex items-center gap-1.5 text-sky-500 font-extrabold text-xs">
                 <Droplets className="w-4 h-4" />
                 <span>Water</span>
               </div>
               <button
                 onClick={handleAddWater}
                 title="Add 250ml glass"
-                className="w-6 h-6 rounded-full bg-sky-50 text-sky-600 font-extrabold flex items-center justify-center hover:bg-sky-100 active:scale-90 transition-all"
+                className="w-7 h-7 rounded-full bg-sky-50 text-sky-600 font-black flex items-center justify-center hover:bg-sky-100 active:scale-90 transition-all border border-sky-100"
               >
                 +
               </button>
             </div>
-            <div className="text-2xl font-black text-[#14171d]">{waterMl} ml</div>
-            <p className="text-[10px] font-semibold text-gray-400 mt-0.5">of 2,000 ml</p>
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mt-3">
+            <div className="text-2xl font-black text-[#0f172a]">{waterMl} ml</div>
+            <p className="text-[10px] font-bold text-slate-400 mt-0.5">of 2,000 ml</p>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
               <div 
                 className="bg-sky-400 h-full rounded-full transition-all duration-300"
                 style={{ width: `${Math.min(100, (waterMl / 2000) * 100)}%` }}
@@ -381,40 +408,40 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         {/* MY PROGRESS ROW */}
         <section 
           onClick={() => setIsWeightModalOpen(true)}
-          className="bg-white rounded-3xl p-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center justify-between cursor-pointer hover:border-gray-200 transition-all active:scale-[0.99]"
+          className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.99]"
         >
           <div>
-            <p className="text-xs font-bold text-gray-400">My progress</p>
+            <p className="text-xs font-black text-slate-400">My progress</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-lg font-black text-[#14171d]">{currentWeight} kg</span>
-              <span className="text-xs font-semibold text-gray-400">Target: {profile.targetWeightKg || 65} kg</span>
+              <span className="text-lg font-black text-[#0f172a]">{currentWeight} kg</span>
+              <span className="text-xs font-bold text-slate-400">Target: {profile.targetWeightKg || 65} kg</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700">Log weight</span>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 border border-slate-200">Log weight</span>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
           </div>
         </section>
 
         {/* GLP-1 DIARY CARD (Screenshot 9) */}
         {!dismissGlp1 && (
-          <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3">
+          <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm space-y-3">
             <div>
-              <h4 className="text-sm font-black text-[#14171d]">GLP-1 diary</h4>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+              <h4 className="text-sm font-black text-[#0f172a]">GLP-1 diary</h4>
+              <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                 If you&apos;ve been prescribed Ozempic, Mounjaro or a similar medication, log your shots and how you feel alongside your meals.
               </p>
             </div>
             <div className="flex items-center gap-2 pt-1">
               <button
                 onClick={() => setDismissGlp1(true)}
-                className="flex-1 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-[#14171d] font-bold text-xs transition-colors"
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-[#0f172a] font-black text-xs transition-colors border border-slate-200"
               >
                 Not now
               </button>
               <button
                 onClick={() => alert('GLP-1 diary enabled for your daily logs!')}
-                className="flex-1 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-[#14171d] font-bold text-xs transition-colors"
+                className="flex-1 py-3 rounded-2xl bg-[#0f172a] hover:bg-black text-white font-black text-xs transition-colors"
               >
                 Try it
               </button>
@@ -422,32 +449,41 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
           </section>
         )}
 
-        {/* LOG MEAL BY CATEGORY SLOTS */}
-        <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        {/* LOG MEAL BY CATEGORY SLOTS (Screenshot 8) */}
+        <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm">
           <div className="grid grid-cols-4 gap-2 text-center">
             
             {(['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const).map((cat) => {
               // Check if any meal exists for this category
               const catMeal = mealsForDate.find((m) => (m as any).category === cat);
+              const photo = getMealPhoto(catMeal);
               return (
                 <button
                   key={cat}
                   onClick={() => handleOpenActionSheet(cat)}
                   className="flex flex-col items-center group active:scale-95 transition-all"
                 >
-                  <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center relative overflow-hidden group-hover:border-[#b6ff2e]">
-                    {catMeal?.imageUrl ? (
-                      <img src={catMeal.imageUrl} alt={cat} className="w-full h-full object-cover" />
+                  <div className="w-16 h-16 rounded-full bg-[#f1f3f5] border-2 border-slate-200/90 flex items-center justify-center relative overflow-hidden group-hover:border-[#0f172a] shadow-sm">
+                    {photo ? (
+                      <img src={photo} alt={cat} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-4 h-4 rounded-full bg-[#14171d] flex items-center justify-center text-white">
-                          <Plus className="w-3 h-3 stroke-[3]" />
+                      <div className="w-full h-full flex items-center justify-center bg-[#f1f3f5]">
+                        <div className="w-6 h-6 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-400">
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
                         </div>
                       </div>
                     )}
+                    {/* Bottom-right badge matching user screenshot 8 */}
+                    <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#0f172a] text-white flex items-center justify-center border-2 border-white shadow-sm">
+                      {photo ? (
+                        <Check className="w-3 h-3 stroke-[3] text-[#b6ff2e]" />
+                      ) : (
+                        <Plus className="w-3 h-3 stroke-[3]" />
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-gray-800 mt-2">{cat}</span>
-                  <span className="text-[10px] font-semibold text-gray-400">
+                  <span className="text-xs font-black text-[#0f172a] mt-2">{cat}</span>
+                  <span className="text-[10px] font-bold text-slate-400">
                     {catMeal ? `${catMeal.totalCalories} kcal` : 'Add'}
                   </span>
                 </button>
@@ -460,21 +496,21 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         {/* RECENTLY LOGGED MEALS */}
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-base font-extrabold text-[#14171d]">Recently</h3>
-            <span className="text-xs font-bold text-gray-400">
+            <h3 className="text-base font-black text-[#0f172a]">Recently</h3>
+            <span className="text-xs font-bold text-slate-400">
               {selectedDateStr === todayStr ? 'Today' : selectedDateStr}
             </span>
           </div>
 
           {isLoadingMeals ? (
-            <div className="bg-white rounded-3xl p-6 text-center border border-gray-100 shadow-sm">
-              <div className="w-6 h-6 border-2 border-[#14171d] border-t-[#b6ff2e] rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-gray-400 mt-2">Loading your meals...</p>
+            <div className="bg-white rounded-3xl p-6 text-center border-2 border-slate-200/90 shadow-sm">
+              <div className="w-6 h-6 border-2 border-[#0f172a] border-t-[#b6ff2e] rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-bold text-slate-400 mt-2">Loading your meals...</p>
             </div>
           ) : mealsForDate.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-sm space-y-2">
-              <p className="text-base font-extrabold text-[#14171d]">No meals yet!</p>
-              <p className="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
+            <div className="bg-white rounded-3xl p-8 text-center border-2 border-slate-200/90 shadow-sm space-y-2">
+              <p className="text-base font-black text-[#0f172a]">No meals yet!</p>
+              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
                 Grab something tasty, log it here, and check out our Instagram <strong>@platevision.ai</strong>!
               </p>
             </div>
@@ -482,32 +518,41 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             <div className="space-y-2.5">
               {mealsForDate.map((meal, index) => {
                 const mealId = (meal as any)._id || meal.id || `app-meal-${index}`;
+                const photo = getMealPhoto(meal);
                 return (
                   <div 
                     key={mealId}
-                    className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center gap-3 hover:border-gray-200 transition-all"
+                    className="bg-white rounded-2xl p-3 border-2 border-slate-200/90 shadow-sm flex items-center gap-3 hover:border-slate-300 transition-all"
                   >
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
-                      <img 
-                        src={meal.imageUrl || '/icons/icon-192x192.png'} 
-                        alt={meal.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = '/icons/icon-192x192.png';
-                        }}
-                      />
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 relative">
+                      {photo ? (
+                        <img 
+                          src={photo} 
+                          alt={meal.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-500 font-black text-xs">
+                          PV
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <h4 className="text-sm font-extrabold text-gray-900 truncate">{meal.title}</h4>
-                      <p className="text-xs font-bold text-gray-500 mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">
+                          {(meal as any).category || 'Meal'}
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-400">{meal.timestamp || ''}</span>
+                      </div>
+                      <h4 className="text-sm font-black text-[#0f172a] truncate mt-0.5">{meal.title}</h4>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">
                         <span className="text-[#65a30d] font-black">{meal.totalCalories} kcal</span> • {meal.totalProtein}g protein
                       </p>
                     </div>
                     <button
                       onClick={() => handleDeleteMeal(mealId)}
                       aria-label="Delete meal"
-                      className="p-2 text-gray-300 hover:text-rose-500 active:scale-90 transition-all"
+                      className="p-2 text-slate-300 hover:text-rose-500 active:scale-90 transition-all"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -685,6 +730,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             
             <ScannerZone
               targetDateStr={selectedDateStr}
+              defaultCategory={selectedCategory}
               onMealScanned={() => {
                 setMealsRefreshKey((k) => k + 1);
                 setIsScannerModalOpen(false);

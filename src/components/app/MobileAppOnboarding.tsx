@@ -292,13 +292,14 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         )}
 
         {/* ============================================================== */}
+        {/* ============================================================== */}
         {/* STEP 3: MAIN GOAL (Screenshot 3)                              */}
         {/* ============================================================== */}
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">What is your main goal?</h2>
-              <p className="text-xs text-gray-500 mt-1">This helps us create a plan that fits your lifestyle and keeps you on track.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">What is your main goal?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">This helps us create a plan that fits your lifestyle and keeps you on track.</p>
             </div>
 
             <div className="space-y-3">
@@ -306,27 +307,39 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 { key: 'lose', label: 'Lose weight' },
                 { key: 'maintain', label: 'Maintain weight' },
                 { key: 'gain', label: 'Gain weight' },
-                { key: 'gain', label: 'Build muscle' }
-              ].map((opt, i) => {
-                const isSelected = formData.goal === opt.key;
+                { key: 'muscle', label: 'Build muscle' }
+              ].map((opt) => {
+                const isSelected = formData.goal === (opt.key === 'muscle' ? 'gain' : opt.key);
                 return (
                   <button
-                    key={i}
-                    onClick={() => {
-                      setFormData({ ...formData, goal: opt.key as any });
-                      handleNext();
-                    }}
-                    className={`w-full p-4 rounded-2xl text-left font-black text-sm transition-all border ${
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, goal: (opt.key === 'muscle' ? 'gain' : opt.key) as any })}
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-sm transition-all border-2 ${
                       isSelected
-                        ? 'bg-[#b6ff2e]/15 border-[#84cc16] text-[#14171d] shadow-sm'
-                        : 'bg-white border-gray-200 hover:border-gray-300 text-gray-800'
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
                     }`}
                   >
-                    {opt.label}
+                    <span>{opt.label}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white' 
+                        : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
                   </button>
                 );
               })}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm shadow-[0_4px_16px_rgba(182,255,46,0.3)] active:scale-98 transition-all"
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -336,8 +349,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 4 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">What gets in the way?</h2>
-              <p className="text-xs text-gray-500 mt-1">Pick everything that applies. We&apos;ll factor it into your plan.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">What gets in the way?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Pick everything that applies. We&apos;ll factor it into your plan.</p>
             </div>
 
             <div className="space-y-2.5">
@@ -353,20 +366,21 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 return (
                   <button
                     key={item}
+                    type="button"
                     onClick={() => {
                       setObstacles((prev) => 
                         isChecked ? prev.filter((x) => x !== item) : [...prev, item]
                       );
                     }}
-                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-bold text-xs transition-all border ${
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-xs transition-all border-2 ${
                       isChecked
-                        ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                        : 'bg-white border-gray-200 text-gray-800'
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
                     }`}
                   >
                     <span>{item}</span>
-                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                      isChecked ? 'bg-[#14171d] border-[#14171d] text-white' : 'border-gray-300'
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                      isChecked ? 'bg-[#0f172a] border-[#0f172a] text-white' : 'border-slate-300 bg-white'
                     }`}>
                       {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
@@ -377,7 +391,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
             >
               Continue
             </button>
@@ -390,8 +404,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 5 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">How is your progress going?</h2>
-              <p className="text-xs text-gray-500 mt-1">Where are you starting from right now?</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">How is your progress going?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Where are you starting from right now?</p>
             </div>
 
             <div className="space-y-3">
@@ -400,23 +414,38 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 'Up and down',
                 'Just getting started',
                 'Not tracking it'
-              ].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => {
-                    setCurrentProgressState(opt);
-                    handleNext();
-                  }}
-                  className={`w-full p-4 rounded-2xl text-left font-black text-sm transition-all border ${
-                    currentProgressState === opt
-                      ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                      : 'bg-white border-gray-200 text-gray-800'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
+              ].map((opt) => {
+                const isSelected = currentProgressState === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setCurrentProgressState(opt)}
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-sm transition-all border-2 ${
+                      isSelected
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <span>{opt}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white' 
+                        : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -426,8 +455,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 6 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">What else matters to you?</h2>
-              <p className="text-xs text-gray-500 mt-1">Check everything that sounds like you.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">What else matters to you?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Check everything that sounds like you.</p>
             </div>
 
             <div className="space-y-2.5">
@@ -443,20 +472,21 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 return (
                   <button
                     key={item}
+                    type="button"
                     onClick={() => {
                       setSecondaryMotivations((prev) =>
                         isChecked ? prev.filter((x) => x !== item) : [...prev, item]
                       );
                     }}
-                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-bold text-xs transition-all border ${
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-xs transition-all border-2 ${
                       isChecked
-                        ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                        : 'bg-white border-gray-200 text-gray-800'
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
                     }`}
                   >
                     <span>{item}</span>
-                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                      isChecked ? 'bg-[#14171d] border-[#14171d] text-white' : 'border-gray-300'
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                      isChecked ? 'bg-[#0f172a] border-[#0f172a] text-white' : 'border-slate-300 bg-white'
                     }`}>
                       {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
@@ -467,7 +497,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
             >
               Continue
             </button>
@@ -480,8 +510,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 7 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">Getting ready for something?</h2>
-              <p className="text-xs text-gray-500 mt-1">We&apos;ll help you look and feel your best by the big day.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Getting ready for something?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">We&apos;ll help you look and feel your best by the big day.</p>
             </div>
 
             <div className="space-y-2.5">
@@ -492,24 +522,41 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 { icon: '⚽', label: 'Sports competition' },
                 { icon: '☀️', label: 'Summer' },
                 { icon: '🎂', label: 'Birthday' }
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    setSpecialOccasion(item.label);
-                    handleNext();
-                  }}
-                  className={`w-full p-4 rounded-2xl flex items-center gap-3 text-left font-black text-xs transition-all border ${
-                    specialOccasion === item.label
-                      ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                      : 'bg-white border-gray-200 text-gray-800'
-                  }`}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
+              ].map((item) => {
+                const isSelected = specialOccasion === item.label;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => setSpecialOccasion(item.label)}
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left font-black text-xs transition-all border-2 ${
+                      isSelected
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white' 
+                        : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -519,21 +566,18 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 8 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">Do you have children?</h2>
-              <p className="text-xs text-gray-500 mt-1">Studies show parents often put their own nutrition last</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Do you have children?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Studies show parents often put their own nutrition last</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => {
-                  setHasChildren(true);
-                  handleNext();
-                }}
-                className={`py-8 rounded-3xl text-center font-black text-base transition-all border shadow-sm ${
+                onClick={() => setHasChildren(true)}
+                className={`py-8 rounded-3xl text-center font-black text-base transition-all border-2 shadow-sm ${
                   hasChildren === true
-                    ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                    : 'bg-white border-gray-100 hover:border-gray-300 text-gray-900'
+                    ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50'
+                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900'
                 }`}
               >
                 Yes
@@ -541,14 +585,11 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  setHasChildren(false);
-                  handleNext();
-                }}
-                className={`py-8 rounded-3xl text-center font-black text-base transition-all border shadow-sm ${
+                onClick={() => setHasChildren(false)}
+                className={`py-8 rounded-3xl text-center font-black text-base transition-all border-2 shadow-sm ${
                   hasChildren === false
-                    ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                    : 'bg-white border-gray-100 hover:border-gray-300 text-gray-900'
+                    ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50'
+                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900'
                 }`}
               >
                 No
@@ -557,7 +598,7 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
 
             <button
               onClick={handleNext}
-              className="w-full mt-8 py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+              className="w-full mt-4 py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
             >
               Continue
             </button>
@@ -569,29 +610,29 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {/* ============================================================== */}
         {step === 9 && (
           <div className="space-y-6 text-center animate-in fade-in duration-300 pt-4">
-            <div className="w-16 h-16 rounded-full bg-[#b6ff2e]/20 mx-auto flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[#b6ff2e]/20 mx-auto flex items-center justify-center border-2 border-[#b6ff2e]/40">
               <Heart className="w-8 h-8 fill-[#84cc16] text-[#84cc16]" />
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-2xl font-black text-[#14171d]">Thank you for trusting us</h2>
-              <p className="text-xs text-gray-500">Now let&apos;s personalize PlateVision for you</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Thank you for trusting us</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold">Now let&apos;s personalize PlateVision for you</p>
             </div>
 
-            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-2 text-center max-w-sm mx-auto">
-              <div className="w-10 h-10 rounded-full bg-gray-100 mx-auto flex items-center justify-center text-gray-700 mb-2">
+            <div className="bg-white rounded-3xl p-6 border-2 border-slate-200/90 shadow-sm space-y-2 text-center max-w-sm mx-auto">
+              <div className="w-10 h-10 rounded-full bg-slate-100 mx-auto flex items-center justify-center text-slate-800 mb-2 border border-slate-200">
                 <Lock className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <h4 className="text-sm font-black text-[#14171d]">Your privacy and security matter to us</h4>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <h4 className="text-sm font-black text-[#0f172a]">Your privacy and security matter to us</h4>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 We promise to always keep your personal information private and secure
               </p>
             </div>
 
-            <div className="pt-8">
+            <div className="pt-4">
               <button
                 onClick={handleNext}
-                className="w-full py-4 rounded-full bg-[#b6ff2e] text-[#14171d] font-black text-sm active:scale-98 transition-all shadow-md"
+                className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
               >
                 Continue
               </button>
@@ -605,8 +646,8 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 10 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">How active are you?</h2>
-              <p className="text-xs text-gray-500 mt-1">Your daily activity level helps us calculate your calorie needs accurately.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">How active are you?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Your daily activity level helps us calculate your calorie needs accurately.</p>
             </div>
 
             <div className="space-y-3">
@@ -615,24 +656,41 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
                 { title: 'Lightly active', sub: 'Light exercise 1-2 times a week', days: 2 },
                 { title: 'Moderately active', sub: 'Exercise 3-4 times a week', days: 4 },
                 { title: 'Very active', sub: 'Intense exercise 5+ times a week', days: 6 }
-              ].map((item) => (
-                <button
-                  key={item.title}
-                  onClick={() => {
-                    setFormData({ ...formData, workoutDaysPerWeek: item.days });
-                    handleNext();
-                  }}
-                  className={`w-full p-4 rounded-2xl text-left border transition-all ${
-                    formData.workoutDaysPerWeek === item.days
-                      ? 'bg-[#b6ff2e]/20 border-[#84cc16]'
-                      : 'bg-white border-gray-200 text-gray-800'
-                  }`}
-                >
-                  <p className="text-sm font-black text-gray-900">{item.title}</p>
-                  <p className="text-xs font-semibold text-gray-400 mt-0.5">{item.sub}</p>
-                </button>
-              ))}
+              ].map((item) => {
+                const isSelected = formData.workoutDaysPerWeek === item.days;
+                return (
+                  <button
+                    key={item.title}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, workoutDaysPerWeek: item.days })}
+                    className={`w-full p-4 rounded-2xl flex items-center justify-between text-left border-2 transition-all ${
+                      isSelected
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-sm font-black text-[#0f172a]">{item.title}</p>
+                      <p className="text-xs font-semibold text-slate-400 mt-0.5">{item.sub}</p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white' 
+                        : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -642,28 +700,43 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {step === 11 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-black text-[#14171d]">Choose your gender</h2>
-              <p className="text-xs text-gray-500 mt-1">Men and women burn calories differently — we&apos;ll adjust for that.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Choose your gender</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Men and women burn calories differently — we&apos;ll adjust for that.</p>
             </div>
 
             <div className="space-y-3">
-              {(['male', 'female'] as const).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => {
-                    setFormData({ ...formData, gender: g });
-                    handleNext();
-                  }}
-                  className={`w-full py-5 rounded-2xl text-center font-black text-sm capitalize transition-all border ${
-                    formData.gender === g
-                      ? 'bg-[#b6ff2e]/20 border-[#84cc16] text-[#14171d]'
-                      : 'bg-white border-gray-200 text-gray-800'
-                  }`}
-                >
-                  {g === 'male' ? 'Male' : 'Female'}
-                </button>
-              ))}
+              {(['male', 'female'] as const).map((g) => {
+                const isSelected = formData.gender === g;
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: g })}
+                    className={`w-full py-5 px-6 rounded-2xl flex items-center justify-between font-black text-sm capitalize transition-all border-2 ${
+                      isSelected
+                        ? 'border-[#0f172a] bg-slate-50 text-[#0f172a] ring-2 ring-[#b6ff2e]/50 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <span>{g === 'male' ? 'Male' : 'Female'}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#0f172a] bg-[#0f172a] text-white' 
+                        : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-4 rounded-full bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] font-black text-sm active:scale-98 transition-all shadow-[0_4px_16px_rgba(182,255,46,0.3)]"
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -901,40 +974,54 @@ export const MobileAppOnboarding: React.FC<MobileAppOnboardingProps> = ({
         {/* ============================================================== */}
         {step === 15 && (
           <div className="text-center space-y-6 animate-in fade-in duration-300">
-            {/* Animated Circular Progress */}
-            <div className="w-36 h-36 rounded-full border-8 border-gray-100 mx-auto relative flex items-center justify-center">
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
+            {/* Animated Circular Progress (Concentric Smooth SVG Gauge) */}
+            <div className="w-40 h-40 mx-auto relative flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+                {/* Complete background track */}
                 <circle
-                  cx="72"
-                  cy="72"
-                  r="56"
-                  stroke="#b6ff2e"
-                  strokeWidth="8"
+                  cx="80"
+                  cy="80"
+                  r="68"
+                  stroke="#f1f5f9"
+                  strokeWidth="12"
                   fill="none"
-                  strokeDasharray="351"
-                  strokeDashoffset={351 - (calcPercent / 100) * 351}
+                />
+                {/* Animated progress stroke */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="68"
+                  stroke="#b6ff2e"
+                  strokeWidth="12"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 68}
+                  strokeDashoffset={2 * Math.PI * 68 * (1 - calcPercent / 100)}
+                  strokeLinecap="round"
                   className="transition-all duration-300 ease-out"
                 />
               </svg>
-              <span className="text-3xl font-black text-[#14171d]">{calcPercent}%</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-4xl font-black text-[#0f172a] tracking-tight">{calcPercent}%</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-1">Building plan</span>
+              </div>
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-2xl font-black text-[#14171d]">Creating your plan...</h2>
-              <p className="text-xs text-gray-400 font-semibold">
+              <h2 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">Creating your plan...</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold">
                 Your profile • {formData.heightCm} cm, {formData.currentWeightKg} kg, {formData.age} years
               </p>
             </div>
 
             {/* Live review ticker */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-left max-w-xs mx-auto">
+            <div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200/80 text-left max-w-xs mx-auto shadow-sm">
               <div className="flex text-amber-400 gap-0.5 mb-1">
                 {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />)}
               </div>
-              <p className="text-xs italic text-gray-700">
+              <p className="text-xs italic text-slate-700 font-medium">
                 &ldquo;Finally a tracker I actually use. Photo scan, done. Down 8 kg in 2 months.&rdquo;
               </p>
-              <p className="text-[10px] font-bold text-gray-400 mt-1">— Marc D. • Verified athlete</p>
+              <p className="text-[10px] font-black text-slate-400 mt-1">— Marc D. • Verified athlete</p>
             </div>
           </div>
         )}
