@@ -65,6 +65,8 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Preload hero background image for instant paint */}
+        <link rel="preload" as="image" href="/images/nutrition-bg.webp" type="image/webp" />
         {/* Early PWA install prompt interceptor — captures event before React hydration */}
         <script
           dangerouslySetInnerHTML={{

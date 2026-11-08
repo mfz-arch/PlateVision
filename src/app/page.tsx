@@ -96,11 +96,13 @@ export default function Home() {
       {/* Full-Screen Immersive Nutrition Background with Soft Blur */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img
-          src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1920&q=85"
-          alt=""
-          className="w-full h-full object-cover blur-[3.5px] scale-105 opacity-85"
+          src="/images/nutrition-bg.webp"
+          alt="Fresh healthy nutrition meal background"
+          loading="eager"
+          decoding="async"
+          className="w-full h-full object-cover blur-[1.5px] scale-102 opacity-90 transition-opacity duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/65 to-[#F8F9FA]/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/50 to-[#F8F9FA]/85" />
       </div>
 
       {/* Top Fixed Header */}
