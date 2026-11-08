@@ -91,8 +91,18 @@ export default function Home() {
   }, []);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#F8F9FA] text-[#0f172a] flex flex-col selection:bg-[#b6ff2e] selection:text-[#0f172a]">
+    <main id="main-content" className="min-h-screen bg-[#F8F9FA] text-[#0f172a] flex flex-col selection:bg-[#b6ff2e] selection:text-[#0f172a] relative">
       
+      {/* Full-Screen Immersive Nutrition Background with Soft Blur */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <img
+          src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1920&q=85"
+          alt=""
+          className="w-full h-full object-cover blur-[3.5px] scale-105 opacity-85"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/65 to-[#F8F9FA]/90" />
+      </div>
+
       {/* Top Fixed Header */}
       <Navbar
         onOpenSignIn={() => setIsSignInOpen(true)}
@@ -114,7 +124,7 @@ export default function Home() {
       />
 
       {/* Main Body Content */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
         
         {/* VIEW 1: HOME LANDING PAGE */}
         {activeTab === 'home' && (
@@ -263,7 +273,7 @@ export default function Home() {
 
           <div className="text-center space-y-1">
             <p className="font-bold text-[#0f172a]">© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
-            <p className="text-[11px] text-slate-400">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Google Gemini.</p>
+            <p className="text-[11px] text-slate-500 font-medium">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Advanced Vision Intelligence.</p>
           </div>
         </div>
       </footer>

@@ -366,7 +366,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             <h3 className="text-xl font-black text-[#0f172a] flex items-center gap-2">
               <span>{t('scannerTitle')}</span>
               <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-lime-100 text-[#0f172a] border border-lime-200">
-                Gemini Vision API
+                PlateVision AI Engine
               </span>
             </h3>
             <p className="text-xs text-slate-500 font-semibold">{t('scannerSubtitle')}</p>
@@ -517,7 +517,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             <Camera className="w-8 h-8" />
           </div>
           <div>
-            <h4 className="text-xl font-black text-[#0f172a]">Scan Your Meal with Gemini Vision AI</h4>
+            <h4 className="text-xl font-black text-[#0f172a]">Scan Your Meal with PlateVision AI</h4>
             <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed font-normal">
               Upload a meal photo from your gallery or take a picture directly to calculate calories, protein, carbs & fats with automatic green box overlays.
             </p>

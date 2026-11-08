@@ -71,37 +71,20 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
     <div className="space-y-24 py-4 sm:py-8">
       
       {/* =====================================================================
-          SECTION 1: HERO SECTION WITH CLEARLY VISIBLE BLURRED NUTRITION PHOTO
+          SECTION 1: HERO SECTION — Open Full-Screen Layout
          ===================================================================== */}
-      <section className="relative rounded-[2.5rem] overflow-hidden border-2 border-slate-300 shadow-xl bg-[#0f172a]">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
         
-        {/* Background Layer: High-Contrast Nutrition Spread with Slight Blur */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <img
-            src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1920&q=85"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = '/images/greek-salad.jpg';
-            }}
-            alt="Healthy nutrition meal prep background"
-            className="w-full h-full object-cover scale-105 blur-[3.5px] opacity-90"
-          />
-          {/* Balanced Frosted Overlay: keeps the food photography clearly visible while guaranteeing crisp text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/65 to-white/30" />
-        </div>
-
-        {/* Hero Foreground Content */}
-        <div className="relative z-10 p-6 sm:p-10 lg:p-14 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        {/* Left Headline & CTAs */}
+        <div className="lg:col-span-7 space-y-6 text-left">
           
-          {/* Left Headline & CTAs */}
-          <div className="lg:col-span-7 space-y-6 text-left">
-            
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border-2 border-slate-200 text-[#0f172a] text-xs font-black tracking-wide shadow-xs">
-              <Utensils className="w-4 h-4 text-[#65a30d]" />
-              <span>{t('heroBadge')}</span>
-              <span className="px-2 py-0.5 rounded-full bg-[#b6ff2e] text-[#0f172a] text-[10px] font-black">
-                GEMINI 2.5 VISION
-              </span>
-            </div>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border-2 border-slate-200 text-[#0f172a] text-xs font-black tracking-wide shadow-xs">
+            <Utensils className="w-4 h-4 text-[#65a30d]" />
+            <span>{t('heroBadge')}</span>
+            <span className="px-2 py-0.5 rounded-full bg-[#b6ff2e] text-[#0f172a] text-[10px] font-black">
+              ADVANCED VISION AI
+            </span>
+          </div>
 
             <h1 className="text-4xl sm:text-6xl font-black text-[#0f172a] tracking-tight leading-[1.08] drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
               {t('heroTitleStart')} <br />
@@ -269,7 +252,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           </div>
 
-        </div>
       </section>
 
       {/* =====================================================================
@@ -312,8 +294,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {isFr
-                  ? 'Les études cliniques montrent que même les sportifs sous-estiment leurs calories de 400 à 600 kcal/jour (huiles de cuisson, sauces, taille des portions). Gemini Vision analyse la densité volumétrique de l\'assiette pour détecter chaque calorie cachée.'
-                  : 'Clinical nutrition studies prove people underestimate daily intake by 400–600 kcal/day due to cooking oils, sauces, and portion distortion. Gemini Vision analyzes 3D plate depth to catch hidden calories automatically.'}
+                  ? 'Les études cliniques montrent que même les sportifs sous-estiment leurs calories de 400 à 600 kcal/jour (huiles de cuisson, sauces, taille des portions). La vision par ordinateur de PlateVision analyse la densité volumétrique de l\'assiette pour détecter chaque calorie cachée.'
+                  : 'Clinical nutrition studies prove people underestimate daily intake by 400–600 kcal/day due to cooking oils, sauces, and portion distortion. PlateVision computer vision analyzes 3D plate depth to catch hidden calories automatically.'}
               </p>
             </div>
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black">
@@ -482,7 +464,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-2 text-sm font-black text-[#0f172a] uppercase tracking-wide">
                     <Zap className="w-4 h-4 text-[#65a30d]" />
-                    <span>PlateVision AI (Gemini Vision)</span>
+                    <span>PlateVision AI Neural Engine</span>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-[#b6ff2e] text-[#0f172a] text-xs font-black border border-[#84cc16]">
                     {isFr ? 'Résultats 3.4x Supérieurs' : '3.4x Higher Results'}
@@ -812,7 +794,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               result: '142g Daily Protein Hit',
               quote: isFr
                 ? 'Le bouton "Fix Result" et les conseils IA après chaque repas sont incroyables. Même sur les plats africains traditionnels comme le Jollof ou le poulet braisé, l\'IA reconnaît tout avec précision.'
-                : 'The "Fix Result" button and instant AI tips after every scan are next-level. Even on traditional homemade dishes like Jollof rice and grilled chicken, Gemini Vision detects every component accurately.'
+                : 'The "Fix Result" button and instant AI tips after every scan are next-level. Even on traditional homemade dishes like Jollof rice and grilled chicken, PlateVision AI detects every component accurately.'
             }
           ].map((item, i) => (
             <div key={i} className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
@@ -864,8 +846,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   ? 'Comment une simple photo peut-elle calculer les calories avec autant de précision ?'
                   : 'How can a single photo calculate calories and macros so accurately?',
                 a: isFr
-                  ? 'PlateVision utilise le modèle multimodal Google Gemini Vision. Contrairement aux anciens détecteurs qui ne reconnaissaient que le nom du plat, notre IA segmente chaque ingrédient sur l\'assiette, estime le volume en grammes par rapport à la taille standard de l\'assiette, et calcule les protéines, glucides et lipides.'
-                  : 'PlateVision is powered by Google Gemini multimodal computer vision. Instead of guessing a single dish name, it segments every visible food item on the plate, estimates volumetric gram weight relative to plate geometry, and computes protein, carbs, and fats.'
+                  ? 'PlateVision utilise un modèle multimodal de vision par ordinateur de pointe. Contrairement aux anciens détecteurs qui ne reconnaissaient que le nom du plat, notre IA segmente chaque ingrédient sur l\'assiette, estime le volume en grammes par rapport à la taille standard de l\'assiette, et calcule les protéines, glucides et lipides.'
+                  : 'PlateVision is powered by state-of-the-art multimodal computer vision. Instead of guessing a single dish name, it segments every visible food item on the plate, estimates volumetric gram weight relative to plate geometry, and computes protein, carbs, and fats.'
               },
               {
                 q: isFr

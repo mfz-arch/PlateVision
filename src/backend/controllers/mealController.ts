@@ -45,7 +45,7 @@ export async function analyzePlateImage(imageBase64: string, mimeType = 'image/j
     totalCarbs: parsedDish.totalCarbs || 0,
     totalFats: parsedDish.totalFats || 0,
     detectedItems: parsedDish.detectedItems || [],
-    aiAdvice: parsedDish.aiAdvice || 'Analyzed successfully by Gemini Vision AI.'
+    aiAdvice: parsedDish.aiAdvice || 'Analyzed successfully by PlateVision AI.'
   };
 }
 
