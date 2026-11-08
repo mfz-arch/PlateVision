@@ -193,3 +193,4 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
     </div>
   );
 };
+

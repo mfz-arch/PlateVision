@@ -254,24 +254,6 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#14171d] font-sans pb-28 selection:bg-[#b6ff2e] selection:text-[#14171d]">
-      
-      {/* Top Banner if opened in mobile browser: prompt to install to home screen */}
-      {!isStandalone && (
-        <div className="bg-[#0f172a] text-white px-4 py-2.5 border-b border-[#b6ff2e]/30 flex items-center justify-between text-xs z-50 relative">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <span className="text-base">📲</span>
-            <span className="font-extrabold text-xs truncate text-slate-200">
-              Installer l&apos;application sur l&apos;écran d&apos;accueil
-            </span>
-          </div>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('platevision-open-install'))}
-            className="px-3 py-1.5 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs shrink-0 active:scale-95 transition-all shadow-[0_0_10px_rgba(182,255,46,0.3)] hover:bg-[#a3f01b]"
-          >
-            Installer
-          </button>
-        </div>
-      )}
 
       {/* TOP HEADER */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200/80 px-4 py-3">

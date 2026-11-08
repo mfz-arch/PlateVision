@@ -10,6 +10,11 @@ export const translations = {
     navSignIn: 'Sign In',
     navRegister: 'Create Account',
     navSignOut: 'Sign Out',
+    navInstallApp: 'Install App',
+    close: 'Close',
+    install: 'Install',
+    copied: 'Copied!',
+    copy: 'Copy',
 
     // Landing Hero
     heroBadge: 'The New Era of Smart Nutrition',
@@ -128,6 +133,11 @@ export const translations = {
     navSignIn: 'Se connecter',
     navRegister: 'Créer un compte',
     navSignOut: 'Déconnexion',
+    navInstallApp: 'Installer App',
+    close: 'Fermer',
+    install: 'Installer',
+    copied: 'Copié !',
+    copy: 'Copier',
 
     // Landing Hero
     heroBadge: 'La nouvelle ère de la nutrition intelligente',

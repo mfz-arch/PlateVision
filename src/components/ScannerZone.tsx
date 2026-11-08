@@ -359,17 +359,17 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center">
-            <Camera className="w-5 h-5 text-[#b6ff2e]" />
+          <div className="w-10 h-10 rounded-xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#84cc16]">
+            <Camera className="w-5 h-5 text-[#84cc16]" />
           </div>
           <div>
-            <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
+            <h3 className="text-xl font-black text-[#0f172a] flex items-center gap-2">
               <span>{t('scannerTitle')}</span>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#b6ff2e]/20 text-[#b6ff2e] border border-[#b6ff2e]/40">
+              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-lime-100 text-[#0f172a] border border-lime-200">
                 Gemini Vision API
               </span>
             </h3>
-            <p className="text-xs text-[#9ea3b0]">{t('scannerSubtitle')}</p>
+            <p className="text-xs text-slate-500 font-semibold">{t('scannerSubtitle')}</p>
           </div>
         </div>
 
@@ -377,7 +377,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           <button
             onClick={onClose}
             aria-label="Close scanner"
-            className="p-2 rounded-full text-[#9ea3b0] hover:text-white hover:bg-white/10 transition-all"
+            className="p-2 rounded-full text-slate-400 hover:text-[#0f172a] hover:bg-slate-100 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -386,17 +386,17 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
       {/* API Error Alert Banner */}
       {apiError && (
-        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start justify-between gap-3 text-red-400 text-xs animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-200 flex items-start justify-between gap-3 text-red-600 text-xs animate-in fade-in duration-200">
           <div className="flex items-start gap-2.5">
-            <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <Info className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-white text-sm">Scan Error</p>
-              <p className="mt-0.5 leading-relaxed text-red-300">{apiError}</p>
+              <p className="font-bold text-[#0f172a] text-sm">Scan Error</p>
+              <p className="mt-0.5 leading-relaxed text-red-600">{apiError}</p>
             </div>
           </div>
           <button 
             onClick={() => setApiError(null)} 
-            className="p-1 rounded-lg hover:bg-white/10 text-red-400 hover:text-white transition-all shrink-0"
+            className="p-1 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-700 transition-all shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -409,10 +409,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           <button
             key={dish.id}
             onClick={() => handleSelectSample(dish)}
-            className={`p-2.5 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+            className={`p-2.5 rounded-2xl border-2 text-left flex items-center gap-3 transition-all ${
               selectedDish?.id === dish.id && !customImage
-                ? 'bg-[#b6ff2e]/10 border-[#b6ff2e] shadow-[0_0_15px_rgba(182,255,46,0.2)]'
-                : 'bg-[#14171d] border-white/10 hover:border-white/20'
+                ? 'bg-lime-50 border-[#84cc16] shadow-xs'
+                : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
             }`}
           >
             <img 
@@ -422,13 +422,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src = '/icons/icon-192x192.png';
-                e.currentTarget.className = 'w-12 h-12 rounded-xl object-contain p-1 shrink-0 bg-[#23262f] border border-white/10';
+                e.currentTarget.className = 'w-12 h-12 rounded-xl object-contain p-1 shrink-0 bg-slate-100 border border-slate-200';
               }}
-              className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10"
+              className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200"
             />
             <div className="overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">{dish.title}</p>
-              <p className="text-[10px] text-[#b6ff2e] font-semibold">{dish.totalCalories} kcal</p>
+              <p className="text-xs font-black text-[#0f172a] truncate">{dish.title}</p>
+              <p className="text-[10px] text-[#65a30d] font-bold">{dish.totalCalories} kcal</p>
             </div>
           </button>
         ))}
@@ -450,14 +450,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           className="hidden" 
         />
 
-        {/* Upload Custom File Trigger — only shown once a dish is displayed.
-            When nothing is selected, the big dropzone below already handles uploads (no duplicate button). */}
+        {/* Upload Custom File Trigger */}
         {selectedDish && (
           <button 
             onClick={() => setShowSourceChoiceModal(true)}
-            className="p-2.5 rounded-2xl bg-[#14171d] border border-dashed border-[#b6ff2e]/50 hover:border-[#b6ff2e] cursor-pointer flex items-center justify-center gap-2 text-[#b6ff2e] font-bold text-xs transition-all hover:bg-[#b6ff2e]/5"
+            className="p-2.5 rounded-2xl bg-white border-2 border-dashed border-[#84cc16] hover:bg-lime-50 cursor-pointer flex items-center justify-center gap-2 text-[#0f172a] font-black text-xs transition-all shadow-xs"
           >
-            <Camera className="w-4 h-4 text-[#b6ff2e]" />
+            <Camera className="w-4 h-4 text-[#84cc16]" />
             <span>{t('uploadPhoto')}</span>
           </button>
         )}
@@ -465,10 +464,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
       {/* Choice Modal for Upload Source (Gallery vs Camera) */}
       {showSourceChoiceModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-sm p-6 glass-card rounded-3xl border border-white/10 text-center space-y-5 animate-in zoom-in duration-200">
-            <h4 className="text-lg font-extrabold text-white">Choose Photo Source</h4>
-            <p className="text-xs text-[#9ea3b0]">Select how you want to upload your meal photo</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm p-6 bg-white rounded-3xl border-2 border-slate-200 text-center space-y-5 animate-in zoom-in duration-200 shadow-2xl">
+            <h4 className="text-lg font-black text-[#0f172a]">Choose Photo Source</h4>
+            <p className="text-xs text-slate-500 font-semibold">Select how you want to upload your meal photo</p>
             
             <div className="space-y-3">
               <button
@@ -476,10 +475,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                   setShowSourceChoiceModal(false);
                   galleryInputRef.current?.click();
                 }}
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#14171d] border border-white/10 hover:border-[#b6ff2e] hover:bg-[#b6ff2e]/10 text-white text-sm font-bold flex items-center justify-center gap-3 transition-all"
+                className="w-full py-3.5 px-4 rounded-2xl bg-slate-50 border-2 border-slate-200 hover:border-[#84cc16] hover:bg-lime-50 text-[#0f172a] text-sm font-black flex items-center justify-center gap-3 transition-all"
               >
-                <ImageIcon className="w-5 h-5 text-[#b6ff2e]" />
-                <span>Upload from Galerie</span>
+                <ImageIcon className="w-5 h-5 text-[#84cc16]" />
+                <span>Upload from Gallery</span>
               </button>
 
               <button
@@ -487,16 +486,16 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                   setShowSourceChoiceModal(false);
                   cameraInputRef.current?.click();
                 }}
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#14171d] border border-white/10 hover:border-[#b6ff2e] hover:bg-[#b6ff2e]/10 text-white text-sm font-bold flex items-center justify-center gap-3 transition-all"
+                className="w-full py-3.5 px-4 rounded-2xl bg-slate-50 border-2 border-slate-200 hover:border-[#84cc16] hover:bg-lime-50 text-[#0f172a] text-sm font-black flex items-center justify-center gap-3 transition-all"
               >
-                <Camera className="w-5 h-5 text-[#b6ff2e]" />
+                <Camera className="w-5 h-5 text-[#84cc16]" />
                 <span>Take Picture Directly</span>
               </button>
             </div>
 
             <button
               onClick={() => setShowSourceChoiceModal(false)}
-              className="text-xs font-semibold text-[#9ea3b0] hover:text-white pt-2"
+              className="text-xs font-bold text-slate-400 hover:text-[#0f172a] pt-2 transition-colors"
             >
               Cancel
             </button>
@@ -512,18 +511,18 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           aria-label="Upload a meal photo or open the camera"
           onClick={() => setShowSourceChoiceModal(true)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSourceChoiceModal(true); } }}
-          className="p-10 sm:p-14 text-center border-2 border-dashed border-[#b6ff2e]/40 hover:border-[#b6ff2e] bg-[#14171d]/80 glass-card rounded-3xl cursor-pointer space-y-4 hover:bg-[#b6ff2e]/5 transition-all group"
+          className="p-10 sm:p-14 text-center border-2 border-dashed border-[#84cc16]/60 hover:border-[#84cc16] bg-white rounded-3xl cursor-pointer space-y-4 hover:bg-lime-50/40 transition-all group shadow-xs"
         >
-          <div className="w-16 h-16 mx-auto rounded-3xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e] group-hover:scale-110 transition-all shadow-[0_0_25px_rgba(182,255,46,0.2)]">
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#84cc16] group-hover:scale-110 transition-all shadow-xs">
             <Camera className="w-8 h-8" />
           </div>
           <div>
-            <h4 className="text-xl font-extrabold text-white">Scan Your Meal with Gemini Vision AI</h4>
-            <p className="text-xs text-[#9ea3b0] mt-1 max-w-md mx-auto leading-relaxed">
-              Upload a meal photo from your Galerie or take a picture directly to calculate calories, protein, carbs & fats with automatic green box overlays.
+            <h4 className="text-xl font-black text-[#0f172a]">Scan Your Meal with Gemini Vision AI</h4>
+            <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed font-normal">
+              Upload a meal photo from your gallery or take a picture directly to calculate calories, protein, carbs & fats with automatic green box overlays.
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_20px_rgba(182,255,46,0.3)]">
+          <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs tracking-wide shadow-xs hover:bg-[#a3f01b] transition-all">
             <Upload className="w-4 h-4" />
             <span>Upload Photo / Open Camera</span>
           </span>
@@ -531,7 +530,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <div className="lg:col-span-7 relative rounded-3xl overflow-hidden bg-[#14171d] border border-[rgba(255,255,255,0.1)] group">
+          <div className="lg:col-span-7 relative rounded-3xl overflow-hidden bg-slate-900 border-2 border-slate-200 group shadow-xs">
             
             <img 
               src={selectedDish.imageUrl} 
@@ -542,8 +541,8 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
             {isScanning && (
               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]">
                 <div className="scanner-beam" />
-                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#14171d]/90 border border-[#b6ff2e]/40 text-center">
-                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#b6ff2e]">
+                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#0f172a]/95 border border-[#b6ff2e]/50 text-center">
+                  <div className="flex items-center justify-center gap-2 text-xs font-black text-[#b6ff2e]">
                     <RefreshCw className="w-4 h-4 animate-spin text-[#b6ff2e]" />
                     <span>{t('scanningInProgress')} ({scanProgress}%)...</span>
                   </div>
@@ -571,10 +570,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="px-1.5 py-0.5 rounded bg-[#14171d]/90 text-[10px] font-extrabold text-[#b6ff2e] border border-[#b6ff2e]/40">
+                    <span className="px-1.5 py-0.5 rounded bg-[#0f172a]/90 text-[10px] font-black text-[#b6ff2e] border border-[#b6ff2e]/40">
                       {item.name}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#b6ff2e] text-[10px] font-extrabold text-[#14171d]">
+                    <span className="px-1.5 py-0.5 rounded bg-[#b6ff2e] text-[10px] font-black text-[#0f172a]">
                       {item.calories} kcal
                     </span>
                   </div>
@@ -582,52 +581,52 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               );
             })}
 
-            <div className="absolute bottom-3 left-3 bg-[#14171d]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-[#9ea3b0] font-semibold">
+            <div className="absolute bottom-3 left-3 bg-[#0f172a]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-slate-200 font-semibold">
               {t('hoverBoxInstruction')}
             </div>
           </div>
 
           {/* Right Column: Nutrient Breakdown */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="p-5 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)] space-y-4">
+            <div className="p-5 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4">
               <div>
-                <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
+                <span className="text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-lime-100 text-[#0f172a] border border-lime-200">
                   {selectedDish.category}
                 </span>
-                <h4 className="text-lg font-extrabold text-white mt-2 leading-snug">{selectedDish.title}</h4>
+                <h4 className="text-lg font-black text-[#0f172a] mt-2 leading-snug">{selectedDish.title}</h4>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('scannerTitle')}</p>
-                  <p className="text-3xl font-extrabold text-[#b6ff2e]">{selectedDish.totalCalories} <span className="text-sm font-normal">kcal</span></p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black">{t('scannerTitle')}</p>
+                  <p className="text-3xl font-black text-[#65a30d]">{selectedDish.totalCalories} <span className="text-sm font-normal text-slate-500">kcal</span></p>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center text-[#b6ff2e]">
+                <div className="w-12 h-12 rounded-2xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#84cc16]">
                   <Flame className="w-6 h-6" />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
-                  <p className="text-base font-extrabold text-white">{selectedDish.totalProtein}g</p>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">{t('proteinsLabel')}</p>
+                  <p className="text-base font-black text-[#0f172a]">{selectedDish.totalProtein}g</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
-                  <p className="text-base font-extrabold text-white">{selectedDish.totalCarbs}g</p>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">{t('carbsLabel')}</p>
+                  <p className="text-base font-black text-[#0f172a]">{selectedDish.totalCarbs}g</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#14171d] border border-white/5">
-                  <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('fatsLabel')}</p>
-                  <p className="text-base font-extrabold text-white">{selectedDish.totalFats}g</p>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">{t('fatsLabel')}</p>
+                  <p className="text-base font-black text-[#0f172a]">{selectedDish.totalFats}g</p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#b6ff2e]">
-                  <Zap className="w-4 h-4 text-[#b6ff2e]" />
+              <div className="p-4 rounded-2xl bg-lime-50 border-2 border-lime-200 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-[#65a30d]">
+                  <Zap className="w-4 h-4 text-[#84cc16]" />
                   <span>{t('aiAdviceTitle')} :</span>
                 </div>
-                <p className="text-xs text-white/90 leading-relaxed italic">
+                <p className="text-xs text-slate-700 leading-relaxed italic font-medium">
                   "{selectedDish.aiAdvice}"
                 </p>
               </div>
@@ -635,10 +634,10 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               {/* Fix Result Toggle Button */}
               <button
                 onClick={() => setShowFixPanel(!showFixPanel)}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all border ${
+                className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all border-2 ${
                   showFixPanel
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                    : 'bg-[#14171d] border-white/10 text-[#9ea3b0] hover:border-amber-500/40 hover:text-amber-400'
+                    ? 'bg-amber-50 border-amber-300 text-amber-800'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-800'
                 }`}
               >
                 <Edit3 className="w-3.5 h-3.5" />
@@ -647,13 +646,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
               {/* Fix Result Panel */}
               {showFixPanel && (
-                <div className="space-y-3 p-4 rounded-2xl bg-[#14171d] border border-amber-500/30 animate-in slide-in-from-top duration-200">
-                  <p className="text-[10px] uppercase font-extrabold text-amber-400 tracking-wider">Edit Detected Items</p>
+                <div className="space-y-3 p-4 rounded-2xl bg-amber-50/60 border-2 border-amber-200 animate-in slide-in-from-top duration-200">
+                  <p className="text-[10px] uppercase font-black text-amber-800 tracking-wider">Edit Detected Items</p>
 
                   {/* Editable Items List */}
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                     {selectedDish.detectedItems.map((item) => (
-                      <div key={item.id} className="p-3 rounded-xl bg-[#1a1d24] border border-white/5 space-y-2">
+                      <div key={item.id} className="p-3 rounded-xl bg-white border border-slate-200 space-y-2 shadow-xs">
                         {editingItemId === item.id ? (
                           /* Editing Mode */
                           <div className="space-y-2">
@@ -661,20 +660,20 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                               type="text"
                               value={editValues.name || ''}
                               onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
-                              className="w-full px-3 py-1.5 rounded-lg bg-[#14171d] border border-amber-500/40 text-white text-xs font-bold focus:outline-none focus:border-[#b6ff2e]"
+                              className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-amber-400 text-[#0f172a] text-xs font-bold focus:outline-none focus:border-[#84cc16]"
                               placeholder="Food name"
                             />
                             <div className="grid grid-cols-2 gap-1.5">
                               {(['calories', 'protein', 'carbs', 'fats', 'weightGrams'] as const).map((field) => (
                                 <div key={field} className="flex items-center gap-1">
-                                  <label className="text-[9px] text-[#9ea3b0] uppercase font-bold w-12 shrink-0">
+                                  <label className="text-[9px] text-slate-500 uppercase font-bold w-12 shrink-0">
                                     {field === 'weightGrams' ? 'Weight' : field}
                                   </label>
                                   <input
                                     type="number"
                                     value={editValues[field] || 0}
                                     onChange={(e) => setEditValues({ ...editValues, [field]: Number(e.target.value) })}
-                                    className="w-full px-2 py-1 rounded-md bg-[#14171d] border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#b6ff2e] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-full px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[#0f172a] text-xs font-semibold focus:outline-none focus:border-[#84cc16] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   />
                                 </div>
                               ))}
@@ -682,13 +681,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                             <div className="flex gap-2">
                               <button
                                 onClick={saveEditItem}
-                                className="flex-1 py-1.5 rounded-lg bg-[#b6ff2e] text-[#14171d] text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95"
+                                className="flex-1 py-1.5 rounded-lg bg-[#b6ff2e] text-[#0f172a] text-[10px] font-black flex items-center justify-center gap-1 transition-all active:scale-95 shadow-xs"
                               >
                                 <Save className="w-3 h-3" /> Save
                               </button>
                               <button
                                 onClick={() => { setEditingItemId(null); setEditValues({}); }}
-                                className="px-3 py-1.5 rounded-lg bg-white/5 text-[#9ea3b0] text-[10px] font-bold transition-all hover:text-white"
+                                className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold transition-all hover:bg-slate-200"
                               >
                                 Cancel
                               </button>
@@ -698,22 +697,22 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                           /* Display Mode */
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-xs font-bold text-white">{item.name}</p>
-                              <p className="text-[10px] text-[#9ea3b0]">
+                              <p className="text-xs font-black text-[#0f172a]">{item.name}</p>
+                              <p className="text-[10px] text-slate-500 font-semibold">
                                 {item.calories}kcal · P:{item.protein}g · C:{item.carbs}g · F:{item.fats}g · {item.weightGrams}g
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => startEditItem(item)}
-                                className="p-1.5 rounded-lg hover:bg-amber-500/15 text-[#9ea3b0] hover:text-amber-400 transition-all"
+                                className="p-1.5 rounded-lg hover:bg-amber-100 text-slate-400 hover:text-amber-700 transition-all"
                                 title="Edit item"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => deleteItem(item.id)}
-                                className="p-1.5 rounded-lg hover:bg-red-500/15 text-[#9ea3b0] hover:text-red-400 transition-all"
+                                className="p-1.5 rounded-lg hover:bg-red-100 text-slate-400 hover:text-red-600 transition-all"
                                 title="Remove item"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -728,30 +727,30 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
                   {/* Add Manual Item Button */}
                   <button
                     onClick={addManualItem}
-                    className="w-full py-2 rounded-xl border border-dashed border-[#b6ff2e]/40 text-[#b6ff2e] text-[10px] font-bold flex items-center justify-center gap-1.5 hover:bg-[#b6ff2e]/5 transition-all"
+                    className="w-full py-2 rounded-xl border-2 border-dashed border-[#84cc16] text-[#0f172a] text-[10px] font-black flex items-center justify-center gap-1.5 hover:bg-lime-50 transition-all bg-white"
                   >
-                    <PlusCircle className="w-3.5 h-3.5" /> Add Food Item Manually
+                    <PlusCircle className="w-3.5 h-3.5 text-[#84cc16]" /> Add Food Item Manually
                   </button>
 
                   {/* AI Re-fix Section */}
                   {customImage && (
-                    <div className="pt-2 border-t border-white/5 space-y-2">
-                      <p className="text-[10px] uppercase font-extrabold text-[#b6ff2e] tracking-wider flex items-center gap-1.5">
-                        <MessageSquare className="w-3 h-3" /> Ask AI to Fix
+                    <div className="pt-2 border-t border-amber-200 space-y-2">
+                      <p className="text-[10px] uppercase font-black text-[#65a30d] tracking-wider flex items-center gap-1.5">
+                        <MessageSquare className="w-3 h-3 text-[#84cc16]" /> Ask AI to Fix
                       </p>
                       <textarea
                         value={aiFixText}
                         onChange={(e) => setAiFixText(e.target.value)}
                         placeholder={"E.g., \"That's fufu not mashed potatoes\" or \"The rice portion is about 300g not 150g\""}
-                        className="w-full px-3 py-2 rounded-xl bg-[#14171d] border border-white/10 text-white text-xs placeholder:text-[#9ea3b0]/50 focus:outline-none focus:border-[#b6ff2e] resize-none h-16"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-[#0f172a] text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#84cc16] resize-none h-16"
                       />
                       {aiFixError && (
-                        <p className="text-[10px] text-red-400 font-semibold">{aiFixError}</p>
+                        <p className="text-[10px] text-red-600 font-semibold">{aiFixError}</p>
                       )}
                       <button
                         onClick={handleAiFix}
                         disabled={isAiFixing || !aiFixText.trim()}
-                        className="w-full py-2.5 rounded-xl bg-[#b6ff2e] text-[#14171d] text-xs font-extrabold flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-[0_0_15px_rgba(182,255,46,0.25)]"
+                        className="w-full py-2.5 rounded-xl bg-[#b6ff2e] text-[#0f172a] text-xs font-black flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-xs hover:bg-[#a3f01b]"
                       >
                         {isAiFixing ? (
                           <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> AI is Re-analyzing...</>
@@ -767,13 +766,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
               <button
                 onClick={handleLogMeal}
                 disabled={isSaving || isScanning || selectedDish.id === 'scanning-temp'}
-                className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_20px_rgba(182,255,46,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-sm tracking-wide hover:bg-[#a3f01b] transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 <span>{isSaving ? 'Saving...' : t('logMealCTA')}</span>
               </button>
 
-              <p className="text-[10px] leading-relaxed text-[#9ea3b0] text-center">
+              <p className="text-[10px] leading-relaxed text-slate-400 text-center">
                 AI nutrition values are estimates and may be inaccurate. They are not medical or dietary advice.
               </p>
             </div>
@@ -786,12 +785,12 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
   if (isModal) {
     return (
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-label="Plate scanner dialog"
       >
-        <div className="relative w-full max-w-5xl p-6 sm:p-8 glass-card rounded-3xl border border-[rgba(255,255,255,0.12)] shadow-[0_25px_60px_rgba(0,0,0,0.9)] my-8">
+        <div className="relative w-full max-w-5xl p-6 sm:p-8 bg-white rounded-3xl border-2 border-slate-200 shadow-2xl my-8">
           {content}
         </div>
       </div>

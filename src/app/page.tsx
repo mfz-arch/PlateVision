@@ -91,7 +91,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#14171d] text-white flex flex-col selection:bg-[#b6ff2e] selection:text-[#14171d]">
+    <main id="main-content" className="min-h-screen bg-[#F8F9FA] text-[#0f172a] flex flex-col selection:bg-[#b6ff2e] selection:text-[#0f172a]">
       
       {/* Top Fixed Header */}
       <Navbar
@@ -150,19 +150,19 @@ export default function Home() {
         )}
 
         {activeTab === 'dashboard' && !userProfile && (
-          <div className="py-16 text-center space-y-4 glass-card rounded-3xl border border-white/10 max-w-lg mx-auto px-6">
-            <h3 className="text-2xl font-extrabold text-white">Access Your Dashboard</h3>
-            <p className="text-xs text-[#9ea3b0]">Please sign in or create an account first to view your personalized CalZen nutrition dashboard.</p>
+          <div className="py-16 text-center space-y-4 bg-white rounded-3xl border-2 border-slate-200 shadow-sm max-w-lg mx-auto px-6">
+            <h3 className="text-2xl font-black text-[#0f172a]">Access Your Dashboard</h3>
+            <p className="text-xs text-slate-500">Please sign in or create an account first to view your personalized CalZen nutrition dashboard.</p>
             <div className="flex justify-center gap-3 pt-2">
               <button 
                 onClick={() => setIsSignInOpen(true)} 
-                className="px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide shadow-[0_0_15px_rgba(182,255,46,0.3)]"
+                className="px-6 py-3 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs tracking-wide shadow-sm hover:bg-[#a3f01b] transition-all"
               >
                 Sign In
               </button>
               <button 
                 onClick={() => setIsRegisterOpen(true)} 
-                className="px-6 py-3 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/15"
+                className="px-6 py-3 rounded-xl bg-slate-100 text-[#0f172a] border border-slate-200 font-bold text-xs hover:bg-slate-200 transition-all"
               >
                 Create Account
               </button>
@@ -172,7 +172,7 @@ export default function Home() {
 
         {/* VIEW 3: SCANNER ONLY PAGE */}
         {activeTab === 'scanner' && (
-          <div className="p-6 glass-card rounded-3xl border border-[rgba(255,255,255,0.1)]">
+          <div className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-sm">
             <ScannerZone onMealScanned={() => { setMealsRefreshKey((k) => k + 1); setActiveTab('dashboard'); }} />
           </div>
         )}
@@ -226,44 +226,44 @@ export default function Home() {
       />
 
       {/* Footer with legal links (extra bottom padding on mobile for the tab bar) */}
-      <footer className="mt-16 pt-10 pb-28 md:pb-10 border-t border-[rgba(255,255,255,0.06)] bg-[#14171d]">
-        <div className="max-w-7xl mx-auto px-4 text-xs text-[#9ea3b0] space-y-6">
-          <nav aria-label="Legal & Policies" className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 font-semibold">
-            <Link href="/privacy" className="hover:text-[#b6ff2e] transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[#b6ff2e] transition-colors">Terms of Service</Link>
-            <Link href="/cookies" className="hover:text-[#b6ff2e] transition-colors">Cookie Policy</Link>
-            <Link href="/accessibility" className="hover:text-[#b6ff2e] transition-colors">Accessibility Statement</Link>
-            <Link href="/terms#dmca" className="hover:text-[#b6ff2e] transition-colors">DMCA / Copyright</Link>
-            <Link href="/admin" className="text-[#b6ff2e] hover:underline font-bold">Admin Portal</Link>
+      <footer className="mt-16 pt-10 pb-28 md:pb-10 border-t-2 border-slate-200 bg-white text-slate-600">
+        <div className="max-w-7xl mx-auto px-4 text-xs text-slate-500 space-y-6">
+          <nav aria-label="Legal & Policies" className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 font-bold text-slate-600">
+            <Link href="/privacy" className="hover:text-[#65a30d] transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-[#65a30d] transition-colors">Terms of Service</Link>
+            <Link href="/cookies" className="hover:text-[#65a30d] transition-colors">Cookie Policy</Link>
+            <Link href="/accessibility" className="hover:text-[#65a30d] transition-colors">Accessibility Statement</Link>
+            <Link href="/terms#dmca" className="hover:text-[#65a30d] transition-colors">DMCA / Copyright</Link>
+            <Link href="/admin" className="text-[#84cc16] hover:underline font-black">Admin Portal</Link>
             <button
               type="button"
               onClick={() => {
                 try { localStorage.removeItem('pv_cookie_consent_v1'); } catch {}
                 if (typeof window !== 'undefined') window.dispatchEvent(new Event('pv:open-cookie-settings'));
               }}
-              className="text-[#9ea3b0] hover:text-[#b6ff2e] transition-colors underline underline-offset-2 cursor-pointer"
+              className="text-slate-500 hover:text-[#65a30d] transition-colors underline underline-offset-2 cursor-pointer font-bold"
             >
               Cookie Preferences
             </button>
           </nav>
 
           {/* FTC & Medical Compliance Disclaimers */}
-          <div className="max-w-3xl mx-auto text-center space-y-2 text-[11px] leading-relaxed text-[#9ea3b0]">
+          <div className="max-w-3xl mx-auto text-center space-y-2 text-[11px] leading-relaxed text-slate-500">
             <p>
-              <strong className="text-white">Health &amp; Medical Disclaimer:</strong> PlateVision AI provides automated nutrition{' '}
-              <strong className="text-white">estimates</strong> for wellness journaling and general informational purposes only. It is not
+              <strong className="text-[#0f172a]">Health &amp; Medical Disclaimer:</strong> PlateVision AI provides automated nutrition{' '}
+              <strong className="text-[#0f172a]">estimates</strong> for wellness journaling and general informational purposes only. It is not
               a medical device, does not provide medical or dietary diagnosis/treatment, and should never replace qualified professional advice.
               Always consult a physician or registered dietitian before changing your diet or fitness routine.
             </p>
-            <p className="text-[10px] text-[#838896]">
+            <p className="text-[10px] text-slate-400">
               All calculations rely on standard nutritional reference equations (Mifflin-St Jeor). Individual results vary.
               Sample food photography licensed under Unsplash License. User interface icons provided under ISC License (Lucide).
             </p>
           </div>
 
           <div className="text-center space-y-1">
-            <p className="font-semibold text-white">© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
-            <p className="text-[11px]">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Google Gemini.</p>
+            <p className="font-bold text-[#0f172a]">© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
+            <p className="text-[11px] text-slate-400">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Google Gemini.</p>
           </div>
         </div>
       </footer>

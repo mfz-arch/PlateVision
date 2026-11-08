@@ -170,36 +170,36 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-modal-title"
     >
-      <div className="relative w-full max-w-2xl p-6 sm:p-8 glass-card rounded-3xl border border-[rgba(255,255,255,0.12)] shadow-[0_25px_60px_rgba(0,0,0,0.9)]">
+      <div className="relative w-full max-w-2xl p-6 sm:p-8 bg-white text-[#0f172a] rounded-3xl border-2 border-slate-200 shadow-2xl">
         
         {/* Top Header Progress Bar */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 flex items-center justify-center">
-              <Target className="w-4 h-4 text-[#b6ff2e]" aria-hidden="true" />
+            <div className="w-8 h-8 rounded-lg bg-lime-100 border border-lime-200 flex items-center justify-center">
+              <Target className="w-4 h-4 text-[#84cc16]" aria-hidden="true" />
             </div>
-            <h2 id="onboarding-modal-title" className="text-sm font-extrabold text-white">
+            <h2 id="onboarding-modal-title" className="text-sm font-black text-[#0f172a]">
               {t('onboardingTitle')}
             </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close onboarding wizard"
-            className="p-2 rounded-full text-[#9ea3b0] hover:text-white hover:bg-white/10 transition-all focus-visible:outline-none"
+            className="p-2 rounded-full text-slate-400 hover:text-[#0f172a] hover:bg-slate-100 transition-all focus-visible:outline-none"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Step indicator bar */}
-        <div className="w-full bg-[#14171d] h-2 rounded-full mb-8 overflow-hidden border border-white/5">
+        <div className="w-full bg-slate-100 h-2 rounded-full mb-8 overflow-hidden border border-slate-200">
           <div 
-            className="bg-[#b6ff2e] h-full transition-all duration-500 shadow-[0_0_12px_#b6ff2e]"
+            className="bg-[#84cc16] h-full transition-all duration-500 shadow-xs"
             style={{ width: `${(step / 5) * 100}%` }}
           />
         </div>
@@ -208,7 +208,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">{t('step1Question')}</h3>
+              <h3 className="text-2xl font-black text-[#0f172a]">{t('step1Question')}</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -223,19 +223,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div
                     key={item.id}
                     onClick={() => setFormData({ ...formData, goal: item.id as any })}
-                    className={`p-5 rounded-2xl cursor-pointer border transition-all ${
+                    className={`p-5 rounded-2xl cursor-pointer border-2 transition-all ${
                       isSelected
-                        ? 'bg-[#b6ff2e]/10 border-[#b6ff2e] shadow-[0_0_20px_rgba(182,255,46,0.25)]'
-                        : 'bg-[#14171d] border-white/10 hover:border-white/20'
+                        ? 'bg-lime-50 border-[#84cc16] shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-                      isSelected ? 'bg-[#b6ff2e] text-[#14171d]' : 'bg-white/5 text-[#9ea3b0]'
+                      isSelected ? 'bg-[#b6ff2e] text-[#0f172a]' : 'bg-slate-100 text-slate-500'
                     }`}>
                       <IconComp className="w-5 h-5" />
                     </div>
-                    <h4 className="text-base font-bold text-white mb-1">{item.title}</h4>
-                    <p className="text-xs text-[#9ea3b0]">{item.desc}</p>
+                    <h4 className="text-base font-black text-[#0f172a] mb-1">{item.title}</h4>
+                    <p className="text-xs text-slate-500 font-medium">{item.desc}</p>
                   </div>
                 );
               })}
@@ -247,31 +247,31 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">{t('wizardStep2Title')}</h3>
-              <p className="text-xs text-[#9ea3b0] mt-1">{t('wizardStep2Desc')}</p>
+              <h3 className="text-2xl font-black text-[#0f172a]">{t('wizardStep2Title')}</h3>
+              <p className="text-xs text-slate-500 font-semibold mt-1">{t('wizardStep2Desc')}</p>
             </div>
 
             {authError && (
-              <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold text-center">
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold text-center">
                 {authError}
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('emailLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('emailLabel')}</label>
                 <input
                   type="email"
                   required
                   placeholder="your.email@example.com"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('passwordLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('passwordLabel')}</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -279,12 +279,12 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     placeholder="••••••••"
                     value={formData.password || ''}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-4 pr-10 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                    className="w-full pl-4 pr-10 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-[#9ea3b0] hover:text-white transition-all"
+                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-[#0f172a] transition-all"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -293,49 +293,49 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('nameLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('nameLabel')}</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('ageLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('ageLabel')}</label>
                 <input
                   type="number"
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('heightLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('heightLabel')}</label>
                 <input
                   type="number"
                   value={formData.heightCm}
                   onChange={(e) => setFormData({ ...formData, heightCm: Number(e.target.value) })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-1">{t('currentWeightLabel')}</label>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-1">{t('currentWeightLabel')}</label>
                 <input
                   type="number"
                   value={formData.currentWeightKg}
                   onChange={(e) => setFormData({ ...formData, currentWeightKg: Number(e.target.value) })}
-                  className="w-full px-4 py-3 bg-[#14171d] border border-white/10 rounded-xl text-white text-sm focus:border-[#b6ff2e] focus:outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-[#0f172a] text-sm focus:border-[#84cc16] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-[#b6ff2e] uppercase mb-1 flex items-center justify-between">
+                <label className="block text-xs font-black text-[#65a30d] uppercase mb-1 flex items-center justify-between">
                   <span>{t('targetWeightLabel')}</span>
-                  <span className="text-white text-sm">{formData.targetWeightKg} kg</span>
+                  <span className="text-[#0f172a] text-sm font-black">{formData.targetWeightKg} kg</span>
                 </label>
                 <input
                   type="range"
@@ -343,7 +343,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   max="130"
                   value={formData.targetWeightKg}
                   onChange={(e) => setFormData({ ...formData, targetWeightKg: Number(e.target.value) })}
-                  className="w-full accent-[#b6ff2e]"
+                  className="w-full accent-[#84cc16]"
                 />
               </div>
 
@@ -371,15 +371,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       setFormData({ ...formData, acceptedTerms: e.target.checked });
                       if (authError) setAuthError(null);
                     }}
-                    className="mt-1 w-4 h-4 rounded border-white/20 bg-[#14171d] text-[#b6ff2e] focus:ring-2 focus:ring-[#b6ff2e] accent-[#b6ff2e] shrink-0"
+                    className="mt-1 w-4 h-4 rounded border-slate-300 bg-slate-50 text-[#84cc16] focus:ring-2 focus:ring-[#84cc16] accent-[#84cc16] shrink-0"
                   />
-                  <span className="text-xs text-[#c4c8d2] leading-relaxed">
+                  <span className="text-xs text-slate-600 leading-relaxed font-medium">
                     I agree to the{' '}
                     <a
                       href="/terms"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#b6ff2e] underline underline-offset-2 hover:text-[#a3f01b] font-bold"
+                      className="text-[#65a30d] underline underline-offset-2 hover:text-[#84cc16] font-bold"
                     >
                       Terms of Service
                     </a>{' '}
@@ -388,7 +388,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       href="/privacy"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#b6ff2e] underline underline-offset-2 hover:text-[#a3f01b] font-bold"
+                      className="text-[#65a30d] underline underline-offset-2 hover:text-[#84cc16] font-bold"
                     >
                       Privacy Policy
                     </a>
@@ -404,14 +404,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-2xl font-extrabold text-white">{t('wizardStep3Title')}</h3>
-              <p className="text-xs text-[#9ea3b0] mt-1">{t('wizardStep3Desc')}</p>
+              <h3 className="text-2xl font-black text-[#0f172a]">{t('wizardStep3Title')}</h3>
+              <p className="text-xs text-slate-500 font-semibold mt-1">{t('wizardStep3Desc')}</p>
             </div>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-2">
-                  {t('workoutDaysLabel')} : <span className="text-[#b6ff2e] font-bold">{formData.workoutDaysPerWeek} {t('workoutDaysUnit')}</span>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-2">
+                  {t('workoutDaysLabel')} : <span className="text-[#65a30d] font-black">{formData.workoutDaysPerWeek} {t('workoutDaysUnit')}</span>
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((days) => (
@@ -419,10 +419,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       key={days}
                       type="button"
                       onClick={() => setFormData({ ...formData, workoutDaysPerWeek: days })}
-                      className={`py-3 rounded-xl font-bold text-sm border transition-all ${
+                      className={`py-3 rounded-xl font-black text-sm border-2 transition-all ${
                         formData.workoutDaysPerWeek === days
-                          ? 'bg-[#b6ff2e] text-[#14171d] border-[#b6ff2e] shadow-[0_0_15px_rgba(182,255,46,0.3)]'
-                          : 'bg-[#14171d] text-[#9ea3b0] border-white/10 hover:border-white/20'
+                          ? 'bg-[#b6ff2e] text-[#0f172a] border-[#84cc16] shadow-xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       {days}d
@@ -432,8 +432,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#9ea3b0] uppercase mb-2">
-                  {t('timeframeLabel')} : <span className="text-[#b6ff2e] font-bold">{formData.timeframeMonths} {t('timeframeUnit')}</span>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-2">
+                  {t('timeframeLabel')} : <span className="text-[#65a30d] font-black">{formData.timeframeMonths} {t('timeframeUnit')}</span>
                 </label>
                 <div className="grid grid-cols-4 gap-3">
                   {[1, 2, 3, 6].map((months) => (
@@ -441,10 +441,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       key={months}
                       type="button"
                       onClick={() => setFormData({ ...formData, timeframeMonths: months })}
-                      className={`py-3 rounded-xl font-bold text-sm border transition-all ${
+                      className={`py-3 rounded-xl font-black text-sm border-2 transition-all ${
                         formData.timeframeMonths === months
-                          ? 'bg-[#b6ff2e] text-[#14171d] border-[#b6ff2e] shadow-[0_0_15px_rgba(182,255,46,0.3)]'
-                          : 'bg-[#14171d] text-[#9ea3b0] border-white/10 hover:border-white/20'
+                          ? 'bg-[#b6ff2e] text-[#0f172a] border-[#84cc16] shadow-xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       {months} {t('timeframeUnit')}
@@ -460,54 +460,54 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {step === 4 && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 text-[#b6ff2e] text-xs font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-200 text-[#0f172a] text-xs font-black mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
                 {t('step4Badge')}
               </div>
-              <h3 className="text-2xl font-extrabold text-white">{t('step4Title')}</h3>
+              <h3 className="text-2xl font-black text-[#0f172a]">{t('step4Title')}</h3>
             </div>
 
             {isPaceUnrealistic ? (
-              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-                <div className="flex items-center gap-3 text-amber-400 font-bold text-base">
-                  <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
+              <div className="p-5 rounded-2xl bg-amber-50 border-2 border-amber-200 space-y-3">
+                <div className="flex items-center gap-3 text-amber-800 font-black text-base">
+                  <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
                   <span>{t('alertIntensiveTitle')} ({kgPerWeek.toFixed(1)} kg / wk)</span>
                 </div>
-                <p className="text-xs text-amber-200/90 leading-relaxed">
+                <p className="text-xs text-amber-900 leading-relaxed font-medium">
                   {t('alertIntensiveDesc', { months: formData.timeframeMonths })}
                 </p>
-                <div className="p-3 rounded-xl bg-amber-500/15 text-xs text-amber-300 font-medium">
+                <div className="p-3 rounded-xl bg-amber-100 text-xs text-amber-900 font-semibold">
                   {t('alertIntensiveAdvice')}
                 </div>
               </div>
             ) : (
-              <div className="p-5 rounded-2xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/30 space-y-3">
-                <div className="flex items-center gap-3 text-[#b6ff2e] font-bold text-base">
-                  <CheckCircle className="w-6 h-6 text-[#b6ff2e] shrink-0" />
+              <div className="p-5 rounded-2xl bg-lime-50 border-2 border-lime-200 space-y-3">
+                <div className="flex items-center gap-3 text-emerald-800 font-black text-base">
+                  <CheckCircle className="w-6 h-6 text-[#84cc16] shrink-0" />
                   <span>{t('alertRealisticTitle')} ({kgPerWeek.toFixed(1)} kg / wk)</span>
                 </div>
-                <p className="text-xs text-white/80 leading-relaxed">
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
                   {t('alertRealisticDesc')}
                 </p>
               </div>
             )}
 
-            <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('currentStat')}</p>
-                <p className="text-base font-extrabold text-white">{formData.currentWeightKg} kg</p>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">{t('currentStat')}</p>
+                <p className="text-base font-black text-[#0f172a]">{formData.currentWeightKg} kg</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('targetStat')}</p>
-                <p className="text-base font-extrabold text-[#b6ff2e]">{formData.targetWeightKg} kg</p>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">{t('targetStat')}</p>
+                <p className="text-base font-black text-[#65a30d]">{formData.targetWeightKg} kg</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('durationStat')}</p>
-                <p className="text-base font-extrabold text-white">{formData.timeframeMonths} mo</p>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">{t('durationStat')}</p>
+                <p className="text-base font-black text-[#0f172a]">{formData.timeframeMonths} mo</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('workoutStat')}</p>
-                <p className="text-base font-extrabold text-white">{formData.workoutDaysPerWeek}d / wk</p>
+                <p className="text-[10px] text-slate-500 uppercase font-bold">{t('workoutStat')}</p>
+                <p className="text-base font-black text-[#0f172a]">{formData.workoutDaysPerWeek}d / wk</p>
               </div>
             </div>
           </div>
@@ -518,51 +518,51 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           <div className="py-6 space-y-6 text-center animate-in fade-in duration-300">
             {isCalculating ? (
               <div className="space-y-6 py-8">
-                <div className="w-20 h-20 mx-auto rounded-3xl bg-[#b6ff2e]/10 border border-[#b6ff2e]/40 flex items-center justify-center animate-pulse shadow-[0_0_30px_rgba(182,255,46,0.3)]">
-                  <Sparkles className="w-10 h-10 text-[#b6ff2e] animate-spin" />
+                <div className="w-20 h-20 mx-auto rounded-3xl bg-lime-100 border border-lime-200 flex items-center justify-center animate-pulse shadow-sm">
+                  <Sparkles className="w-10 h-10 text-[#84cc16] animate-spin" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-extrabold text-white mb-2">{t('step5CalculatingTitle')}</h4>
+                  <h4 className="text-xl font-black text-[#0f172a] mb-2">{t('step5CalculatingTitle')}</h4>
                 </div>
-                <div className="w-full bg-[#14171d] h-3 rounded-full overflow-hidden border border-white/10">
+                <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                   <div 
-                    className="bg-[#b6ff2e] h-full transition-all duration-300 shadow-[0_0_15px_#b6ff2e]"
+                    className="bg-[#84cc16] h-full transition-all duration-300 shadow-xs"
                     style={{ width: `${calcProgress}%` }}
                   />
                 </div>
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#b6ff2e] text-[#14171d] flex items-center justify-center shadow-[0_0_30px_rgba(182,255,46,0.4)]">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#b6ff2e] text-[#0f172a] flex items-center justify-center shadow-xs">
                   <Check className="w-8 h-8 stroke-[3]" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold text-white">{t('step5SuccessTitle')}</h3>
-                  <p className="text-xs text-[#9ea3b0]">{t('step5SuccessDesc')}</p>
+                  <h3 className="text-2xl font-black text-[#0f172a]">{t('step5SuccessTitle')}</h3>
+                  <p className="text-xs text-slate-500 font-semibold">{t('step5SuccessDesc')}</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
-                  <div className="p-4 rounded-2xl bg-[#14171d] border border-[#b6ff2e]/30">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('caloriesPerDay')}</p>
-                    <p className="text-xl font-extrabold text-[#b6ff2e]">2 150 <span className="text-xs font-normal">kcal</span></p>
+                  <div className="p-4 rounded-2xl bg-lime-50/80 border-2 border-[#84cc16]">
+                    <p className="text-[10px] text-slate-600 uppercase font-black">{t('caloriesPerDay')}</p>
+                    <p className="text-xl font-black text-[#0f172a]">2 150 <span className="text-xs font-normal text-slate-500">kcal</span></p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('proteinsLabel')}</p>
-                    <p className="text-xl font-extrabold text-white">156 <span className="text-xs font-normal">g</span></p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold">{t('proteinsLabel')}</p>
+                    <p className="text-xl font-black text-[#0f172a]">156 <span className="text-xs font-normal text-slate-500">g</span></p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('carbsLabel')}</p>
-                    <p className="text-xl font-extrabold text-white">210 <span className="text-xs font-normal">g</span></p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold">{t('carbsLabel')}</p>
+                    <p className="text-xl font-black text-[#0f172a]">210 <span className="text-xs font-normal text-slate-500">g</span></p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#14171d] border border-white/10">
-                    <p className="text-[10px] text-[#9ea3b0] uppercase font-bold">{t('waterPerDay')}</p>
-                    <p className="text-xl font-extrabold text-sky-400">2.8 <span className="text-xs font-normal">L</span></p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold">{t('waterPerDay')}</p>
+                    <p className="text-xl font-black text-sky-600">2.8 <span className="text-xs font-normal text-slate-500">L</span></p>
                   </div>
                 </div>
 
                 <button
                   onClick={handleFinalSubmit}
-                  className="w-full py-4 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_25px_rgba(182,255,46,0.35)]"
+                  className="w-full py-4 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-xs"
                 >
                   {t('accessDashboardCTA')}
                 </button>
@@ -573,11 +573,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         {/* Footer Navigation Buttons */}
         {step <= 4 && (
-          <div className="flex items-center justify-between mt-8 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between mt-8 pt-4 border-t-2 border-slate-200">
             {step > 1 ? (
               <button
                 onClick={handlePrevStep}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 text-white font-bold text-xs hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-all border border-slate-200"
               >
                 <ArrowLeft className="w-4 h-4" />
                 {t('prevButton')}
@@ -586,10 +586,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
             <button
               onClick={handleNextStep}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#b6ff2e] text-[#14171d] font-extrabold text-xs tracking-wide hover:bg-[#a3f01b] transition-all shadow-[0_0_15px_rgba(182,255,46,0.3)]"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs tracking-wide hover:bg-[#a3f01b] transition-all shadow-xs"
             >
               <span>{step === 4 ? t('launchAnalysisCTA') : t('nextButton')}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 text-[#0f172a]" />
             </button>
           </div>
         )}

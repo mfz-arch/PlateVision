@@ -636,3 +636,4 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
     </div>
   );
 };
+
