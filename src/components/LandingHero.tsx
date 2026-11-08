@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Camera, ArrowRight, Zap, Flame, CheckCircle2, Utensils,
-  Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles,
-  TrendingUp, Clock, ShieldCheck, BarChart3, ChevronDown,
-  ChevronUp, Award, Target, Brain, Scale, Star, Layers
+  Sparkles, TrendingUp, Clock, ShieldCheck, BarChart3,
+  ChevronDown, ChevronUp, Award, Target, Brain, Scale,
+  Star, XCircle, Check, Activity, Layers
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { useLanguage } from '../context/LanguageContext';
@@ -30,14 +30,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   const [selectedDishIndex, setSelectedDishIndex] = useState(0);
   const activeDish = SAMPLE_DISHES[selectedDishIndex] || SAMPLE_DISHES[0];
 
-  // Interactive Comparison Mode ('ai' vs 'manual')
+  // Interactive Comparison Mode ('both' | 'ai' | 'manual')
   const [comparisonTab, setComparisonTab] = useState<'both' | 'ai' | 'manual'>('both');
-
-  // Interactive 60-Second Video Walkthrough State
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [videoSeconds, setVideoSeconds] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 1.5>(1);
 
   // Interactive 90-Day Results Calculator State
   const [calcGoal, setCalcGoal] = useState<'lose' | 'gain' | 'recomp'>('lose');
@@ -55,89 +49,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
     }
   };
 
-  // 60-second walkthrough timer loop
-  useEffect(() => {
-    if (!isPlaying) return;
-    const intervalMs = playbackSpeed === 1.5 ? 666 : 1000;
-    const timer = setInterval(() => {
-      setVideoSeconds((prev) => {
-        if (prev >= 60) {
-          setIsPlaying(false);
-          return 60;
-        }
-        return prev + 1;
-      });
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [isPlaying, playbackSpeed]);
-
-  // Video Chapters (0:00 to 1:00)
-  const videoChapters = [
-    {
-      id: 0,
-      start: 0,
-      end: 15,
-      timeLabel: '0:00 - 0:15',
-      title: isFr ? '1. Photo Instantanée du Repas' : '1. Instant Meal Capture',
-      subtitle: isFr
-        ? 'Ouvrez PlateVision et prenez une photo en 1 seconde sans peser vos aliments.'
-        : 'Open PlateVision and snap a photo in 1 second—no kitchen scale required.',
-      dish: SAMPLE_DISHES[0],
-      hudStatus: isFr ? 'CALIBRAGE OPTIQUE DE L\'ASSIETTE...' : 'OPTICAL PLATE CALIBRATION...',
-      highlightStep: 'capture'
-    },
-    {
-      id: 1,
-      start: 15,
-      end: 32,
-      timeLabel: '0:15 - 0:32',
-      title: isFr ? '2. Détection Volumétrique Gemini Vision' : '2. Gemini Vision Volumetric Detection',
-      subtitle: isFr
-        ? 'L\'IA segmente chaque ingrédient, estime le grammage en 3D et détecte les sauces cachées.'
-        : 'AI segments every ingredient, estimates 3D gram weight, and detects hidden oils & dressings.',
-      dish: SAMPLE_DISHES[0],
-      hudStatus: isFr ? '3 INGRÉDIENTS DÉTECTÉS (PRÉCISION 94.2%)' : '3 INGREDIENTS DETECTED (94.2% PRECISION)',
-      highlightStep: 'detect'
-    },
-    {
-      id: 2,
-      start: 32,
-      end: 48,
-      timeLabel: '0:32 - 0:48',
-      title: isFr ? '3. Calcul Exact des Macros & Calories' : '3. Exact Macro & Calorie Breakdown',
-      subtitle: isFr
-        ? 'Protéines, glucides, lipides et calories sont calculés et synchronisés avec votre BMR.'
-        : 'Protein, carbs, fats, and calories are computed and synced against your personal BMR target.',
-      dish: SAMPLE_DISHES[1],
-      hudStatus: isFr ? 'MACROS SYNCHRONISÉES : 640 KCAL | 42G PROT' : 'MACROS SYNCED: 640 KCAL | 42G PROTEIN',
-      highlightStep: 'macros'
-    },
-    {
-      id: 3,
-      start: 48,
-      end: 60,
-      timeLabel: '0:48 - 1:00',
-      title: isFr ? '4. Coaching IA & Progression Quotidienne' : '4. Real-Time AI Coaching & Daily Rings',
-      subtitle: isFr
-        ? 'Recevez un conseil nutritionnel personnalisé et validez votre journée en un clic.'
-        : 'Receive personalized nutritional feedback and lock in your daily streak in one tap.',
-      dish: SAMPLE_DISHES[2],
-      hudStatus: isFr ? 'OBJECTIF JOURNALIER ATTEINT À 96% ✓' : 'DAILY GOAL ADHERENCE AT 96% ✓',
-      highlightStep: 'coach'
-    }
-  ];
-
-  const currentChapter =
-    videoChapters.find((c) => videoSeconds >= c.start && videoSeconds <= c.end) || videoChapters[0];
-
-  const formatVideoTime = (sec: number) => {
-    const mins = Math.floor(sec / 60);
-    const rem = sec % 60;
-    return `${mins}:${rem < 10 ? '0' : ''}${rem}`;
-  };
-
   // Calculator math
-  const minutesSavedPerDay = calcMealsPerDay * 4.5; // ~4.5 mins saved per meal vs manual scale & app typing
+  const minutesSavedPerDay = calcMealsPerDay * 4.5;
   const hoursSavedPerYear = Math.round((minutesSavedPerDay * 365) / 60);
   const hiddenCaloriesCaught =
     calcCurrentMethod === 'none'
@@ -147,10 +60,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       : calcMealsPerDay * 75;
   const projected90DayKg =
     calcGoal === 'lose'
-      ? -(calcMealsPerDay * 1.9 + (calcCurrentMethod === 'none' ? 2.4 : 1.6)).toFixed(1)
+      ? `-${(calcMealsPerDay * 1.9 + (calcCurrentMethod === 'none' ? 2.4 : 1.6)).toFixed(1)}`
       : calcGoal === 'gain'
       ? `+${(calcMealsPerDay * 0.95 + 1.2).toFixed(1)}`
-      : `-4.2 kg fat / +2.1 kg muscle`;
+      : `-4.2 kg / +2.1 kg`;
   const adherenceBoost =
     calcCurrentMethod === 'manual' ? '3.1x' : calcCurrentMethod === 'guess' ? '3.4x' : '4.2x';
 
@@ -158,29 +71,22 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
     <div className="space-y-24 py-4 sm:py-8">
       
       {/* =====================================================================
-          SECTION 1: HERO SECTION WITH SLIGHTLY BLURRED NUTRITION BACKGROUND
+          SECTION 1: HERO SECTION WITH CLEARLY VISIBLE BLURRED NUTRITION PHOTO
          ===================================================================== */}
-      <section className="relative rounded-[2.5rem] overflow-hidden border-2 border-slate-200/90 shadow-xl">
+      <section className="relative rounded-[2.5rem] overflow-hidden border-2 border-slate-300 shadow-xl bg-[#0f172a]">
         
-        {/* Background Layer: Nutrition Imagery with Slight Blur */}
+        {/* Background Layer: High-Contrast Nutrition Spread with Slight Blur */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <img
-            src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1920&q=85"
+            src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1920&q=85"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = '/images/greek-salad.jpg';
             }}
-            alt="Fresh healthy nutrition ingredients background"
-            className="w-full h-full object-cover scale-105 blur-[3px] opacity-35"
+            alt="Healthy nutrition meal prep background"
+            className="w-full h-full object-cover scale-105 blur-[3.5px] opacity-90"
           />
-          {/* Secondary nutrition texture accent on the right */}
-          <div className="
-            absolute inset-0 
-            bg-gradient-to-r from-white/95 via-white/88 to-lime-50/80
-            backdrop-blur-[2px]
-          " />
-          {/* Decorative soft neon orbs */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#b6ff2e]/25 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl" />
+          {/* Balanced Frosted Overlay: keeps the food photography clearly visible while guaranteeing crisp text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/65 to-white/30" />
         </div>
 
         {/* Hero Foreground Content */}
@@ -189,7 +95,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           {/* Left Headline & CTAs */}
           <div className="lg:col-span-7 space-y-6 text-left">
             
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border-2 border-lime-300 text-[#0f172a] text-xs font-black tracking-wide shadow-xs">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border-2 border-slate-200 text-[#0f172a] text-xs font-black tracking-wide shadow-xs">
               <Utensils className="w-4 h-4 text-[#65a30d]" />
               <span>{t('heroBadge')}</span>
               <span className="px-2 py-0.5 rounded-full bg-[#b6ff2e] text-[#0f172a] text-[10px] font-black">
@@ -197,33 +103,33 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black text-[#0f172a] tracking-tight leading-[1.08]">
+            <h1 className="text-4xl sm:text-6xl font-black text-[#0f172a] tracking-tight leading-[1.08] drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
               {t('heroTitleStart')} <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4d7c0f] via-[#65a30d] to-emerald-600">
+              <span className="text-[#4d7c0f]">
                 {t('heroTitleEnd')}
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-700 leading-relaxed max-w-2xl font-medium bg-white/60 backdrop-blur-xs p-3.5 rounded-2xl border border-white/80">
+            <p className="text-base sm:text-lg text-[#0f172a] leading-relaxed max-w-2xl font-medium bg-white/85 backdrop-blur-md p-4 rounded-2xl border border-slate-200/90 shadow-xs">
               {t('heroSubtitle')}
             </p>
 
-            {/* Quick Problem -> Solution Pill Strip */}
-            <div className="grid grid-cols-3 gap-2.5 max-w-xl">
-              <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs">
+            {/* Quick Brand Metric Strip */}
+            <div className="grid grid-cols-3 gap-3 max-w-xl">
+              <div className="p-3.5 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-slate-200 shadow-xs">
                 <p className="text-xl sm:text-2xl font-black text-[#0f172a]">1.8s</p>
                 <p className="text-[11px] text-slate-600 font-bold">
                   {isFr ? 'Temps de scan IA' : 'Instant AI Scan'}
                 </p>
               </div>
-              <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-slate-200 shadow-xs">
                 <p className="text-xl sm:text-2xl font-black text-[#65a30d]">94.2%</p>
                 <p className="text-[11px] text-slate-600 font-bold">
                   {isFr ? 'Précision Macros' : 'Macro Accuracy'}
                 </p>
               </div>
-              <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs">
-                <p className="text-xl sm:text-2xl font-black text-emerald-600">3.4x</p>
+              <div className="p-3.5 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-slate-200 shadow-xs">
+                <p className="text-xl sm:text-2xl font-black text-[#0f172a]">3.4x</p>
                 <p className="text-[11px] text-slate-600 font-bold">
                   {isFr ? 'Plus de résultats' : 'Better Results'}
                 </p>
@@ -234,7 +140,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-1">
               <button
                 onClick={onStartAssessment}
-                className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#b6ff2e] text-[#0f172a] font-black text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-lg hover:scale-[1.03] active:scale-95 border-2 border-[#84cc16]"
+                className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#b6ff2e] text-[#0f172a] font-black text-base tracking-wide hover:bg-[#a3f01b] transition-all shadow-lg hover:scale-[1.02] active:scale-95 border-2 border-[#84cc16]"
               >
                 <span>{t('heroStartAssessment')}</span>
                 <ArrowRight className="w-5 h-5 text-[#0f172a]" />
@@ -242,15 +148,15 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
               <button
                 onClick={handleTestScannerClick}
-                className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-slate-300 hover:border-[#0f172a] text-[#0f172a] font-black text-base transition-all hover:bg-white shadow-sm"
+                className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#0f172a] hover:bg-slate-800 text-white font-black text-base transition-all shadow-md"
               >
-                <Camera className="w-5 h-5 text-[#65a30d]" />
+                <Camera className="w-5 h-5 text-[#b6ff2e]" />
                 <span>{t('heroTestScanner')}</span>
               </button>
             </div>
 
             {/* Key Guarantee Badges */}
-            <div className="flex flex-wrap items-center gap-5 pt-3 text-xs text-slate-700 font-bold border-t border-slate-300/70">
+            <div className="inline-flex flex-wrap items-center gap-5 px-4 py-2.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 text-xs text-[#0f172a] font-bold">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-[#65a30d]" />
                 <span>{t('heroBmrGuarantee')}</span>
@@ -268,9 +174,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           {/* Right 3D Interactive Card Showcase with Live Dish Switcher */}
-          <div className="lg:col-span-5 relative space-y-3">
+          <div className="lg:col-span-5 relative">
             
-            <div className="relative p-4 bg-white/95 backdrop-blur-md rounded-3xl border-2 border-slate-200 shadow-2xl transition-all duration-500 group">
+            <div className="relative p-4 bg-white/95 backdrop-blur-md rounded-3xl border-2 border-slate-200 shadow-2xl transition-all duration-500">
               
               {/* Image Preview with Multi-Bounding Box Overlay */}
               <div className="relative rounded-2xl overflow-hidden bg-slate-100">
@@ -310,7 +216,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 </div>
               </div>
 
-              {/* Floating Stats Footer Card */}
+              {/* Floating Stats Footer Card (Cohesive Brand Colors Only) */}
               <div className="p-4 mt-3 rounded-2xl bg-[#0f172a] text-white border border-slate-800 shadow-md space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -319,39 +225,41 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   </div>
 
                   <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white border border-white/15">
                       P: {activeDish.totalProtein}g
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white border border-white/15">
                       C: {activeDish.totalCarbs}g
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#b6ff2e]/15 text-[#b6ff2e] border border-[#b6ff2e]/30">
                       F: {activeDish.totalFats}g
                     </span>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-300 line-clamp-1 font-medium">
-                  💡 {activeDish.aiAdvice}
-                </p>
+                <div className="flex items-center gap-2 text-[11px] text-slate-300 font-medium">
+                  <Sparkles className="w-3.5 h-3.5 text-[#b6ff2e] shrink-0" />
+                  <p className="line-clamp-1">{activeDish.aiAdvice}</p>
+                </div>
               </div>
 
-              {/* Interactive Sample Switcher Pills inside Hero Card */}
+              {/* Interactive Sample Switcher Pills inside Hero Card (Real Icons, No Emojis) */}
               <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  {isFr ? 'Tester un plat :' : 'Click to test plate:'}
+                  {isFr ? 'Tester un plat :' : 'Select sample plate:'}
                 </span>
                 <div className="flex items-center gap-1.5">
                   {SAMPLE_DISHES.map((dish, idx) => (
                     <button
                       key={dish.id}
                       onClick={() => setSelectedDishIndex(idx)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition-all ${
                         selectedDishIndex === idx
                           ? 'bg-[#0f172a] text-[#b6ff2e] shadow-xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      {idx === 0 ? '🥗 Salmon' : idx === 1 ? '🍗 Chicken' : '🫒 Greek'}
+                      <Utensils className="w-3 h-3" />
+                      <span>{idx === 0 ? 'Salmon' : idx === 1 ? 'Chicken' : 'Greek'}</span>
                     </button>
                   ))}
                 </div>
@@ -365,11 +273,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </section>
 
       {/* =====================================================================
-          SECTION 2: WHY PLATEVISION INCREASES RESULTS CONSIDERABLY (SCIENCE & DATA)
+          SECTION 2: WHY PLATEVISION INCREASES RESULTS CONSIDERABLY (BRAND COLORS ONLY)
          ===================================================================== */}
       <section className="space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lime-100 border border-lime-200 text-[#0f172a] text-xs font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lime-100 border border-lime-300 text-[#0f172a] text-xs font-black uppercase tracking-wider">
             <TrendingUp className="w-4 h-4 text-[#65a30d]" />
             <span>{isFr ? 'IMPACT PROUVÉ SUR VOS RÉSULTATS' : 'THE SCIENCE OF ACCELERATED RESULTS'}</span>
           </div>
@@ -385,17 +293,17 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </p>
         </div>
 
-        {/* 3 Core Pillars Explaining Why Results Skyrocket */}
+        {/* 3 Core Pillars — Strictly Cohesive Brand Palette (Slate + Neon Lime + White) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           {/* Pillar 1 */}
-          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-sm hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between">
+          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-xs hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between group">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                <div className="w-12 h-12 rounded-2xl bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center shadow-xs">
                   <Target className="w-6 h-6" />
                 </div>
-                <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-black">
+                <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[#0f172a] text-xs font-black">
                   {isFr ? '-43% d\'erreur éliminée' : 'Eliminates ±43% Error'}
                 </span>
               </div>
@@ -409,19 +317,19 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </p>
             </div>
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black">
-              <span className="text-slate-500">{isFr ? 'Précision Humaine : 57%' : 'Human Guessing: 57%'}</span>
+              <span className="text-slate-500">{isFr ? 'Estimation Humaine : 57%' : 'Human Guessing: 57%'}</span>
               <span className="text-[#65a30d]">{isFr ? 'PlateVision IA : 94.2%' : 'PlateVision AI: 94.2%'}</span>
             </div>
           </div>
 
           {/* Pillar 2 */}
-          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-sm hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between">
+          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-xs hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between group">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#65a30d]">
+                <div className="w-12 h-12 rounded-2xl bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center shadow-xs">
                   <Clock className="w-6 h-6" />
                 </div>
-                <span className="px-3 py-1 rounded-full bg-lime-100 text-[#0f172a] text-xs font-black">
+                <span className="px-3 py-1 rounded-full bg-lime-100 border border-lime-300 text-[#0f172a] text-xs font-black">
                   {isFr ? '1.8 sec vs 15 min/jour' : '1.8s vs 15 mins/day'}
                 </span>
               </div>
@@ -430,7 +338,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {isFr
-                  ? 'Chercher chaque ingrédient manuellement dans une base de données prend 5 minutes par repas. Au bout de 10 jours, vous arrêtez. Avec une simple photo en 1.8 seconde, suivre ses macros devient aussi simple que d\'envoyer un Snap.'
+                  ? 'Chercher chaque ingrédient manuellement dans une base de données prend 5 minutes par repas. Au bout de 10 jours, vous arrêtez. Avec une simple photo en 1.8 seconde, suivre ses macros devient instantané.'
                   : 'Searching barcodes and typing 8 ingredients per meal takes 15+ minutes a day—causing 82% of users to quit by week two. Snapping a 1.8-second photo removes all friction, keeping 91% of athletes consistent past 90 days.'}
               </p>
             </div>
@@ -441,13 +349,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           {/* Pillar 3 */}
-          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-sm hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between">
+          <div className="p-7 bg-white rounded-3xl border-2 border-slate-200 shadow-xs hover:border-[#84cc16] transition-all space-y-4 flex flex-col justify-between group">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
+                <div className="w-12 h-12 rounded-2xl bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center shadow-xs">
                   <Brain className="w-6 h-6" />
                 </div>
-                <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-black">
+                <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[#0f172a] text-xs font-black">
                   {isFr ? 'Feedback Temps Réel' : 'Real-Time Bio-Feedback'}
                 </span>
               </div>
@@ -456,7 +364,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {isFr
-                  ? 'Au lieu de découvrir à la fin du mois que vous manquiez de protéines, notre coach IA analyse chaque assiette instantanément et vous indique quoi ajuster au repas suivant pour maximiser la perte de gras ou le gain musculaire.'
+                  ? 'Au lieu de découvrir à la fin du mois que vous manquiez de protéines, notre coach IA analyse chaque assiette instantanément et vous indique quoi ajuster au repas suivant pour maximiser vos résultats.'
                   : 'Instead of realizing at the end of the month that your protein was too low, PlateVision gives instant AI advice on every plate—telling you exactly how to balance your next meal to protect lean muscle and burn fat.'}
               </p>
             </div>
@@ -468,8 +376,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
         </div>
 
-        {/* Interactive Side-by-Side Comparison Card: Old Manual Tracking vs PlateVision AI */}
-        <div className="p-6 sm:p-8 bg-white rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+        {/* Interactive Side-by-Side Comparison Card */}
+        <div className="p-6 sm:p-8 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
               <h3 className="text-xl sm:text-2xl font-black text-[#0f172a]">
@@ -479,7 +387,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </h3>
               <p className="text-xs text-slate-500 font-semibold mt-1">
                 {isFr
-                  ? 'Cliquez pour filtrer les métriques de performance entre le suivi manuel et la vision IA.'
+                  ? 'Comparez comment la vision par ordinateur transforme la régularité et les résultats physiques.'
                   : 'Compare how automated computer vision transforms daily adherence and body composition outcomes.'}
               </p>
             </div>
@@ -510,10 +418,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             {(comparisonTab === 'both' || comparisonTab === 'manual') && (
               <div className={`p-6 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-4 ${comparisonTab === 'manual' ? 'md:col-span-2' : ''}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-black text-slate-700 uppercase tracking-wide">
-                    ❌ {isFr ? 'Applications Manuelles & Pesée' : 'Traditional Manual Logging'}
+                  <span className="inline-flex items-center gap-2 text-sm font-black text-slate-700 uppercase tracking-wide">
+                    <XCircle className="w-4 h-4 text-slate-500" />
+                    <span>{isFr ? 'Applications Manuelles & Pesée' : 'Traditional Manual Logging'}</span>
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 text-xs font-black">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 text-xs font-black">
                     {isFr ? 'Abandon élevé' : 'High Drop-off'}
                   </span>
                 </div>
@@ -522,48 +431,58 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   <div>
                     <div className="flex justify-between font-bold mb-1">
                       <span className="text-slate-600">{isFr ? 'Adhésion après 30 jours' : '30-Day User Retention'}</span>
-                      <span className="text-rose-600 font-black">18%</span>
+                      <span className="text-slate-700 font-black">18%</span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="bg-rose-500 h-full rounded-full" style={{ width: '18%' }} />
+                      <div className="bg-slate-500 h-full rounded-full" style={{ width: '18%' }} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between font-bold mb-1">
                       <span className="text-slate-600">{isFr ? 'Précision des portions (Sans balance)' : 'Portion Accuracy (Without Scale)'}</span>
-                      <span className="text-amber-600 font-black">57%</span>
+                      <span className="text-slate-700 font-black">57%</span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="bg-amber-500 h-full rounded-full" style={{ width: '57%' }} />
+                      <div className="bg-slate-500 h-full rounded-full" style={{ width: '57%' }} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between font-bold mb-1">
                       <span className="text-slate-600">{isFr ? 'Atteinte de l\'objectif à 12 semaines' : '12-Week Goal Achievement Rate'}</span>
-                      <span className="text-rose-600 font-black">24%</span>
+                      <span className="text-slate-700 font-black">24%</span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="bg-rose-500 h-full rounded-full" style={{ width: '24%' }} />
+                      <div className="bg-slate-500 h-full rounded-full" style={{ width: '24%' }} />
                     </div>
                   </div>
                 </div>
 
                 <ul className="space-y-2 pt-2 text-xs text-slate-600 font-medium">
-                  <li>• {isFr ? '15 à 20 minutes perdues chaque jour à chercher des aliments' : '15–20 minutes wasted daily searching food databases'}</li>
-                  <li>• {isFr ? 'Impossible d\'analyser les plats au restaurant ou faits maison' : 'Impossible to accurately log restaurant or family-cooked meals'}</li>
-                  <li>• {isFr ? 'Aucun conseil en temps réel sur l\'équilibre des macronutriments' : 'Zero real-time guidance on how to fix macro imbalances'}</li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{isFr ? '15 à 20 minutes perdues chaque jour à chercher des aliments' : '15–20 minutes wasted daily searching food databases'}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{isFr ? 'Impossible d\'analyser les plats au restaurant ou faits maison' : 'Impossible to accurately log restaurant or family-cooked meals'}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{isFr ? 'Aucun conseil en temps réel sur l\'équilibre des macronutriments' : 'Zero real-time guidance on how to fix macro imbalances'}</span>
+                  </li>
                 </ul>
               </div>
             )}
 
             {/* PlateVision AI Column */}
             {(comparisonTab === 'both' || comparisonTab === 'ai') && (
-              <div className={`p-6 rounded-2xl bg-lime-50/70 border-2 border-[#84cc16] space-y-4 ${comparisonTab === 'ai' ? 'md:col-span-2' : ''}`}>
+              <div className={`p-6 rounded-2xl bg-lime-50/60 border-2 border-[#84cc16] space-y-4 ${comparisonTab === 'ai' ? 'md:col-span-2' : ''}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-black text-[#0f172a] uppercase tracking-wide">
-                    ⚡ PlateVision AI (Gemini Vision)
+                  <span className="inline-flex items-center gap-2 text-sm font-black text-[#0f172a] uppercase tracking-wide">
+                    <Zap className="w-4 h-4 text-[#65a30d]" />
+                    <span>PlateVision AI (Gemini Vision)</span>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-[#b6ff2e] text-[#0f172a] text-xs font-black border border-[#84cc16]">
                     {isFr ? 'Résultats 3.4x Supérieurs' : '3.4x Higher Results'}
@@ -576,7 +495,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       <span className="text-[#0f172a]">{isFr ? 'Adhésion après 30 jours' : '30-Day User Retention'}</span>
                       <span className="text-[#65a30d] font-black">91%</span>
                     </div>
-                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-200">
+                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-300">
                       <div className="bg-[#84cc16] h-full rounded-full" style={{ width: '91%' }} />
                     </div>
                   </div>
@@ -586,7 +505,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       <span className="text-[#0f172a]">{isFr ? 'Précision Volumétrique IA' : 'AI Volumetric Macro Precision'}</span>
                       <span className="text-[#65a30d] font-black">94.2%</span>
                     </div>
-                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-200">
+                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-300">
                       <div className="bg-[#84cc16] h-full rounded-full" style={{ width: '94%' }} />
                     </div>
                   </div>
@@ -596,16 +515,25 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       <span className="text-[#0f172a]">{isFr ? 'Atteinte de l\'objectif à 12 semaines' : '12-Week Goal Achievement Rate'}</span>
                       <span className="text-[#65a30d] font-black">84%</span>
                     </div>
-                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-200">
-                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: '84%' }} />
+                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-lime-300">
+                      <div className="bg-[#65a30d] h-full rounded-full" style={{ width: '84%' }} />
                     </div>
                   </div>
                 </div>
 
                 <ul className="space-y-2 pt-2 text-xs text-[#0f172a] font-semibold">
-                  <li>✓ {isFr ? 'Scan photo complet en 1.8 seconde (maison, restaurant, tupperware)' : '1.8-second photo scan works on home meals, restaurants & meal prep'}</li>
-                  <li>✓ {isFr ? 'Détection multi-aliments avec boîtes englobantes et bouton "Fix Result"' : 'Multi-ingredient bounding boxes + instant "Fix Result" AI correction'}</li>
-                  <li>✓ {isFr ? 'Synchronisation directe entre le site web et l\'application mobile PWA' : 'Seamless cloud sync across desktop web and mobile home-screen app'}</li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#65a30d] shrink-0" />
+                    <span>{isFr ? 'Scan photo complet en 1.8 seconde (maison, restaurant, tupperware)' : '1.8-second photo scan works on home meals, restaurants & meal prep'}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#65a30d] shrink-0" />
+                    <span>{isFr ? 'Détection multi-aliments avec boîtes englobantes et bouton "Fix Result"' : 'Multi-ingredient bounding boxes + instant "Fix Result" AI correction'}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#65a30d] shrink-0" />
+                    <span>{isFr ? 'Synchronisation directe entre le site web et l\'application mobile PWA' : 'Seamless cloud sync across desktop web and mobile home-screen app'}</span>
+                  </li>
                 </ul>
               </div>
             )}
@@ -614,308 +542,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </section>
 
       {/* =====================================================================
-          SECTION 3: 1-MINUTE INTERACTIVE PRODUCT WALKTHROUGH VIDEO
+          SECTION 3: INTERACTIVE 90-DAY RESULTS & TIME-SAVED SIMULATOR
          ===================================================================== */}
-      <section className="space-y-8">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0f172a] text-[#b6ff2e] text-xs font-black uppercase tracking-wider">
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>{isFr ? 'DÉMO VIDÉO INTERACTIVE DE 60 SECONDES' : '60-SECOND INTERACTIVE VIDEO WALKTHROUGH'}</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#0f172a] tracking-tight">
-            {isFr
-              ? 'Découvrez PlateVision en action en 1 minute'
-              : 'Watch How PlateVision Works in 60 Seconds'}
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600">
-            {isFr
-              ? 'Lancez la vidéo de 1 minute ou cliquez directement sur un chapitre pour voir comment l\'IA transforme une simple photo en plan nutritionnel complet.'
-              : 'Press play on our 1-minute guided tour or click any chapter below to see how Gemini Vision turns a meal photo into actionable macro telemetry.'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          
-          {/* Left 7 Cols: Interactive 60-Second Video Stage */}
-          <div className="lg:col-span-7 bg-[#0f172a] rounded-3xl border-2 border-slate-800 shadow-2xl overflow-hidden flex flex-col justify-between">
-            
-            {/* Top Video Viewport */}
-            <div className="relative h-80 sm:h-[420px] w-full overflow-hidden bg-slate-950 select-none">
-              
-              {/* Background Video / Animated Meal Stream */}
-              <video
-                key={currentChapter.id}
-                src="https://assets.mixkit.co/videos/preview/mixkit-healthy-food-in-a-bowl-42874-large.mp4"
-                poster={currentChapter.dish.imageUrl}
-                autoPlay={isPlaying}
-                loop
-                muted={isMuted}
-                playsInline
-                className="w-full h-full object-cover opacity-55 transition-all duration-700"
-              />
-
-              {/* Fallback / Dish High-Res Layer with Dynamic Zoom when playing */}
-              <img
-                src={currentChapter.dish.imageUrl}
-                alt={currentChapter.title}
-                className={`absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-80 transition-transform duration-1000 ${
-                  isPlaying ? 'scale-105' : 'scale-100'
-                }`}
-              />
-
-              {/* Dark Gradient Vignette for HUD Readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/35 to-[#0f172a]/70" />
-
-              {/* Top HUD Telemetry Bar */}
-              <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-[#b6ff2e]/40 text-[#b6ff2e] text-xs font-black">
-                  <span className={`w-2 h-2 rounded-full bg-[#b6ff2e] ${isPlaying ? 'animate-ping' : ''}`} />
-                  <span>{currentChapter.hudStatus}</span>
-                </div>
-                <div className="px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-white/15 text-white font-mono text-xs font-bold">
-                  {formatVideoTime(videoSeconds)} / 1:00
-                </div>
-              </div>
-
-              {/* Center Interactive AI Overlay Based on Current Chapter */}
-              <div className="absolute inset-x-6 top-16 bottom-20 flex items-center justify-center">
-                {currentChapter.highlightStep === 'capture' && (
-                  <div className="w-full max-w-md p-5 rounded-3xl border-2 border-dashed border-[#b6ff2e] bg-slate-900/75 backdrop-blur-md text-center space-y-3 animate-in fade-in duration-300">
-                    <div className="w-14 h-14 mx-auto rounded-2xl bg-[#b6ff2e] text-[#0f172a] flex items-center justify-center shadow-lg">
-                      <Camera className="w-7 h-7" />
-                    </div>
-                    <p className="text-base font-black text-white">
-                      {isFr ? 'Étape 1 : Cadrage Automatique de l\'Assiette' : 'Step 1: Auto-Framing Your Plate'}
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      {isFr
-                        ? 'Pas besoin de peser : prenez une photo depuis la caméra ou votre galerie photo.'
-                        : 'No weighing required: snap directly from your phone camera or photo album.'}
-                    </p>
-                  </div>
-                )}
-
-                {currentChapter.highlightStep === 'detect' && (
-                  <div className="w-full max-w-md space-y-2.5 animate-in fade-in duration-300">
-                    {currentChapter.dish.detectedItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3 rounded-2xl bg-slate-900/85 backdrop-blur-md border-2 border-[#b6ff2e] flex items-center justify-between text-xs shadow-lg"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#b6ff2e]" />
-                          <div>
-                            <p className="font-black text-white">{item.name}</p>
-                            <p className="text-[10px] text-slate-400">
-                              {isFr ? 'Poids estimé par vision 3D :' : '3D Vision Estimated Weight:'} {item.weightGrams}g
-                            </p>
-                          </div>
-                        </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#b6ff2e] text-[#0f172a] font-black">
-                          {item.calories} kcal
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {currentChapter.highlightStep === 'macros' && (
-                  <div className="w-full max-w-md p-5 rounded-3xl bg-slate-900/90 backdrop-blur-md border-2 border-[#b6ff2e] space-y-4 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">TOTAL MEAL ENERGY</p>
-                        <p className="text-3xl font-black text-[#b6ff2e]">{currentChapter.dish.totalCalories} kcal</p>
-                      </div>
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black">
-                        ✓ BMR Matched
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2.5 text-center">
-                      <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30">
-                        <p className="text-[10px] text-rose-300 font-bold">PROTEIN</p>
-                        <p className="text-lg font-black text-white">{currentChapter.dish.totalProtein}g</p>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
-                        <p className="text-[10px] text-amber-300 font-bold">CARBS</p>
-                        <p className="text-lg font-black text-white">{currentChapter.dish.totalCarbs}g</p>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-                        <p className="text-[10px] text-emerald-300 font-bold">FATS</p>
-                        <p className="text-lg font-black text-white">{currentChapter.dish.totalFats}g</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {currentChapter.highlightStep === 'coach' && (
-                  <div className="w-full max-w-md p-5 rounded-3xl bg-slate-900/90 backdrop-blur-md border-2 border-[#b6ff2e] space-y-3 animate-in fade-in duration-300">
-                    <div className="flex items-center gap-2 text-[#b6ff2e] text-xs font-black uppercase">
-                      <Sparkles className="w-4 h-4" />
-                      <span>{isFr ? 'Conseil du Coach IA Gemini' : 'Gemini AI Nutritionist Feedback'}</span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-white leading-relaxed font-medium">
-                      &ldquo;{currentChapter.dish.aiAdvice}&rdquo;
-                    </p>
-                    <div className="pt-2 flex items-center justify-between text-[11px] text-emerald-400 font-black">
-                      <span>✓ {isFr ? 'Ajouté au journal du jour' : 'Logged to Today\'s Dashboard'}</span>
-                      <span>+1 Day Streak 🔥</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Big Center Play Button Overlay when Paused at 0:00 */}
-                {!isPlaying && videoSeconds === 0 && (
-                  <button
-                    onClick={() => setIsPlaying(true)}
-                    aria-label="Play 1-minute demo video"
-                    className="absolute inset-0 flex items-center justify-center bg-slate-950/40 hover:bg-slate-950/20 transition-all group cursor-pointer"
-                  >
-                    <div className="w-20 h-20 rounded-full bg-[#b6ff2e] text-[#0f172a] flex items-center justify-center shadow-[0_0_40px_rgba(182,255,46,0.8)] group-hover:scale-110 transition-transform">
-                      <Play className="w-9 h-9 fill-current ml-1" />
-                    </div>
-                  </button>
-                )}
-              </div>
-
-              {/* Bottom Caption Inside Video */}
-              <div className="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black text-[#b6ff2e]">{currentChapter.title}</p>
-                  <p className="text-[11px] text-slate-300 line-clamp-1">{currentChapter.subtitle}</p>
-                </div>
-                <span className="text-[11px] font-mono text-slate-400 shrink-0">{currentChapter.timeLabel}</span>
-              </div>
-
-            </div>
-
-            {/* Video Transport & Timeline Controls */}
-            <div className="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 space-y-3">
-              {/* Interactive Scrubbing Bar (0 to 60s) */}
-              <div className="space-y-1">
-                <input
-                  type="range"
-                  min={0}
-                  max={60}
-                  value={videoSeconds}
-                  onChange={(e) => setVideoSeconds(Number(e.target.value))}
-                  aria-label="Video timeline scrubber (60 seconds)"
-                  className="w-full accent-[#b6ff2e] h-2 bg-slate-800 rounded-lg cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                  <span>0:00 Capture</span>
-                  <span>0:15 AI Vision</span>
-                  <span>0:32 Macros</span>
-                  <span>0:48 AI Coach</span>
-                  <span>1:00 Done</span>
-                </div>
-              </div>
-
-              {/* Buttons Row */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      if (videoSeconds >= 60) setVideoSeconds(0);
-                      setIsPlaying(!isPlaying);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs hover:bg-[#a3f01b] transition-all"
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                    <span>{isPlaying ? (isFr ? 'Pause' : 'Pause') : (isFr ? 'Lire la démo (1m)' : 'Play 1m Demo')}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setVideoSeconds(0);
-                      setIsPlaying(true);
-                    }}
-                    title="Restart 1-minute video"
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-all"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPlaybackSpeed(playbackSpeed === 1 ? 1.5 : 1)}
-                    className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-black font-mono"
-                  >
-                    {playbackSpeed}x
-                  </button>
-                  <button
-                    onClick={() => setIsMuted(!isMuted)}
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#b6ff2e]" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right 5 Cols: Clickable 60-Second Video Chapters */}
-          <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-            <div className="space-y-3">
-              {videoChapters.map((chap) => {
-                const isActive = currentChapter.id === chap.id;
-                return (
-                  <button
-                    key={chap.id}
-                    onClick={() => {
-                      setVideoSeconds(chap.start);
-                      setIsPlaying(true);
-                    }}
-                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-3.5 ${
-                      isActive
-                        ? 'bg-lime-50/90 border-[#84cc16] shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-black shrink-0 mt-0.5 ${
-                        isActive ? 'bg-[#0f172a] text-[#b6ff2e]' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {chap.timeLabel}
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-[#0f172a]">{chap.title}</h4>
-                      <p className="text-xs text-slate-600 leading-relaxed">{chap.subtitle}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="p-5 rounded-2xl bg-[#0f172a] text-white border border-slate-800 flex items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <p className="text-xs font-black text-[#b6ff2e]">
-                  {isFr ? 'Envie d\'essayer avec votre propre repas ?' : 'Want to test it with your own meal?'}
-                </p>
-                <p className="text-[11px] text-slate-300">
-                  {isFr ? 'Lancez le scanner IA directement depuis votre navigateur.' : 'Launch the live AI scanner right now in your browser.'}
-                </p>
-              </div>
-              <button
-                onClick={handleTestScannerClick}
-                className="px-4 py-2.5 rounded-xl bg-[#b6ff2e] text-[#0f172a] font-black text-xs shrink-0 hover:bg-[#a3f01b] transition-all"
-              >
-                {isFr ? 'Scanner →' : 'Try Scanner →'}
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* =====================================================================
-          SECTION 4: INTERACTIVE 90-DAY RESULTS & TIME-SAVED SIMULATOR
-         ===================================================================== */}
-      <section className="p-6 sm:p-10 bg-white rounded-[2.5rem] border-2 border-slate-200 shadow-md space-y-8">
+      <section className="p-6 sm:p-10 bg-white rounded-[2.5rem] border-2 border-slate-200 shadow-sm space-y-8">
         <div className="max-w-2xl space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-200 text-[#0f172a] text-xs font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-300 text-[#0f172a] text-xs font-black uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-[#65a30d]" />
             <span>{isFr ? 'SIMULATEUR D\'IMPACT PERSONNEL' : 'INTERACTIVE 90-DAY IMPACT CALCULATOR'}</span>
           </div>
@@ -953,7 +584,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                     onClick={() => setCalcGoal(g.id as any)}
                     className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                       calcGoal === g.id
-                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-sm'
+                        ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
                         : 'bg-slate-50 text-[#0f172a] border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -1067,7 +698,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-lime-500/10 border border-[#b6ff2e]/30 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-white/5 border border-[#b6ff2e]/30 flex items-center justify-between">
               <div>
                 <p className="text-xs font-black text-[#b6ff2e]">
                   {isFr ? 'Calories cachées détectées / jour' : 'Hidden Calories Caught Daily'}
@@ -1092,7 +723,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </section>
 
       {/* =====================================================================
-          SECTION 5: THREE STEP HOW IT WORKS SECTION
+          SECTION 4: THREE STEP HOW IT WORKS SECTION
          ===================================================================== */}
       <section className="space-y-10">
         <div className="text-center max-w-xl mx-auto space-y-2">
@@ -1128,10 +759,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4 hover:border-[#84cc16] transition-all group"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#84cc16] group-hover:bg-[#b6ff2e] group-hover:text-[#0f172a] transition-all">
+                  <div className="w-12 h-12 rounded-2xl bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center group-hover:bg-[#b6ff2e] group-hover:text-[#0f172a] transition-all">
                     <IconComp className="w-6 h-6" />
                   </div>
-                  <span className="text-2xl font-black text-slate-300 group-hover:text-[#84cc16] transition-all">{card.step}</span>
+                  <span className="text-2xl font-black text-slate-300 group-hover:text-[#65a30d] transition-all">{card.step}</span>
                 </div>
 
                 <h3 className="text-lg font-black text-[#0f172a]">{card.title}</h3>
@@ -1143,7 +774,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </section>
 
       {/* =====================================================================
-          SECTION 6: REAL ATHLETE STORIES & SOCIAL PROOF
+          SECTION 5: REAL ATHLETE STORIES & SOCIAL PROOF
          ===================================================================== */}
       <section className="space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -1164,7 +795,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               role: isFr ? 'Objectif : Sèche Athlétique' : 'Goal: Lean Fat Loss',
               result: '-8.4 kg in 10 weeks',
               quote: isFr
-                ? 'Je pensais manger 2 000 kcal par jour, mais je stagnait depuis 4 mois. Dès mon premier scan avec PlateVision, j\'ai compris que mes assiettes de riz et sauces faisaient 950 kcal au lieu de 550. En corrigeant ça, j\'ai perdu 8,4 kg sans avoir faim.'
+                ? 'Je pensais manger 2 000 kcal par jour, mais je stagnais depuis 4 mois. Dès mon premier scan avec PlateVision, j\'ai compris que mes assiettes de riz et sauces faisaient 950 kcal au lieu de 550. En corrigeant ça, j\'ai perdu 8,4 kg sans avoir faim.'
                 : 'I thought I was eating 2,000 kcal a day, yet my weight was stuck for 4 months. On day one with PlateVision, the AI showed my rice & sauce bowls were 950 kcal instead of 550. Fixing that single blindspot dropped 8.4 kg in 10 weeks.'
             },
             {
@@ -1187,16 +818,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <div key={i} className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-amber-400">
+                  <div className="flex items-center gap-1 text-[#84cc16]">
                     {[...Array(5)].map((_, s) => (
                       <Star key={s} className="w-4 h-4 fill-current" />
                     ))}
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-lime-100 text-[#0f172a] border border-lime-200 text-xs font-black">
+                  <span className="px-2.5 py-1 rounded-full bg-[#0f172a] text-[#b6ff2e] text-xs font-black">
                     {item.result}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed italic">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   &ldquo;{item.quote}&rdquo;
                 </p>
               </div>
@@ -1205,7 +836,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   <p className="text-sm font-black text-[#0f172a]">{item.name}</p>
                   <p className="text-[11px] text-slate-500 font-semibold">{item.role}</p>
                 </div>
-                <CheckCircle2 className="w-5 h-5 text-[#84cc16]" />
+                <CheckCircle2 className="w-5 h-5 text-[#65a30d]" />
               </div>
             </div>
           ))}
@@ -1213,7 +844,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </section>
 
       {/* =====================================================================
-          SECTION 7: INTERACTIVE FAQ ACCORDION & FINAL CTA BANNER
+          SECTION 6: INTERACTIVE FAQ ACCORDION & FINAL CTA BANNER
          ===================================================================== */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         

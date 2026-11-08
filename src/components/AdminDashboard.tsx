@@ -6,7 +6,7 @@ import {
   Utensils, Database, Cpu, Image as ImageIcon, CheckCircle2,
   Sparkles, TrendingUp, Calendar, LayoutDashboard, BarChart3,
   DollarSign, Download, Filter, Eye, ShieldCheck, Server,
-  ArrowUpRight, Clock, Award, Layers, ChevronRight, X
+  ArrowUpRight, Clock, Award, Layers, ChevronRight, X, Check, Zap
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -521,7 +521,7 @@ export const AdminDashboard: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Athletes</span>
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
                     <Users className="w-4 h-4" />
                   </div>
                 </div>
@@ -550,22 +550,22 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Scans Today</span>
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
                     <Activity className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-3xl font-black text-amber-600">{stats?.todayMealsCount || 0}</p>
+                <p className="text-3xl font-black text-[#0f172a]">{stats?.todayMealsCount || 0}</p>
                 <p className="text-[11px] text-slate-500 font-semibold">24h active stream</p>
               </div>
 
               <div className="p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Calories Tracked</span>
-                  <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
                     <Flame className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-3xl font-black text-rose-500">
+                <p className="text-3xl font-black text-[#0f172a]">
                   {stats?.aggregates?.calories ? stats.aggregates.calories.toLocaleString() : 0}
                 </p>
                 <p className="text-[11px] text-slate-500 font-semibold">
@@ -763,7 +763,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-xs space-y-1">
                 <p className="text-[10px] font-bold uppercase text-slate-500">Avg Energy / Plate</p>
-                <p className="text-3xl font-black text-rose-500">{biMetrics.avgCaloriesPerMeal} <span className="text-xs font-normal text-slate-500">kcal</span></p>
+                <p className="text-3xl font-black text-[#0f172a]">{biMetrics.avgCaloriesPerMeal} <span className="text-xs font-normal text-slate-500">kcal</span></p>
               </div>
             </div>
 
@@ -778,12 +778,12 @@ export const AdminDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-rose-500">Fat Loss (Calorie Deficit)</span>
+                      <span className="text-[#0f172a]">Fat Loss (Calorie Deficit)</span>
                       <span className="text-[#0f172a] font-black">{stats?.goalsBreakdown?.lose || 0} athletes</span>
                     </div>
                     <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                       <div 
-                        className="bg-rose-500 h-full rounded-full"
+                        className="bg-[#0f172a] h-full rounded-full"
                         style={{ width: `${stats?.totalUsers ? ((stats.goalsBreakdown.lose / stats.totalUsers) * 100) : 0}%` }}
                       />
                     </div>
@@ -791,12 +791,12 @@ export const AdminDashboard: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-emerald-600">Muscle Gain (Lean Surplus)</span>
+                      <span className="text-[#65a30d]">Muscle Gain (Lean Surplus)</span>
                       <span className="text-[#0f172a] font-black">{stats?.goalsBreakdown?.gain || 0} athletes</span>
                     </div>
                     <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                       <div 
-                        className="bg-emerald-500 h-full rounded-full"
+                        className="bg-[#84cc16] h-full rounded-full"
                         style={{ width: `${stats?.totalUsers ? ((stats.goalsBreakdown.gain / stats.totalUsers) * 100) : 0}%` }}
                       />
                     </div>
@@ -804,12 +804,12 @@ export const AdminDashboard: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-sky-600">Maintenance &amp; Recomposition</span>
+                      <span className="text-slate-600">Maintenance &amp; Recomposition</span>
                       <span className="text-[#0f172a] font-black">{stats?.goalsBreakdown?.maintain || 0} athletes</span>
                     </div>
                     <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                       <div 
-                        className="bg-sky-500 h-full rounded-full"
+                        className="bg-slate-400 h-full rounded-full"
                         style={{ width: `${stats?.totalUsers ? ((stats.goalsBreakdown.maintain / stats.totalUsers) * 100) : 0}%` }}
                       />
                     </div>
@@ -825,22 +825,22 @@ export const AdminDashboard: React.FC = () => {
                 </h3>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 text-center">
-                    <p className="text-[10px] uppercase font-black text-rose-600">Protein</p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <p className="text-[10px] uppercase font-black text-[#65a30d]">Protein</p>
                     <p className="text-2xl font-black text-[#0f172a] mt-1">
                       {stats?.aggregates?.protein ? stats.aggregates.protein.toLocaleString() : 0}g
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 text-center">
-                    <p className="text-[10px] uppercase font-black text-amber-600">Carbs</p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <p className="text-[10px] uppercase font-black text-slate-600">Carbs</p>
                     <p className="text-2xl font-black text-[#0f172a] mt-1">
                       {stats?.aggregates?.carbs ? stats.aggregates.carbs.toLocaleString() : 0}g
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-center">
-                    <p className="text-[10px] uppercase font-black text-emerald-600">Fats</p>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <p className="text-[10px] uppercase font-black text-slate-600">Fats</p>
                     <p className="text-2xl font-black text-[#0f172a] mt-1">
                       {stats?.aggregates?.fats ? stats.aggregates.fats.toLocaleString() : 0}g
                     </p>
@@ -995,11 +995,7 @@ export const AdminDashboard: React.FC = () => {
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${
-                            u.goal === 'lose' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                            u.goal === 'gain' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                            'bg-sky-100 text-sky-800 border border-sky-200'
-                          }`}>
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-slate-100 text-[#0f172a] border border-slate-200">
                             {u.goal}
                           </span>
                         </td>
@@ -1012,14 +1008,15 @@ export const AdminDashboard: React.FC = () => {
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <span className="font-black text-[#0f172a]">{u.mealsCount} meals</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black inline-flex items-center gap-1 ${
                               isPower
-                                ? 'bg-amber-100 text-amber-800'
+                                ? 'bg-[#0f172a] text-[#b6ff2e]'
                                 : isActive
-                                ? 'bg-lime-100 text-[#0f172a]'
-                                : 'bg-slate-100 text-slate-500'
+                                ? 'bg-lime-100 text-[#365314] border border-lime-300'
+                                : 'bg-slate-100 text-slate-500 border border-slate-200'
                             }`}>
-                              {isPower ? '🔥 Power' : isActive ? '✓ Active' : 'New'}
+                              {isPower ? <Zap className="w-2.5 h-2.5 text-[#b6ff2e]" /> : isActive ? <Check className="w-2.5 h-2.5 text-[#65a30d]" /> : null}
+                              <span>{isPower ? 'Power' : isActive ? 'Active' : 'New'}</span>
                             </span>
                           </div>
                         </td>
@@ -1103,9 +1100,9 @@ export const AdminDashboard: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] font-black pt-2 border-t border-slate-100">
-                    <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-600">P: {meal.totalProtein}g</span>
-                    <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-600">C: {meal.totalCarbs}g</span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600">F: {meal.totalFats}g</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-100 text-[#0f172a] border border-slate-200">P: {meal.totalProtein}g</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">C: {meal.totalCarbs}g</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">F: {meal.totalFats}g</span>
                     <span className="text-slate-400 font-normal font-mono truncate max-w-[90px]">{meal.userId}</span>
                   </div>
                 </div>
