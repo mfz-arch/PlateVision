@@ -1,28 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  Home,
-  CalendarDays,
-  BarChart2,
-  User,
-  Camera,
-  Image as ImageIcon,
-  X,
-  Trash2,
-  Droplets,
-  Footprints,
-  Download,
-  Utensils,
+import { 
+  Flame, FileText, User, Plus, Camera, Image as ImageIcon, 
+  Scale, X, Trash2, ShieldCheck, ChevronRight, Droplets, 
+  Footprints, Check, ArrowLeft, Download, Sparkles, Heart, Mic, Barcode
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../../types/plateVision';
 import { toLocalDateStr } from '../../lib/date';
-import { useAppTheme } from '../../lib/appTheme';
 import { MobileAppScannerModal } from './MobileAppScannerModal';
 import { MealDetailModal } from './MealDetailModal';
-import { AppLogTab } from './AppLogTab';
-import { AppInsightsTab } from './AppInsightsTab';
-import { AppProfileTab } from './AppProfileTab';
 
 interface MobileAppDashboardProps {
   profile: UserProfile;
@@ -30,37 +17,11 @@ interface MobileAppDashboardProps {
   onUpdateProfile?: (updated: UserProfile) => void;
 }
 
-type AppTab = 'home' | 'log' | 'insights' | 'profile';
-
 export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   profile,
   onSignOut,
-  onUpdateProfile,
+  onUpdateProfile
 }) => {
-  const { mode: themeMode, setMode: setThemeMode, tokens } = useAppTheme();
-
-  // Active Bottom Navigation Tab
-  const [activeTab, setActiveTab] = useState<AppTab>('home');
-
-  // Unit System (metric / imperial)
-  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pv_app_units');
-      if (saved === 'imperial') return 'imperial';
-    }
-    return 'metric';
-  });
-
-  const handleToggleUnitSystem = () => {
-    setUnitSystem((prev) => {
-      const next = prev === 'metric' ? 'imperial' : 'metric';
-      try {
-        localStorage.setItem('pv_app_units', next);
-      } catch {}
-      return next;
-    });
-  };
-
   // Calendar date selection
   const todayStr = useMemo(() => toLocalDateStr(), []);
   const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
@@ -75,13 +36,18 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [selectedImageForScan, setSelectedImageForScan] = useState<string | null>(null);
   const [selectedMealForDetail, setSelectedMealForDetail] = useState<ScannedMeal | null>(null);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isNutritionReportOpen, setIsNutritionReportOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [dismissGlp1, setDismissGlp1] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(true);
 
   // Hidden native file inputs for Camera and Album
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const albumInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper to compress camera/album photo before opening the scanner
   const compressImage = (file: File, maxWidth = 900): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -136,19 +102,26 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     }
   };
 
-  // Auto-detected meal category by time of day
-  const getAutoMealCategory = (): 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner' => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = 
+        window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone === true;
+      setIsStandalone(standalone);
+    }
+  }, []);
+
+  // Selected meal category for scanning (auto-detected by time of day)
+  const getAutoMealCategory = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 11) return 'Breakfast';
     if (hour >= 11 && hour < 15) return 'Lunch';
     if (hour >= 15 && hour < 18) return 'Snack';
     return 'Dinner';
   };
-  const [selectedCategory, setSelectedCategory] = useState<
-    'Breakfast' | 'Lunch' | 'Snack' | 'Dinner'
-  >(getAutoMealCategory);
+  const [selectedCategory, setSelectedCategory] = useState<'Breakfast' | 'Lunch' | 'Snack' | 'Dinner'>(getAutoMealCategory);
 
-  // Local water and steps tracking
+  // Local water and steps tracking (cached per day)
   const [waterMl, setWaterMl] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`pv_water_${todayStr}`);
@@ -156,7 +129,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     }
     return 0;
   });
-  const [stepsCount] = useState<number>(() => {
+  const [stepsCount, setStepsCount] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`pv_steps_${todayStr}`);
       return saved ? parseInt(saved, 10) : 1240;
@@ -167,18 +140,14 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   const handleAddWater = () => {
     setWaterMl((prev) => {
       const next = prev + 250;
-      try {
-        localStorage.setItem(`pv_water_${todayStr}`, next.toString());
-      } catch {}
+      localStorage.setItem(`pv_water_${selectedDateStr}`, next.toString());
       return next;
     });
   };
 
   // Weight logging state
   const [currentWeight, setCurrentWeight] = useState<number>(profile.currentWeightKg || 70);
-  const [newWeightInput, setNewWeightInput] = useState<string>(
-    profile.currentWeightKg?.toString() || '70'
-  );
+  const [newWeightInput, setNewWeightInput] = useState<string>(profile.currentWeightKg?.toString() || '70');
 
   // Fetch meals from DB
   useEffect(() => {
@@ -200,56 +169,54 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       }
     }
     fetchMeals();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [refreshKey]);
 
-  // Today's meals for Home tab
-  const todaysMeals = useMemo(() => {
+  // Filter meals for selected calendar date
+  const mealsForDate = useMemo(() => {
     return meals.filter((meal) => {
-      if (meal.dateStr) return meal.dateStr === todayStr;
+      if (meal.dateStr) return meal.dateStr === selectedDateStr;
       if (meal.timestamp) {
         const d = new Date(meal.timestamp);
-        if (!isNaN(d.getTime())) return toLocalDateStr(d) === todayStr;
+        if (!isNaN(d.getTime())) return toLocalDateStr(d) === selectedDateStr;
       }
-      return false;
+      return selectedDateStr === todayStr;
     });
-  }, [meals, todayStr]);
+  }, [meals, selectedDateStr, todayStr]);
 
-  // Daily Totals for Home tab
-  const totalCaloriesEaten = todaysMeals.reduce((sum, m) => sum + (m.totalCalories || 0), 0);
-  const totalProteinEaten = todaysMeals.reduce((sum, m) => sum + (m.totalProtein || 0), 0);
-  const totalCarbsEaten = todaysMeals.reduce((sum, m) => sum + (m.totalCarbs || 0), 0);
-  const totalFatsEaten = todaysMeals.reduce((sum, m) => sum + (m.totalFats || 0), 0);
+  // Daily Totals
+  const totalCaloriesLogged = mealsForDate.reduce((sum, m) => sum + (m.totalCalories || 0), 0);
+  const totalProteinLogged = mealsForDate.reduce((sum, m) => sum + (m.totalProtein || 0), 0);
+  const totalCarbsLogged = mealsForDate.reduce((sum, m) => sum + (m.totalCarbs || 0), 0);
+  const totalFatsLogged = mealsForDate.reduce((sum, m) => sum + (m.totalFats || 0), 0);
+  const totalFiberLogged = Math.round(totalCarbsLogged * 0.15); // standard fiber estimation
 
-  const dailyCalorieTarget = profile.dailyCaloriesGoal || 2100;
-  const proteinGoal = profile.proteinGoalGrams || 130;
-  const carbsGoal = profile.carbsGoalGrams || 240;
-  const fatsGoal = profile.fatsGoalGrams || 70;
+  const dailyCalorieTarget = profile.dailyCaloriesGoal || 2400;
+  const caloriesLeft = Math.max(0, dailyCalorieTarget - totalCaloriesLogged);
 
-  const isOverGoal = totalCaloriesEaten > dailyCalorieTarget;
-  const remainingCalories = isOverGoal
-    ? totalCaloriesEaten - dailyCalorieTarget
-    : dailyCalorieTarget - totalCaloriesEaten;
+  // Generate 7-day week calendar strip
+  const weekDays = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 is Sun
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
 
-  // Dynamic Greeting & Date
-  const greetingText = useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
-
-  const formattedToday = useMemo(() => {
-    return new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
-  }, []);
-
-  const userInitial = (profile.name || 'A').trim().charAt(0).toUpperCase();
+    const days = [];
+    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = toLocalDateStr(d);
+      days.push({
+        label: labels[i],
+        dayNum: d.getDate(),
+        dateStr,
+        isToday: dateStr === todayStr
+      });
+    }
+    return days;
+  }, [todayStr]);
 
   // Delete Meal
   const handleDeleteMeal = async (id: string) => {
@@ -271,10 +238,10 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     setIsActionSheetOpen(true);
   };
 
-  // Helper to reliably retrieve food photo
+  // Helper to reliably retrieve food photo (local camera capture cache, or DB imageUrl)
   const getMealPhoto = (meal?: ScannedMeal | null): string | null => {
     if (!meal) return null;
-    const id = (meal as ScannedMeal & { _id?: string })._id || meal.id;
+    const id = (meal as any)._id || meal.id;
     if (typeof window !== 'undefined' && id) {
       const cached = localStorage.getItem(`pv_photo_${id}`);
       if (cached) return cached;
@@ -285,562 +252,431 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     return null;
   };
 
-  // Ring geometry
-  const ringRadius = 46;
-  const ringCircumference = 2 * Math.PI * ringRadius;
-  const ringProgress = Math.min(1, totalCaloriesEaten / Math.max(1, dailyCalorieTarget));
-
   return (
-    <div
-      className="min-h-screen font-sans pb-28 transition-colors duration-200"
-      style={{ backgroundColor: tokens.bg, color: tokens.ink }}
-    >
-      {/* MAIN CONTAINER */}
-      <main className="max-w-md mx-auto px-4 pt-5 space-y-5">
-        {/* ================================================================= */}
-        {/* TAB 1: HOME                                                       */}
-        {/* ================================================================= */}
-        {activeTab === 'home' && (
-          <>
-            {/* 1. Greeting Row (Page 4) */}
-            <header className="flex items-center justify-between pt-1">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: tokens.ink }}>
-                  {greetingText}, {profile.name?.split(' ')[0] || 'Athlete'}
-                </h1>
-                <p className="text-xs font-medium mt-0.5" style={{ color: tokens.muted }}>
-                  {formattedToday}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab('profile')}
-                aria-label="Open Profile"
-                className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold border transition-transform active:scale-95"
-                style={{
-                  backgroundColor: tokens.primarySoft,
-                  color: tokens.isDark ? tokens.primaryBright : tokens.primary,
-                  borderColor: tokens.border,
-                }}
-              >
-                {userInitial}
-              </button>
-            </header>
+    <div className="min-h-screen bg-[#F8F9FA] text-[#14171d] font-sans pb-28 selection:bg-[#b6ff2e] selection:text-[#14171d]">
 
-            {/* 2. Calorie Ring Card (Page 4) */}
-            <section
-              className="rounded-[20px] p-5 border flex items-center justify-between gap-4"
-              style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-            >
-              {/* Left: Circular Progress Ring */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
-                  <circle
-                    cx="56"
-                    cy="56"
-                    r={ringRadius}
-                    stroke={tokens.surfaceMuted}
-                    strokeWidth="9"
-                    fill="none"
-                  />
-                  <circle
-                    cx="56"
-                    cy="56"
-                    r={ringRadius}
-                    stroke={isOverGoal ? tokens.fat : tokens.primaryBright}
-                    strokeWidth="9"
-                    fill="none"
-                    strokeDasharray={ringCircumference}
-                    strokeDashoffset={ringCircumference * (1 - ringProgress)}
-                    strokeLinecap="round"
-                    className="transition-all duration-700 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                  <span
-                    className="text-lg font-bold tabular-nums leading-none"
-                    style={{ color: tokens.ink }}
-                  >
-                    {totalCaloriesEaten.toLocaleString()}
-                  </span>
-                  <span className="text-[11px] font-medium mt-1" style={{ color: tokens.muted }}>
-                    kcal eaten
-                  </span>
-                </div>
-              </div>
-
-              {/* Right: Remaining Hero Number + Goal + Status Chip */}
-              <div className="flex-1 space-y-1.5 text-left pl-2">
-                <p className="text-xs font-medium" style={{ color: tokens.muted }}>
-                  {isOverGoal ? 'Over goal' : 'Remaining'}
-                </p>
-                <p
-                  className="text-[32px] leading-[38px] font-bold tabular-nums tracking-tight"
-                  style={{ color: isOverGoal ? tokens.fat : tokens.ink }}
-                >
-                  {remainingCalories.toLocaleString()} kcal
-                </p>
-                <p className="text-xs font-medium tabular-nums" style={{ color: tokens.muted }}>
-                  Goal {dailyCalorieTarget.toLocaleString()} kcal
-                </p>
-                <div className="pt-1">
-                  <span
-                    className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      backgroundColor: isOverGoal
-                        ? tokens.isDark
-                          ? 'rgba(240,100,106,0.18)'
-                          : '#FEE2E2'
-                        : tokens.primarySoft,
-                      color: isOverGoal
-                        ? tokens.fat
-                        : tokens.isDark
-                        ? tokens.primaryBright
-                        : tokens.primary,
-                    }}
-                  >
-                    {isOverGoal ? 'Over' : 'On track'}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* 3. Macro Bars Card (P / C / F with semantic colors & labels) */}
-            <section
-              className="rounded-[20px] p-5 border space-y-4"
-              style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-            >
-              {[
-                {
-                  key: 'P',
-                  label: 'Protein',
-                  eaten: totalProteinEaten,
-                  goal: proteinGoal,
-                  color: tokens.protein,
-                },
-                {
-                  key: 'C',
-                  label: 'Carbs',
-                  eaten: totalCarbsEaten,
-                  goal: carbsGoal,
-                  color: tokens.carbs,
-                },
-                {
-                  key: 'F',
-                  label: 'Fat',
-                  eaten: totalFatsEaten,
-                  goal: fatsGoal,
-                  color: tokens.fat,
-                },
-              ].map((m) => {
-                const pct = Math.min(100, (m.eaten / Math.max(1, m.goal)) * 100);
-                return (
-                  <div key={m.key} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold flex items-center gap-1.5">
-                        <span
-                          className="w-4 h-4 rounded-full text-[10px] font-bold text-white inline-flex items-center justify-center"
-                          style={{ backgroundColor: m.color }}
-                        >
-                          {m.key}
-                        </span>
-                        <span>{m.label}</span>
-                      </span>
-                      <span className="font-semibold tabular-nums" style={{ color: tokens.muted }}>
-                        <strong style={{ color: tokens.ink }}>{m.eaten}</strong> / {m.goal} g
-                      </span>
-                    </div>
-                    <div
-                      className="w-full h-2 rounded-full overflow-hidden"
-                      style={{ backgroundColor: tokens.surfaceMuted }}
-                    >
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, backgroundColor: m.color }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </section>
-
-            {/* 4. Compact Twin Cards: Water & Steps */}
-            <section className="grid grid-cols-2 gap-3">
-              <div
-                className="rounded-[20px] p-4 border"
-                style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className="text-xs font-semibold flex items-center gap-1.5"
-                    style={{ color: tokens.protein }}
-                  >
-                    <Droplets className="w-4 h-4" />
-                    <span>Water</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleAddWater}
-                    aria-label="Add 250ml water"
-                    className="w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center border transition-transform active:scale-90"
-                    style={{
-                      backgroundColor: tokens.primarySoft,
-                      borderColor: tokens.border,
-                      color: tokens.isDark ? tokens.primaryBright : tokens.primary,
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
-                <p className="text-lg font-bold tabular-nums mt-1.5">{waterMl} ml</p>
-                <p className="text-[11px]" style={{ color: tokens.muted }}>
-                  of 2,000 ml
-                </p>
-              </div>
-
-              <div
-                className="rounded-[20px] p-4 border"
-                style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-              >
-                <span
-                  className="text-xs font-semibold flex items-center gap-1.5"
-                  style={{ color: tokens.primaryBright }}
-                >
-                  <Footprints className="w-4 h-4" />
-                  <span>Steps</span>
-                </span>
-                <p className="text-lg font-bold tabular-nums mt-2.5">
-                  {stepsCount.toLocaleString()}
-                </p>
-                <p className="text-[11px]" style={{ color: tokens.muted }}>
-                  of 8,000 goal
-                </p>
-              </div>
-            </section>
-
-            {/* 5. Today's Meals Section */}
-            <section className="space-y-2.5">
-              <div className="flex items-center justify-between px-0.5">
-                <h2 className="text-lg font-semibold" style={{ color: tokens.ink }}>
-                  Today&apos;s meals
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('log')}
-                  className="text-xs font-semibold min-h-[36px] px-1"
-                  style={{ color: tokens.isDark ? tokens.primaryBright : tokens.primary }}
-                >
-                  See all
-                </button>
-              </div>
-
-              {/* Skeleton Placeholders while Loading (Page 9) */}
-              {isLoadingMeals ? (
-                <div className="space-y-2.5">
-                  {[1, 2].map((n) => (
-                    <div
-                      key={n}
-                      className="rounded-[20px] p-3.5 border flex items-center gap-3 animate-pulse"
-                      style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-                    >
-                      <div
-                        className="w-12 h-12 rounded-[14px]"
-                        style={{ backgroundColor: tokens.surfaceMuted }}
-                      />
-                      <div className="flex-1 space-y-2">
-                        <div
-                          className="h-3.5 w-2/3 rounded"
-                          style={{ backgroundColor: tokens.surfaceMuted }}
-                        />
-                        <div
-                          className="h-3 w-1/3 rounded"
-                          style={{ backgroundColor: tokens.surfaceMuted }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : todaysMeals.length === 0 ? (
-                /* Empty State (Page 9) */
-                <div
-                  className="rounded-[20px] p-7 border text-center space-y-3"
-                  style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-full border-2 border-dashed mx-auto flex items-center justify-center"
-                    style={{ borderColor: tokens.primaryBright, color: tokens.primaryBright }}
-                  >
-                    <Utensils className="w-5 h-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold">No meals logged today</p>
-                    <p className="text-xs" style={{ color: tokens.muted }}>
-                      Snap a photo of your plate to see calories and macros in seconds.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenActionSheet()}
-                    className="px-5 py-3 rounded-[14px] text-white text-xs font-semibold min-h-[44px]"
-                    style={{ backgroundColor: tokens.primary }}
-                  >
-                    Scan your first meal
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {todaysMeals.map((meal, index) => {
-                    const typedMeal = meal as ScannedMeal & { _id?: string; category?: string };
-                    const mealId = typedMeal._id || meal.id || `home-meal-${index}`;
-                    const photo = getMealPhoto(meal);
-                    return (
-                      <div
-                        key={mealId}
-                        onClick={() => setSelectedMealForDetail(meal)}
-                        className="rounded-[20px] p-3 border flex items-center gap-3 cursor-pointer transition-transform active:scale-[0.99]"
-                        style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-                      >
-                        <div
-                          className="w-12 h-12 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center border"
-                          style={{ backgroundColor: tokens.surfaceMuted, borderColor: tokens.border }}
-                        >
-                          {photo ? (
-                            <img
-                              src={photo}
-                              alt={meal.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Utensils className="w-5 h-5" style={{ color: tokens.muted }} />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold truncate">{meal.title}</h3>
-                          <p className="text-xs mt-0.5" style={{ color: tokens.muted }}>
-                            {typedMeal.category || 'Meal'}
-                            {meal.timestamp ? ` · ${meal.timestamp}` : ''}
-                          </p>
-                        </div>
-
-                        <div className="text-right shrink-0">
-                          <span className="text-sm font-bold tabular-nums">
-                            {meal.totalCalories} kcal
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteMeal(mealId);
-                          }}
-                          aria-label="Delete meal"
-                          className="p-2 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center"
-                          style={{ color: tokens.muted }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 2: LOG                                                        */}
-        {/* ================================================================= */}
-        {activeTab === 'log' && (
-          <AppLogTab
-            tokens={tokens}
-            meals={meals}
-            selectedDateStr={selectedDateStr}
-            onSelectDate={setSelectedDateStr}
-            dailyCalorieTarget={dailyCalorieTarget}
-            onOpenMealDetail={(meal) => setSelectedMealForDetail(meal)}
-            onDeleteMeal={handleDeleteMeal}
-            onAddMealForCategory={(cat) => handleOpenActionSheet(cat)}
-            getMealPhoto={getMealPhoto}
-          />
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 3: INSIGHTS                                                   */}
-        {/* ================================================================= */}
-        {activeTab === 'insights' && (
-          <AppInsightsTab
-            tokens={tokens}
-            meals={meals}
-            dailyCalorieTarget={dailyCalorieTarget}
-            currentWeight={currentWeight}
-            targetWeight={profile.targetWeightKg || 65}
-            unitSystem={unitSystem}
-            onOpenWeightModal={() => setIsWeightModalOpen(true)}
-          />
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 4: PROFILE                                                    */}
-        {/* ================================================================= */}
-        {activeTab === 'profile' && (
-          <AppProfileTab
-            tokens={tokens}
-            profile={profile}
-            themeMode={themeMode}
-            onChangeThemeMode={setThemeMode}
-            unitSystem={unitSystem}
-            onToggleUnitSystem={handleToggleUnitSystem}
-            onOpenNutritionReport={() => setIsNutritionReportOpen(true)}
-            onUpdateProfile={onUpdateProfile}
-            onSignOut={onSignOut}
-          />
-        )}
-      </main>
-
-      {/* =================================================================== */}
-      {/* 4-TAB BOTTOM NAVIGATION + RAISED CENTER SCAN BUTTON (Pages 1, 4)    */}
-      {/* =================================================================== */}
-      <nav
-        aria-label="App Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-md"
-        style={{
-          backgroundColor: tokens.isDark ? 'rgba(22,32,27,0.95)' : 'rgba(255,255,255,0.95)',
-          borderColor: tokens.border,
-        }}
-      >
-        <div className="max-w-md mx-auto px-2 h-16 grid grid-cols-5 items-center relative">
-          {/* Home */}
+      {/* TOP HEADER */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200/80 px-4 py-3">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          
+          {/* Left: Streak Flame Badge */}
           <button
-            type="button"
-            onClick={() => setActiveTab('home')}
-            className="flex flex-col items-center justify-center gap-0.5 min-h-[48px]"
-            style={{
-              color:
-                activeTab === 'home'
-                  ? tokens.isDark
-                    ? tokens.primaryBright
-                    : tokens.primary
-                  : tokens.muted,
-            }}
+            onClick={() => setIsStreakModalOpen(true)}
+            aria-label="View Streak"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 transition-all active:scale-95"
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[11px] font-semibold">Home</span>
+            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+            <span className="text-xs font-black text-slate-800">0</span>
           </button>
 
-          {/* Log */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('log')}
-            className="flex flex-col items-center justify-center gap-0.5 min-h-[48px]"
-            style={{
-              color:
-                activeTab === 'log'
-                  ? tokens.isDark
-                    ? tokens.primaryBright
-                    : tokens.primary
-                  : tokens.muted,
-            }}
+          {/* Center: Brand Title */}
+          <div 
+            onClick={() => setSelectedDateStr(todayStr)}
+            className="flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
           >
-            <CalendarDays className="w-5 h-5" />
-            <span className="text-[11px] font-semibold">Log</span>
-          </button>
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white p-0.5 border-2 border-slate-200 shadow-sm">
+              <img src="/logo.svg" alt="PlateVision" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-xl font-black tracking-tight text-[#0f172a]">
+              Plate<span className="text-[#84cc16]">Vision</span>
+            </span>
+          </div>
 
-          {/* Raised Center Scan Button */}
-          <div className="flex items-center justify-center">
+          {/* Right: Nutrition Report & Profile */}
+          <div className="flex items-center gap-2">
             <button
-              type="button"
-              onClick={() => handleOpenActionSheet()}
-              aria-label="Scan Meal"
-              className="-mt-6 w-14 h-14 rounded-full text-white flex items-center justify-center shadow-lg border-4 transition-transform active:scale-90"
-              style={{
-                backgroundColor: tokens.primary,
-                borderColor: tokens.bg,
-              }}
+              onClick={() => setIsNutritionReportOpen(true)}
+              aria-label="Nutrition Report"
+              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all border border-slate-200"
             >
-              <Camera className="w-6 h-6" />
+              <FileText className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              aria-label="User Profile"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 flex items-center justify-center text-slate-800 active:scale-95 transition-all"
+            >
+              <User className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Insights */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('insights')}
-            className="flex flex-col items-center justify-center gap-0.5 min-h-[48px]"
-            style={{
-              color:
-                activeTab === 'insights'
-                  ? tokens.isDark
-                    ? tokens.primaryBright
-                    : tokens.primary
-                  : tokens.muted,
-            }}
-          >
-            <BarChart2 className="w-5 h-5" />
-            <span className="text-[11px] font-semibold">Insights</span>
-          </button>
-
-          {/* Profile */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('profile')}
-            className="flex flex-col items-center justify-center gap-0.5 min-h-[48px]"
-            style={{
-              color:
-                activeTab === 'profile'
-                  ? tokens.isDark
-                    ? tokens.primaryBright
-                    : tokens.primary
-                  : tokens.muted,
-            }}
-          >
-            <User className="w-5 h-5" />
-            <span className="text-[11px] font-semibold">Profile</span>
-          </button>
         </div>
-      </nav>
+      </header>
 
-      {/* =================================================================== */}
-      {/* CAMERA / ALBUM ACTION SHEET (Bright, clean, Camera & Album only)     */}
-      {/* =================================================================== */}
-      {isActionSheetOpen && (
-        <div
-          onClick={() => setIsActionSheetOpen(false)}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center"
+      {/* MAIN CONTAINER */}
+      <main className="max-w-md mx-auto px-4 pt-4 space-y-4">
+        
+        {/* WEEKLY CALENDAR STRIP */}
+        <section className="bg-white rounded-3xl p-3 border-2 border-slate-200/90 shadow-sm">
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {weekDays.map((d) => {
+              const isSelected = d.dateStr === selectedDateStr;
+              return (
+                <button
+                  key={d.dateStr}
+                  onClick={() => setSelectedDateStr(d.dateStr)}
+                  className={`flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
+                    isSelected 
+                      ? 'bg-[#0f172a] text-white shadow-md' 
+                      : 'hover:bg-slate-50 text-slate-500'
+                  }`}
+                >
+                  <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                    {d.label}
+                  </span>
+                  <span className={`text-sm font-black mt-0.5 ${isSelected ? 'text-[#b6ff2e]' : 'text-slate-800'}`}>
+                    {d.dayNum}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* HERO CALORIES & MACROS CARD */}
+        <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm relative overflow-hidden">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl font-black text-[#0f172a] tracking-tight">{caloriesLeft}</span>
+                <span className="text-sm font-extrabold text-slate-400">/{dailyCalorieTarget}</span>
+              </div>
+              <p className="text-xs font-bold text-slate-400 mt-0.5">Calories left</p>
+            </div>
+
+            {/* Circular Gauge Ring matching CalZen Reference (Concentric & Smooth) */}
+            <div className="w-18 h-18 relative flex items-center justify-center shrink-0">
+              <svg className="w-18 h-18 -rotate-90" viewBox="0 0 68 68" width="72" height="72">
+                {/* Complete background track */}
+                <circle
+                  cx="34"
+                  cy="34"
+                  r="27"
+                  stroke="#f1f5f9"
+                  strokeWidth="5"
+                  fill="none"
+                />
+                {/* Active progress stroke */}
+                <circle
+                  cx="34"
+                  cy="34"
+                  r="27"
+                  stroke="#0f172a"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 27}
+                  strokeDashoffset={2 * Math.PI * 27 * (1 - Math.min(1, totalCaloriesLogged / dailyCalorieTarget))}
+                  strokeLinecap="round"
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <Flame className="w-4 h-4 text-[#0f172a] fill-[#0f172a]" />
+                <span className="text-[10px] font-black text-[#0f172a] mt-0.5">
+                  +{totalCaloriesLogged > 0 ? totalCaloriesLogged : 6}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Macros Progress Rows */}
+          <div className="grid grid-cols-4 gap-2 pt-6 border-t-2 border-slate-100 mt-5">
+            {/* Protein */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-500">Protein</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-[#84cc16] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (totalProteinLogged / (profile.proteinGoalGrams || 120)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalProteinLogged}/{profile.proteinGoalGrams || 120}g</p>
+            </div>
+
+            {/* Fat */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-500">Fat</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-amber-400 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (totalFatsLogged / (profile.fatsGoalGrams || 70)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalFatsLogged}/{profile.fatsGoalGrams || 70}g</p>
+            </div>
+
+            {/* Carbs */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-500">Carbs</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-sky-400 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (totalCarbsLogged / (profile.carbsGoalGrams || 250)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalCarbsLogged}/{profile.carbsGoalGrams || 250}g</p>
+            </div>
+
+            {/* Fiber */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-500">Fiber</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (totalFiberLogged / 38) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] font-black text-[#0f172a]">{totalFiberLogged}/38g</p>
+            </div>
+          </div>
+        </section>
+
+        {/* TWIN METRIC CARDS: STEPS & WATER */}
+        <section className="grid grid-cols-2 gap-3">
+          
+          {/* Steps */}
+          <div className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm">
+            <div className="flex items-center gap-1.5 text-rose-500 font-extrabold text-xs mb-2">
+              <Footprints className="w-4 h-4" />
+              <span>Steps</span>
+            </div>
+            <div className="text-2xl font-black text-[#0f172a]">{stepsCount}</div>
+            <p className="text-[10px] font-bold text-slate-400 mt-0.5">of 8,000</p>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
+              <div 
+                className="bg-rose-400 h-full rounded-full"
+                style={{ width: `${Math.min(100, (stepsCount / 8000) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Water */}
+          <div className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-sky-500 font-extrabold text-xs">
+                <Droplets className="w-4 h-4" />
+                <span>Water</span>
+              </div>
+              <button
+                onClick={handleAddWater}
+                title="Add 250ml glass"
+                className="w-7 h-7 rounded-full bg-sky-50 text-sky-600 font-black flex items-center justify-center hover:bg-sky-100 active:scale-90 transition-all border border-sky-100"
+              >
+                +
+              </button>
+            </div>
+            <div className="text-2xl font-black text-[#0f172a]">{waterMl} ml</div>
+            <p className="text-[10px] font-bold text-slate-400 mt-0.5">of 2,000 ml</p>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
+              <div 
+                className="bg-sky-400 h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, (waterMl / 2000) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+        </section>
+
+        {/* MY PROGRESS ROW */}
+        <section 
+          onClick={() => setIsWeightModalOpen(true)}
+          className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.99]"
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-[28px] p-6 shadow-2xl border-t animate-in slide-in-from-bottom duration-200"
-            style={{
-              backgroundColor: tokens.surface,
-              borderColor: tokens.border,
-              color: tokens.ink,
-            }}
-          >
-            <div
-              className="w-10 h-1 rounded-full mx-auto mb-5"
-              style={{ backgroundColor: tokens.border }}
-            />
+          <div>
+            <p className="text-xs font-black text-slate-400">My progress</p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-lg font-black text-[#0f172a]">{currentWeight} kg</span>
+              <span className="text-xs font-bold text-slate-400">Target: {profile.targetWeightKg || 65} kg</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 border border-slate-200">Log weight</span>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </div>
+        </section>
 
-            {/* Meal Type Segmented Pills */}
-            <div
-              className="grid grid-cols-4 gap-1 p-1 rounded-full border mb-5"
-              style={{ backgroundColor: tokens.surfaceMuted, borderColor: tokens.border }}
-            >
-              {(['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const).map((cat) => {
-                const active = selectedCategory === cat;
+        {/* GLP-1 DIARY CARD (Screenshot 9) */}
+        {!dismissGlp1 && (
+          <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm space-y-3">
+            <div>
+              <h4 className="text-sm font-black text-[#0f172a]">GLP-1 diary</h4>
+              <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                If you&apos;ve been prescribed Ozempic, Mounjaro or a similar medication, log your shots and how you feel alongside your meals.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setDismissGlp1(true)}
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-[#0f172a] font-black text-xs transition-colors border border-slate-200"
+              >
+                Not now
+              </button>
+              <button
+                onClick={() => alert('GLP-1 diary enabled for your daily logs!')}
+                className="flex-1 py-3 rounded-2xl bg-[#0f172a] hover:bg-black text-white font-black text-xs transition-colors"
+              >
+                Try it
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* LOG MEAL BY CATEGORY SLOTS (Screenshot 8) */}
+        <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            
+            {(['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const).map((cat) => {
+              // Check if any meal exists for this category
+              const catMeal = mealsForDate.find((m) => (m as any).category === cat);
+              const photo = getMealPhoto(catMeal);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => handleOpenActionSheet(cat)}
+                  className="flex flex-col items-center group active:scale-95 transition-all"
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#f1f3f5] border-2 border-slate-200/90 flex items-center justify-center relative overflow-hidden group-hover:border-[#0f172a] shadow-sm">
+                    {photo ? (
+                      <img src={photo} alt={cat} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#f1f3f5]">
+                        <div className="w-6 h-6 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-400">
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
+                        </div>
+                      </div>
+                    )}
+                    {/* Bottom-right badge matching user screenshot 8 */}
+                    <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#0f172a] text-white flex items-center justify-center border-2 border-white shadow-sm">
+                      {photo ? (
+                        <Check className="w-3 h-3 stroke-[3] text-[#b6ff2e]" />
+                      ) : (
+                        <Plus className="w-3 h-3 stroke-[3]" />
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-[#0f172a] mt-2">{cat}</span>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {catMeal ? `${catMeal.totalCalories} kcal` : 'Add'}
+                  </span>
+                </button>
+              );
+            })}
+
+          </div>
+        </section>
+
+        {/* RECENTLY LOGGED MEALS */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-base font-black text-[#0f172a]">Recently</h3>
+            <span className="text-xs font-bold text-slate-400">
+              {selectedDateStr === todayStr ? 'Today' : selectedDateStr}
+            </span>
+          </div>
+
+          {isLoadingMeals ? (
+            <div className="bg-white rounded-3xl p-6 text-center border-2 border-slate-200/90 shadow-sm">
+              <div className="w-6 h-6 border-2 border-[#0f172a] border-t-[#b6ff2e] rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-bold text-slate-400 mt-2">Loading your meals...</p>
+            </div>
+          ) : mealsForDate.length === 0 ? (
+            <div className="bg-white rounded-3xl p-8 text-center border-2 border-slate-200/90 shadow-sm space-y-2">
+              <p className="text-base font-black text-[#0f172a]">No meals yet!</p>
+              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                Grab something tasty, log it here, and check out our Instagram <strong>@platevision.ai</strong>!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {mealsForDate.map((meal, index) => {
+                const mealId = (meal as any)._id || meal.id || `app-meal-${index}`;
+                const photo = getMealPhoto(meal);
+                return (
+                  <div 
+                    key={mealId}
+                    onClick={() => setSelectedMealForDetail(meal)}
+                    className="bg-white rounded-2xl p-3 border-2 border-slate-200/90 shadow-sm flex items-center gap-3 hover:border-[#0f172a] transition-all cursor-pointer active:scale-98"
+                  >
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 relative">
+                      {photo ? (
+                        <img 
+                          src={photo} 
+                          alt={meal.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-500 font-black text-xs">
+                          PV
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">
+                          {(meal as any).category || 'Meal'}
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-400">{meal.timestamp || ''}</span>
+                      </div>
+                      <h4 className="text-sm font-black text-[#0f172a] truncate mt-0.5">{meal.title}</h4>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">
+                        <span className="text-[#65a30d] font-black">{meal.totalCalories} kcal</span> • {meal.totalProtein}g protein
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteMeal(mealId);
+                      }}
+                      aria-label="Delete meal"
+                      className="p-2 text-slate-300 hover:text-rose-500 active:scale-90 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+      </main>
+
+      {/* FLOATING ACTION BUTTON (The signature CalZen-like Black + Button) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <button
+          onClick={() => handleOpenActionSheet()}
+          aria-label="Add or Scan Meal"
+          className="w-16 h-16 rounded-full bg-[#14171d] text-white flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:bg-black active:scale-90 transition-all border-2 border-white/20"
+        >
+          <Plus className="w-8 h-8 stroke-[2.5]" />
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* BOTTOM ACTION SHEET: AUTO-DETECTED MEAL TIME + ACTION LIST               */}
+      {/* ========================================================================= */}
+      {isActionSheetOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-white rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 border-t border-gray-100"
+          >
+            {/* Sheet Handle */}
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5" />
+
+            {/* Auto-detected Meal Category Pills (Breakfast / Lunch / Snack / Dinner) */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {(['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const).map((cat) => {
+                const isSelected = selectedCategory === cat;
                 return (
                   <button
                     key={cat}
-                    type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className="py-2 rounded-full text-xs font-semibold transition-all min-h-[38px]"
-                    style={{
-                      backgroundColor: active ? tokens.primary : 'transparent',
-                      color: active ? '#FFFFFF' : tokens.muted,
-                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-black transition-all ${
+                      isSelected
+                        ? 'bg-[#14171d] text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                   >
                     {cat}
                   </button>
@@ -848,6 +684,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
               })}
             </div>
 
+            {/* Hidden native file inputs for Camera and Album */}
             <input
               ref={cameraInputRef}
               type="file"
@@ -864,59 +701,48 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
               onChange={handleImagePicked}
             />
 
-            <div className="divide-y" style={{ borderColor: tokens.border }}>
+            {/* List of Actions: Only Camera & Album as requested */}
+            <div className="divide-y divide-gray-100 text-sm font-extrabold text-[#14171d]">
+              
+              {/* 1. Camera */}
               <button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-full py-4 flex items-center gap-4 text-left min-h-[64px]"
+                onClick={() => {
+                  cameraInputRef.current?.click();
+                }}
+                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
               >
-                <div
-                  className="w-12 h-12 rounded-[14px] flex items-center justify-center border"
-                  style={{
-                    backgroundColor: tokens.primarySoft,
-                    borderColor: tokens.border,
-                    color: tokens.isDark ? tokens.primaryBright : tokens.primary,
-                  }}
-                >
-                  <Camera className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-[#0f172a] border border-slate-200">
+                  <Camera className="w-6 h-6 stroke-[2.2]" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">Camera</p>
-                  <p className="text-xs" style={{ color: tokens.muted }}>
-                    Take a photo of your meal directly
-                  </p>
+                <div className="text-left">
+                  <p className="text-sm font-black text-[#0f172a]">Camera</p>
+                  <p className="text-xs font-semibold text-slate-400">Take a photo of your meal directly</p>
                 </div>
               </button>
 
+              {/* 2. Album / Gallery */}
               <button
                 type="button"
-                onClick={() => albumInputRef.current?.click()}
-                className="w-full py-4 flex items-center gap-4 text-left min-h-[64px]"
+                onClick={() => {
+                  albumInputRef.current?.click();
+                }}
+                className="w-full py-4 flex items-center gap-4 hover:text-[#84cc16] transition-colors"
               >
-                <div
-                  className="w-12 h-12 rounded-[14px] flex items-center justify-center border"
-                  style={{
-                    backgroundColor: tokens.primarySoft,
-                    borderColor: tokens.border,
-                    color: tokens.isDark ? tokens.primaryBright : tokens.primary,
-                  }}
-                >
-                  <ImageIcon className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-[#0f172a] border border-slate-200">
+                  <ImageIcon className="w-6 h-6 stroke-[2.2]" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">Album</p>
-                  <p className="text-xs" style={{ color: tokens.muted }}>
-                    Choose meal picture from gallery
-                  </p>
+                <div className="text-left">
+                  <p className="text-sm font-black text-[#0f172a]">Album</p>
+                  <p className="text-xs font-semibold text-slate-400">Choose meal picture from gallery</p>
                 </div>
               </button>
+
             </div>
 
             <button
-              type="button"
               onClick={() => setIsActionSheetOpen(false)}
-              className="mt-4 w-full py-3.5 rounded-[14px] text-xs font-semibold min-h-[48px]"
-              style={{ backgroundColor: tokens.surfaceMuted, color: tokens.ink }}
+              className="mt-4 w-full py-3.5 rounded-2xl bg-gray-100 text-gray-700 font-extrabold text-xs hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
@@ -924,11 +750,10 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         </div>
       )}
 
-      {/* =================================================================== */}
-      {/* SCANNER MODAL (Analyzing + Review + Edit Bottom Sheet)              */}
-      {/* =================================================================== */}
+      {/* ========================================================================= */}
+      {/* BRIGHT MOBILE SCANNER MODAL                                               */}
+      {/* ========================================================================= */}
       <MobileAppScannerModal
-        key={selectedImageForScan || 'scanner-closed'}
         isOpen={isScannerModalOpen && !!selectedImageForScan}
         onClose={() => {
           setIsScannerModalOpen(false);
@@ -936,7 +761,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         }}
         initialImageBase64={selectedImageForScan}
         category={selectedCategory}
-        targetDateStr={activeTab === 'log' ? selectedDateStr : todayStr}
+        targetDateStr={selectedDateStr}
         onMealSaved={() => {
           setMealsRefreshKey((k) => k + 1);
           setIsScannerModalOpen(false);
@@ -945,12 +770,11 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         onRetakePhoto={() => {
           albumInputRef.current?.click();
         }}
-        tokens={tokens}
       />
 
-      {/* =================================================================== */}
-      {/* MEAL DETAIL MODAL (Macros + AI Tips)                                */}
-      {/* =================================================================== */}
+      {/* ========================================================================= */}
+      {/* MEAL DETAIL MODAL (Opens when clicking any meal card in Today's logs)      */}
+      {/* ========================================================================= */}
       <MealDetailModal
         isOpen={selectedMealForDetail !== null}
         meal={selectedMealForDetail}
@@ -959,77 +783,160 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
           handleDeleteMeal(id);
           setSelectedMealForDetail(null);
         }}
-        tokens={tokens}
       />
 
-      {/* =================================================================== */}
-      {/* NUTRITION REPORT MODAL                                              */}
-      {/* =================================================================== */}
+      {/* ========================================================================= */}
+      {/* STREAK MODAL (Screenshot 7)                                               */}
+      {/* ========================================================================= */}
+      {isStreakModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-[#FAFAFA] rounded-3xl p-6 text-center space-y-4 shadow-2xl relative">
+            <button
+              onClick={() => setIsStreakModalOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
+            </button>
+
+            {/* Big Metallic Flame */}
+            <div className="pt-2">
+              <div className="w-20 h-20 mx-auto flex items-center justify-center text-gray-300">
+                <Flame className="w-16 h-16 fill-gray-300 text-gray-400 drop-shadow-sm" />
+              </div>
+              <h2 className="text-4xl font-black text-[#14171d] mt-1">0</h2>
+              <p className="text-sm font-extrabold text-[#14171d]">days streak</p>
+            </div>
+
+            {/* Weekdays Row Mon-Sun */}
+            <div className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-2 px-1">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
+                  <span key={d} className={d === 'Tue' ? 'text-black font-extrabold' : ''}>{d}</span>
+                ))}
+              </div>
+              <div className="flex items-center justify-between px-1">
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                      i === 1 ? 'bg-black text-white font-black text-xs' : 'bg-gray-100 text-transparent'
+                    }`}
+                  >
+                    {i === 1 ? '✓' : ''}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Twin cards: Nov 3 / Streak started & 0% / Better than 0% PlateVision users */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+                <p className="text-sm font-black text-[#14171d]">
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Streak started</p>
+              </div>
+              <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+                <p className="text-sm font-black text-[#84cc16]">0%</p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Better than 0% PlateVision users</p>
+              </div>
+            </div>
+
+            {/* Milestone Card */}
+            <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-xs font-black text-gray-700">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Flame className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
+                  </div>
+                  <span className="text-xs">0</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[11px] font-black text-[#14171d]">3 more days</p>
+                  <p className="text-[9px] font-bold text-gray-400">to next milestone</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400">3</span>
+                  <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
+                    <Flame className="w-3.5 h-3.5 fill-gray-400 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-[#b6ff2e] h-full rounded-full w-[15%]" />
+              </div>
+            </div>
+
+            {/* Streak Savers */}
+            <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-xs font-black text-[#14171d]">Streak saver <span className="text-[#84cc16]">×2</span></p>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Automatically applies if you miss a day</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-6 h-6 rounded-full bg-lime-100 text-lime-700 flex items-center justify-center text-xs">🛡️</span>
+                <span className="w-6 h-6 rounded-full bg-lime-100 text-lime-700 flex items-center justify-center text-xs">🛡️</span>
+              </div>
+            </div>
+
+            {/* Button */}
+            <button
+              onClick={() => setIsStreakModalOpen(false)}
+              className="w-full py-4 rounded-2xl bg-[#14171d] text-white font-black text-sm active:scale-98 transition-all shadow-md"
+            >
+              Keep it going
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* NUTRITION REPORT MODAL (Screenshot 49)                                    */}
+      {/* ========================================================================= */}
       {isNutritionReportOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
-          <div
-            className="w-full max-w-md rounded-t-[28px] p-6 shadow-2xl space-y-4 border-t"
-            style={{
-              backgroundColor: tokens.surface,
-              borderColor: tokens.border,
-              color: tokens.ink,
-            }}
-          >
-            <div
-              className="w-10 h-1 rounded-full mx-auto"
-              style={{ backgroundColor: tokens.border }}
-            />
-
+          <div className="w-full max-w-md bg-white rounded-t-3xl p-6 shadow-2xl space-y-4">
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-3" />
+            
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold">Nutrition Report</h3>
-                <p className="text-xs mt-0.5" style={{ color: tokens.muted }}>
-                  Summary of calories, macros, weight, and meal diary.
+                <h3 className="text-lg font-black text-[#14171d]">Nutrition Report</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Summary of calories, macros, weight, and meal diary to share with your coach.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsNutritionReportOpen(false)}
-                className="p-2"
-                style={{ color: tokens.muted }}
-              >
+              <button onClick={() => setIsNutritionReportOpen(false)} className="text-gray-400 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2 pt-2">
               {[
                 { title: 'Last 7 days', dates: 'Recent 7-day breakdown' },
                 { title: 'Previous week', dates: 'Full week review' },
                 { title: 'Last 2 weeks', dates: '14-day progress report' },
-                { title: 'Last 30 days', dates: 'Monthly deep dive' },
+                { title: 'Last 30 days', dates: 'Monthly deep dive' }
               ].map((opt) => (
                 <button
                   key={opt.title}
-                  type="button"
                   onClick={() => {
                     alert(`Nutrition Report for "${opt.title}" generated!`);
                     setIsNutritionReportOpen(false);
                   }}
-                  className="w-full p-4 rounded-[16px] border flex items-center justify-between text-left min-h-[56px]"
-                  style={{ backgroundColor: tokens.surfaceMuted, borderColor: tokens.border }}
+                  className="w-full p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-between border border-gray-100 font-extrabold text-sm text-gray-800 transition-all text-left"
                 >
                   <div>
-                    <p className="text-sm font-semibold">{opt.title}</p>
-                    <p className="text-[11px] mt-0.5" style={{ color: tokens.muted }}>
-                      {opt.dates}
-                    </p>
+                    <p className="text-sm font-extrabold text-gray-900">{opt.title}</p>
+                    <p className="text-[11px] font-semibold text-gray-400 mt-0.5">{opt.dates}</p>
                   </div>
-                  <Download className="w-4 h-4" style={{ color: tokens.muted }} />
+                  <Download className="w-4 h-4 text-gray-400" />
                 </button>
               ))}
             </div>
 
             <button
-              type="button"
               onClick={() => setIsNutritionReportOpen(false)}
-              className="w-full py-3.5 rounded-[14px] text-xs font-semibold min-h-[48px]"
-              style={{ backgroundColor: tokens.surfaceMuted, color: tokens.ink }}
+              className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 font-bold text-xs"
             >
               Close
             </button>
@@ -1037,49 +944,211 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
         </div>
       )}
 
-      {/* =================================================================== */}
-      {/* LOG WEIGHT MODAL                                                    */}
-      {/* =================================================================== */}
-      {isWeightModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-sm rounded-[24px] p-6 text-center space-y-4 shadow-2xl border"
-            style={{
-              backgroundColor: tokens.surface,
-              borderColor: tokens.border,
-              color: tokens.ink,
-            }}
-          >
-            <h3 className="text-lg font-bold">Log your weight</h3>
-            <p className="text-xs" style={{ color: tokens.muted }}>
-              Track your daily progress towards your goal
+      {/* ========================================================================= */}
+      {/* PROFILE & SETTINGS MODAL (Screenshots 5 & 6)                              */}
+      {/* ========================================================================= */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#F7F7F8] overflow-y-auto">
+          <div className="max-w-md mx-auto p-4 space-y-4 pb-16">
+            
+            {/* Top Bar */}
+            <div className="flex items-center justify-between py-2">
+              <button 
+                onClick={() => setIsProfileModalOpen(false)} 
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 active:scale-95 shadow-sm"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-base font-extrabold text-[#14171d]">Profile</h2>
+              <div className="w-10" />
+            </div>
+
+            {/* Group 1: Notifications & Units */}
+            <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+              <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                <div>
+                  <p className="text-xs font-black text-[#14171d]">Notifications</p>
+                  <p className="text-[10px] font-semibold text-gray-400">Manage meal reminders</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </div>
+              <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                <span className="text-xs font-black text-[#14171d]">Measurement Units</span>
+                <div className="flex items-center gap-1 text-gray-400">
+                  <span className="text-xs font-semibold text-gray-500">metric</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Goals */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">Goals</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Daily Water Goal</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">2000 ml</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Daily Steps Goal</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">10,000</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="py-2.5 flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-gray-800">Health Connect</span>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <span className="text-xs font-semibold text-gray-500">Connected</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: PlateVision Pro */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">PlateVision Pro</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+                <div className="py-1 flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-xs font-black text-[#14171d]">Choose a plan</p>
+                    <p className="text-[10px] font-semibold text-gray-400">Monthly or yearly</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: About us */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">About us</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Our Instagram</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="https://tiktok.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Our TikTok</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Section: Support */}
+            <div>
+              <p className="text-xs font-black text-[#14171d] px-2 mb-2">Support</p>
+              <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <button 
+                  onClick={() => alert('Subscription status checked.')}
+                  className="w-full py-2.5 flex items-center justify-between text-xs font-bold text-gray-800 text-left"
+                >
+                  <span>Restore subscription</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+                <a 
+                  href="mailto:contact@platevision.ai"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Support</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="/terms"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Terms of Use</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+                <a 
+                  href="/privacy"
+                  className="py-2.5 flex items-center justify-between text-xs font-bold text-gray-800"
+                >
+                  <span>Privacy Policy</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Admin Portal Shortcut (If role is admin) */}
+            {profile.role === 'admin' && (
+              <a
+                href="/admin"
+                className="w-full p-4 rounded-3xl bg-[#14171d] text-white flex items-center justify-between shadow-md active:scale-98 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-5 h-5 text-[#b6ff2e]" />
+                  <div className="text-left">
+                    <p className="text-xs font-black">Admin Management Portal</p>
+                    <p className="text-[10px] text-gray-400">View users, all scans & tokens</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </a>
+            )}
+
+            {/* Sign Out Button */}
+            <button
+              onClick={() => {
+                if (window.confirm('Sign out from your PlateVision account?')) {
+                  onSignOut();
+                }
+              }}
+              className="w-full py-3.5 rounded-3xl bg-rose-50 text-rose-600 font-black text-xs hover:bg-rose-100 active:scale-95 transition-all border border-rose-100"
+            >
+              Sign Out
+            </button>
+
+            {/* Version footer */}
+            <p className="text-center text-[10px] font-semibold text-gray-400 pt-2">
+              version: 1.3.97 (675)
             </p>
 
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* LOG WEIGHT MODAL                                                          */}
+      {/* ========================================================================= */}
+      {isWeightModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 text-center space-y-4 shadow-2xl">
+            <h3 className="text-lg font-black text-[#14171d]">Log your weight</h3>
+            <p className="text-xs text-gray-400">Track your daily progress towards your goal</p>
+            
             <div className="flex items-center justify-center gap-2 py-4">
               <input
                 type="number"
                 step="0.1"
                 value={newWeightInput}
                 onChange={(e) => setNewWeightInput(e.target.value)}
-                className="w-28 text-3xl font-bold text-center border-b-2 focus:outline-none bg-transparent tabular-nums"
-                style={{ borderColor: tokens.primaryBright, color: tokens.ink }}
+                className="w-28 text-3xl font-black text-center text-[#14171d] border-b-2 border-[#b6ff2e] focus:outline-none"
               />
-              <span className="text-base font-semibold" style={{ color: tokens.muted }}>
-                kg
-              </span>
+              <span className="text-base font-bold text-gray-500">kg</span>
             </div>
 
-            <div className="flex gap-2.5">
+            <div className="flex gap-2">
               <button
-                type="button"
                 onClick={() => setIsWeightModalOpen(false)}
-                className="flex-1 py-3.5 rounded-[14px] text-xs font-semibold min-h-[48px]"
-                style={{ backgroundColor: tokens.surfaceMuted, color: tokens.ink }}
+                className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-600 font-bold text-xs"
               >
                 Cancel
               </button>
               <button
-                type="button"
                 onClick={() => {
                   const val = parseFloat(newWeightInput);
                   if (!isNaN(val) && val > 30 && val < 300) {
@@ -1090,8 +1159,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                   }
                   setIsWeightModalOpen(false);
                 }}
-                className="flex-1 py-3.5 rounded-[14px] text-white text-xs font-semibold min-h-[48px]"
-                style={{ backgroundColor: tokens.primary }}
+                className="flex-1 py-3 rounded-2xl bg-[#14171d] text-[#b6ff2e] font-black text-xs shadow-md"
               >
                 Save
               </button>
@@ -1099,6 +1167,8 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
           </div>
         </div>
       )}
+
     </div>
   );
 };
+
