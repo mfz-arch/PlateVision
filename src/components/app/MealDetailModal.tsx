@@ -22,7 +22,8 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
 }) => {
   if (!isOpen || !meal) return null;
 
-  const mealId = (meal as any)._id || meal.id;
+  const typedMeal = meal as ScannedMeal & { _id?: string; category?: string };
+  const mealId = typedMeal._id || meal.id;
 
   let photo: string | null = null;
   if (typeof window !== 'undefined' && mealId) {
@@ -32,7 +33,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
     photo = meal.imageUrl;
   }
 
-  const category = (meal as any).category || 'Meal';
+  const category = typedMeal.category || 'Meal';
   const detectedItems = meal.detectedItems || [];
 
   return (

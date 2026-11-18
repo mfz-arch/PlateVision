@@ -8,13 +8,11 @@ import {
   Scale,
   AlertTriangle,
   FileText,
-  Cookie,
   Camera,
   CheckCircle2,
   Mail,
   Server,
   Activity,
-  HeartPulse,
   ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -347,3 +345,4 @@ export const HomeFooter: React.FC = () => {
     </footer>
   );
 };
+

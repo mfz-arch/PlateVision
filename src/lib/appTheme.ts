@@ -61,20 +61,28 @@ export const DARK_TOKENS: AppThemeTokens = {
 const STORAGE_KEY = 'pv_app_theme';
 
 export function useAppTheme() {
-  const [mode, setModeState] = useState<AppThemeMode>('light');
-  const [systemDark, setSystemDark] = useState<boolean>(false);
+  const [mode, setModeState] = useState<AppThemeMode>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY) as AppThemeMode | null;
+        if (saved === 'light' || saved === 'dark' || saved === 'system') {
+          return saved;
+        }
+      } catch {}
+    }
+    return 'light';
+  });
+
+  const [systemDark, setSystemDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY) as AppThemeMode | null;
-      if (saved === 'light' || saved === 'dark' || saved === 'system') {
-        setModeState(saved);
-      }
-    } catch {}
-
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      setSystemDark(mq.matches);
       const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
       mq.addEventListener('change', handler);
       return () => mq.removeEventListener('change', handler);
@@ -93,3 +101,4 @@ export function useAppTheme() {
 
   return { mode, setMode, isDark, tokens };
 }
+

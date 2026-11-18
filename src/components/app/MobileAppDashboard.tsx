@@ -274,7 +274,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   // Helper to reliably retrieve food photo
   const getMealPhoto = (meal?: ScannedMeal | null): string | null => {
     if (!meal) return null;
-    const id = (meal as any)._id || meal.id;
+    const id = (meal as ScannedMeal & { _id?: string })._id || meal.id;
     if (typeof window !== 'undefined' && id) {
       const cached = localStorage.getItem(`pv_photo_${id}`);
       if (cached) return cached;
@@ -590,7 +590,8 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
               ) : (
                 <div className="space-y-2.5">
                   {todaysMeals.map((meal, index) => {
-                    const mealId = (meal as any)._id || meal.id || `home-meal-${index}`;
+                    const typedMeal = meal as ScannedMeal & { _id?: string; category?: string };
+                    const mealId = typedMeal._id || meal.id || `home-meal-${index}`;
                     const photo = getMealPhoto(meal);
                     return (
                       <div
@@ -617,7 +618,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-semibold truncate">{meal.title}</h3>
                           <p className="text-xs mt-0.5" style={{ color: tokens.muted }}>
-                            {(meal as any).category || 'Meal'}
+                            {typedMeal.category || 'Meal'}
                             {meal.timestamp ? ` · ${meal.timestamp}` : ''}
                           </p>
                         </div>
@@ -927,6 +928,7 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       {/* SCANNER MODAL (Analyzing + Review + Edit Bottom Sheet)              */}
       {/* =================================================================== */}
       <MobileAppScannerModal
+        key={selectedImageForScan || 'scanner-closed'}
         isOpen={isScannerModalOpen && !!selectedImageForScan}
         onClose={() => {
           setIsScannerModalOpen(false);

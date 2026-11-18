@@ -414,3 +414,4 @@ export const AppProfileTab: React.FC<AppProfileTabProps> = ({
     </div>
   );
 };
+

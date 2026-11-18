@@ -51,7 +51,7 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<
     'Breakfast' | 'Lunch' | 'Snack' | 'Dinner'
   >(defaultCategory);
-  const [imageBase64, setImageBase64] = useState<string | null>(initialImageBase64);
+  const imageBase64 = initialImageBase64;
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanStep, setScanStep] = useState<number>(0);
   const [isTakingLong, setIsTakingLong] = useState<boolean>(false);
@@ -88,27 +88,9 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    setSelectedCategory(defaultCategory);
-  }, [defaultCategory]);
-
-  useEffect(() => {
-    if (initialImageBase64) {
-      setImageBase64(initialImageBase64);
-      setHasScanned(false);
-      setApiError(null);
-      setEditingItem(null);
-    }
-  }, [initialImageBase64]);
-
   // Animate 3-step checklist & 8s slow-network message while scanning
   useEffect(() => {
-    if (!isScanning) {
-      setScanStep(0);
-      setIsTakingLong(false);
-      return;
-    }
-    setScanStep(1);
+    if (!isScanning) return;
     const t1 = setTimeout(() => setScanStep(2), 1100);
     const t2 = setTimeout(() => setScanStep(3), 2300);
     const t3 = setTimeout(() => setIsTakingLong(true), 8000);
@@ -136,6 +118,8 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
   const handleStartScan = async () => {
     if (!imageBase64 || isScanning) return;
     setIsScanning(true);
+    setScanStep(1);
+    setIsTakingLong(false);
     setApiError(null);
 
     const controller = new AbortController();
@@ -174,18 +158,24 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
       } else {
         throw new Error('No food detected in this image. Please take a clearer photo.');
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('Scan plate error:', err);
-      setApiError(err.message || 'Error scanning image. Please try again.');
+      setApiError(
+        err instanceof Error ? err.message : 'Error scanning image. Please try again.'
+      );
     } finally {
       setIsScanning(false);
+      setScanStep(0);
+      setIsTakingLong(false);
     }
   };
 
   const handleCancelScan = () => {
     abortControllerRef.current?.abort();
     setIsScanning(false);
+    setScanStep(0);
+    setIsTakingLong(false);
     onClose();
   };
 
@@ -316,8 +306,8 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
         setAiFixPrompt('');
         setShowAiFix(false);
       }
-    } catch (err: any) {
-      setAiFixError(err.message || 'Failed to adjust meal.');
+    } catch (err: unknown) {
+      setAiFixError(err instanceof Error ? err.message : 'Failed to adjust meal.');
     } finally {
       setIsAiFixing(false);
     }
@@ -366,8 +356,8 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
 
       onMealSaved(data.meal as ScannedMeal);
       onClose();
-    } catch (err: any) {
-      setApiError(err.message || 'Failed to save meal.');
+    } catch (err: unknown) {
+      setApiError(err instanceof Error ? err.message : 'Failed to save meal.');
     } finally {
       setIsSaving(false);
     }

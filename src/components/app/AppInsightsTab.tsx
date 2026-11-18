@@ -365,3 +365,4 @@ export const AppInsightsTab: React.FC<AppInsightsTabProps> = ({
     </div>
   );
 };
+

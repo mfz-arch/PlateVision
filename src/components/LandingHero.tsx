@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { 
   Camera, ArrowRight, Zap, Flame, CheckCircle2, Utensils,
-  Sparkles, TrendingUp, Clock, ShieldCheck, BarChart3,
-  ChevronDown, ChevronUp, Award, Target, Brain, Scale,
-  Star, XCircle, Check, Activity, Layers
+  Sparkles, TrendingUp, Clock,
+  ChevronDown, ChevronUp, Target, Brain, Scale,
+  Star, XCircle
 } from 'lucide-react';
 import { SAMPLE_DISHES } from '../data/mockPlateData';
 import { useLanguage } from '../context/LanguageContext';
@@ -382,7 +382,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setComparisonTab(tab.id as any)}
+                  onClick={() => setComparisonTab(tab.id as 'both' | 'ai' | 'manual')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                     comparisonTab === tab.id
                       ? 'bg-[#0f172a] text-[#b6ff2e] shadow-xs'
@@ -563,7 +563,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   <button
                     key={g.id}
                     type="button"
-                    onClick={() => setCalcGoal(g.id as any)}
+                    onClick={() => setCalcGoal(g.id as 'lose' | 'gain' | 'recomp')}
                     className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                       calcGoal === g.id
                         ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
@@ -595,7 +595,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setCalcCurrentMethod(m.id as any)}
+                    onClick={() => setCalcCurrentMethod(m.id as 'guess' | 'manual' | 'none')}
                     className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                       calcCurrentMethod === m.id
                         ? 'bg-lime-50 border-[#84cc16] text-[#0f172a]'

@@ -18,6 +18,8 @@ interface AppLogTabProps {
   getMealPhoto: (meal?: ScannedMeal | null) => string | null;
 }
 
+type MealWithMeta = ScannedMeal & { _id?: string; category?: string };
+
 const CATEGORIES: Array<'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'> = [
   'Breakfast',
   'Lunch',
@@ -230,7 +232,7 @@ export const AppLogTab: React.FC<AppLogTabProps> = ({
       <div className="space-y-4">
         {CATEGORIES.map((category) => {
           const groupMeals = mealsForDate.filter(
-            (m) => ((m as any).category || 'Lunch').toLowerCase() === category.toLowerCase()
+            (m) => ((m as MealWithMeta).category || 'Lunch').toLowerCase() === category.toLowerCase()
           );
           const groupCalories = groupMeals.reduce((sum, m) => sum + (m.totalCalories || 0), 0);
 
@@ -264,7 +266,7 @@ export const AppLogTab: React.FC<AppLogTabProps> = ({
               ) : (
                 <div className="space-y-2">
                   {groupMeals.map((meal, idx) => {
-                    const mealId = (meal as any)._id || meal.id || `log-${category}-${idx}`;
+                    const mealId = (meal as MealWithMeta)._id || meal.id || `log-${category}-${idx}`;
                     const photo = getMealPhoto(meal);
                     return (
                       <div
@@ -323,3 +325,4 @@ export const AppLogTab: React.FC<AppLogTabProps> = ({
     </div>
   );
 };
+
