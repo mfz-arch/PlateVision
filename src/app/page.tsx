@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import Link from 'next/link';
 import { Navbar } from '../components/Navbar';
 import { LandingHero } from '../components/LandingHero';
 import { Dashboard } from '../components/Dashboard';
@@ -12,6 +11,7 @@ import { AccountDataControls } from '../components/AccountDataControls';
 import { AdminDashboard } from '../components/AdminDashboard';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { InstallAppModal } from '../components/InstallAppModal';
+import { HomeFooter } from '../components/HomeFooter';
 import { UserProfile } from '../types/plateVision';
 import { toLocalDateStr } from '../lib/date';
 
@@ -237,48 +237,8 @@ export default function Home() {
         onClose={() => setIsInstallModalOpen(false)}
       />
 
-      {/* Footer with legal links (extra bottom padding on mobile for the tab bar) */}
-      <footer className="mt-16 pt-10 pb-28 md:pb-10 border-t-2 border-slate-200 bg-white text-slate-600">
-        <div className="max-w-7xl mx-auto px-4 text-xs text-slate-500 space-y-6">
-          <nav aria-label="Legal & Policies" className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 font-bold text-slate-600">
-            <Link href="/privacy" className="hover:text-[#65a30d] transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[#65a30d] transition-colors">Terms of Service</Link>
-            <Link href="/cookies" className="hover:text-[#65a30d] transition-colors">Cookie Policy</Link>
-            <Link href="/accessibility" className="hover:text-[#65a30d] transition-colors">Accessibility Statement</Link>
-            <Link href="/terms#dmca" className="hover:text-[#65a30d] transition-colors">DMCA / Copyright</Link>
-            <Link href="/admin" className="text-[#84cc16] hover:underline font-black">Admin Portal</Link>
-            <button
-              type="button"
-              onClick={() => {
-                try { localStorage.removeItem('pv_cookie_consent_v1'); } catch {}
-                if (typeof window !== 'undefined') window.dispatchEvent(new Event('pv:open-cookie-settings'));
-              }}
-              className="text-slate-500 hover:text-[#65a30d] transition-colors underline underline-offset-2 cursor-pointer font-bold"
-            >
-              Cookie Preferences
-            </button>
-          </nav>
-
-          {/* FTC & Medical Compliance Disclaimers */}
-          <div className="max-w-3xl mx-auto text-center space-y-2 text-[11px] leading-relaxed text-slate-500">
-            <p>
-              <strong className="text-[#0f172a]">Health &amp; Medical Disclaimer:</strong> PlateVision AI provides automated nutrition{' '}
-              <strong className="text-[#0f172a]">estimates</strong> for wellness journaling and general informational purposes only. It is not
-              a medical device, does not provide medical or dietary diagnosis/treatment, and should never replace qualified professional advice.
-              Always consult a physician or registered dietitian before changing your diet or fitness routine.
-            </p>
-            <p className="text-[10px] text-slate-400">
-              All calculations rely on standard nutritional reference equations (Mifflin-St Jeor). Individual results vary.
-              Sample food photography licensed under Unsplash License. User interface icons provided under ISC License (Lucide).
-            </p>
-          </div>
-
-          <div className="text-center space-y-1">
-            <p className="font-bold text-[#0f172a]">© {new Date().getFullYear()} PlateVision AI. All rights reserved.</p>
-            <p className="text-[11px] text-slate-500 font-medium">PlateVision™ and the PlateVision logo are trademarks of PlateVision AI. Powered by Advanced Vision Intelligence.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Official SaaS Corporate & Legal Disclaimers Footer — ONLY on Home Page */}
+      {activeTab === 'home' && <HomeFooter />}
 
     </main>
   );
