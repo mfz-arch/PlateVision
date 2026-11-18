@@ -126,7 +126,7 @@ export default function Home() {
       />
 
       {/* Main Body Content */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 md:pb-6 relative z-10">
         
         {/* VIEW 1: HOME LANDING PAGE */}
         {activeTab === 'home' && (
