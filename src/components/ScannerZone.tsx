@@ -161,7 +161,13 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
         })
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = { error: res.status === 413 ? 'Photo is too large. Please try a smaller photo.' : `Server error (${res.status}). Please try again.` };
+      }
 
       clearInterval(interval);
       setScanProgress(100);
@@ -169,7 +175,7 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
 
       if (!res.ok) {
         if (res.status === 401) throw new Error('Your session has expired. Please sign in again.');
-        throw new Error(data.error || 'Failed to analyze plate with Gemini Vision AI.');
+        throw new Error(data.error || 'Failed to analyze plate with Vision AI.');
       }
 
       if (data.dish) {

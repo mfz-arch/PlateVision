@@ -23,17 +23,28 @@ async function safeConnectDB(): Promise<boolean> {
  * persisted when the user confirms it (after optionally fixing the result).
  */
 export async function analyzePlateImage(imageBase64: string, mimeType = 'image/jpeg', userId = 'guest') {
-  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+  const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+  const fallbackDataUrl = imageBase64.startsWith('data:')
+    ? imageBase64
+    : `data:${mimeType};base64,${cleanBase64}`;
 
-  let uploadedImageUrl = '';
-  try {
-    uploadedImageUrl = await uploadImageToCloudinary(cleanBase64);
-  } catch (err) {
-    console.warn('[Backend] Cloudinary upload warning (using data URL fallback):', err);
-    uploadedImageUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:${mimeType};base64,${cleanBase64}`;
-  }
+  // Run Cloudinary upload (capped at 4s) and Gemini Vision in parallel so scans finish in ~3s
+  const cloudinaryWithTimeout = Promise.race([
+    uploadImageToCloudinary(cleanBase64),
+    new Promise<string>((_, reject) =>
+      setTimeout(() => reject(new Error('Cloudinary timeout')), 4000)
+    ),
+  ]);
 
-  const parsedDish = await analyzeFoodImageWithGemini(cleanBase64, mimeType, userId);
+  const [cloudResult, parsedDish] = await Promise.all([
+    cloudinaryWithTimeout.catch((err) => {
+      console.warn('[Backend] Cloudinary upload warning (using data URL fallback):', err?.message || err);
+      return fallbackDataUrl;
+    }),
+    analyzeFoodImageWithGemini(cleanBase64, mimeType, userId),
+  ]);
+
+  const uploadedImageUrl = cloudResult || fallbackDataUrl;
 
   return {
     id: 'scan-' + Date.now(),

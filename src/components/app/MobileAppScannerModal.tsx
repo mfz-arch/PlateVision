@@ -86,7 +86,14 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
         })
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = { error: res.status === 413 ? 'Photo is too large. Please try another photo.' : `Server error (${res.status}). Please try again.` };
+      }
+
       if (!res.ok) {
         if (res.status === 401) throw new Error('Session expired. Please sign in again.');
         throw new Error(data.error || 'Failed to analyze plate. Please try another angle.');

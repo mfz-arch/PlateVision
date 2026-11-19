@@ -53,9 +53,7 @@ export async function analyzeFoodImageWithGemini(
   const modelsToTry = [
     'gemini-3.5-flash-lite',
     'gemini-flash-lite-latest',
-    'gemini-3.1-flash-lite',
-    'gemini-3.5-flash',
-    'gemini-3.8-flash'
+    'gemini-3.1-flash-lite'
   ];
   let lastError: any = null;
 
@@ -103,8 +101,20 @@ export async function analyzeFoodImageWithGemini(
 
       const responseText = response.text;
       if (responseText) {
-        const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanJson);
+        let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        let parsed: any;
+        try {
+          parsed = JSON.parse(cleanJson);
+        } catch {
+          const firstBrace = cleanJson.indexOf('{');
+          const lastBrace = cleanJson.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace > firstBrace) {
+            cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
+            parsed = JSON.parse(cleanJson);
+          } else {
+            throw new Error('Invalid JSON response from Vision AI');
+          }
+        }
 
         if (Array.isArray(parsed.detectedItems) && parsed.detectedItems.length > 0) {
           // Quadrant fallbacks covering the 4 natural sections of a plate

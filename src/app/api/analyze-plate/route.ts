@@ -3,6 +3,8 @@ import { analyzePlateImage } from '@/backend/controllers/mealController';
 import { getSession } from '@/backend/auth/session';
 import { rateLimit, getClientIp } from '@/backend/security/rateLimit';
 
+export const maxDuration = 60;
+
 // POST /api/analyze-plate — analyze a meal photo (does NOT save it to the log)
 export async function POST(req: NextRequest) {
   const session = getSession(req);

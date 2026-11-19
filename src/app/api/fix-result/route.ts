@@ -5,6 +5,8 @@ import { rateLimit, getClientIp } from '@/backend/security/rateLimit';
 import TokenUsage from '@/backend/models/TokenUsage';
 import { toLocalDateStr } from '@/lib/date';
 
+export const maxDuration = 60;
+
 const FIX_PROMPT = `You are an expert AI clinical dietitian. The user previously scanned a food image and you identified the items below. However, the user is telling you that some items were incorrectly identified or their nutritional values are wrong.
 
 **Previous AI Result:**
@@ -77,9 +79,7 @@ export async function POST(req: NextRequest) {
     const modelsToTry = [
       'gemini-3.5-flash-lite',
       'gemini-flash-lite-latest',
-      'gemini-3.1-flash-lite',
-      'gemini-3.5-flash',
-      'gemini-3.8-flash'
+      'gemini-3.1-flash-lite'
     ];
     let lastError: any = null;
 
