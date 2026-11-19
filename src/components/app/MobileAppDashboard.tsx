@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Flame, FileText, User, Plus, Camera, Image as ImageIcon, 
-  Scale, X, Trash2, ShieldCheck, ChevronRight, Droplets, 
-  Footprints, Check, ArrowLeft, Download, Sparkles, Heart, Mic, Barcode
+  Scale, X, Trash2, ShieldCheck, ChevronRight, ChevronLeft, Droplets, 
+  Footprints, Check, ArrowLeft, Download, Sparkles, Heart, Mic, Barcode,
+  Home, CalendarDays, BarChart2, Utensils
 } from 'lucide-react';
 import { UserProfile, ScannedMeal } from '../../types/plateVision';
 import { toLocalDateStr } from '../../lib/date';
@@ -22,6 +23,11 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
   onSignOut,
   onUpdateProfile
 }) => {
+  // Bottom Navigation Tab
+  const [activeTab, setActiveTab] = useState<'home' | 'log' | 'insights' | 'profile'>('home');
+  const [logWeekOffset, setLogWeekOffset] = useState(0);
+  const [insightsRange, setInsightsRange] = useState<'week' | 'month'>('week');
+
   // Calendar date selection
   const todayStr = useMemo(() => toLocalDateStr(), []);
   const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
@@ -218,6 +224,124 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
     return days;
   }, [todayStr]);
 
+  // Dates that have logged meals (for green dot indicator on Log tab)
+  const loggedDatesSet = useMemo(() => {
+    const set = new Set<string>();
+    meals.forEach((m) => {
+      if (m.dateStr) set.add(m.dateStr);
+      else if (m.timestamp) {
+        const d = new Date(m.timestamp);
+        if (!isNaN(d.getTime())) set.add(toLocalDateStr(d));
+      }
+    });
+    return set;
+  }, [meals]);
+
+  // Week strip for Log tab (supports weekOffset navigation)
+  const logWeekDays = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset + logWeekOffset * 7);
+
+    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = toLocalDateStr(d);
+      return {
+        label: labels[i],
+        dayNum: d.getDate(),
+        dateStr,
+        hasMeals: loggedDatesSet.has(dateStr)
+      };
+    });
+  }, [logWeekOffset, loggedDatesSet]);
+
+  // Insights chart & macro split computation
+  const insightsData = useMemo(() => {
+    const map = new Map<string, { kcal: number; p: number; c: number; f: number }>();
+    meals.forEach((m) => {
+      let key = m.dateStr;
+      if (!key && m.timestamp) {
+        const d = new Date(m.timestamp);
+        if (!isNaN(d.getTime())) key = toLocalDateStr(d);
+      }
+      if (!key) return;
+      const cur = map.get(key) || { kcal: 0, p: 0, c: 0, f: 0 };
+      map.set(key, {
+        kcal: cur.kcal + (m.totalCalories || 0),
+        p: cur.p + (m.totalProtein || 0),
+        c: cur.c + (m.totalCarbs || 0),
+        f: cur.f + (m.totalFats || 0)
+      });
+    });
+
+    const now = new Date();
+    const bars: Array<{ label: string; kcal: number }> = [];
+    let totalKcal = 0;
+    let activeDays = 0;
+    let p = 0;
+    let c = 0;
+    let f = 0;
+
+    if (insightsRange === 'week') {
+      const currentDay = now.getDay();
+      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOffset);
+      const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const entry = map.get(toLocalDateStr(d));
+        const kcal = entry?.kcal || 0;
+        bars.push({ label: dayLabels[i], kcal });
+        if (kcal > 0) {
+          totalKcal += kcal;
+          activeDays += 1;
+        }
+        p += entry?.p || 0;
+        c += entry?.c || 0;
+        f += entry?.f || 0;
+      }
+    } else {
+      for (let w = 3; w >= 0; w--) {
+        let weekSum = 0;
+        let weekActive = 0;
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - (w * 7 + (6 - i)));
+          const entry = map.get(toLocalDateStr(d));
+          if (entry && entry.kcal > 0) {
+            weekSum += entry.kcal;
+            weekActive += 1;
+            totalKcal += entry.kcal;
+            activeDays += 1;
+            p += entry.p;
+            c += entry.c;
+            f += entry.f;
+          }
+        }
+        bars.push({ label: `W${4 - w}`, kcal: weekActive > 0 ? Math.round(weekSum / weekActive) : 0 });
+      }
+    }
+
+    const totalMacro = p + c + f;
+    const pPct = totalMacro > 0 ? Math.round((p / totalMacro) * 100) : 30;
+    const cPct = totalMacro > 0 ? Math.round((c / totalMacro) * 100) : 45;
+    const fPct = totalMacro > 0 ? Math.max(0, 100 - pPct - cPct) : 25;
+
+    return {
+      bars,
+      avgKcal: activeDays > 0 ? Math.round(totalKcal / activeDays) : 0,
+      pPct,
+      cPct,
+      fPct
+    };
+  }, [meals, insightsRange]);
+
   // Delete Meal
   const handleDeleteMeal = async (id: string) => {
     if (!window.confirm('Delete this meal from your journal?')) return;
@@ -306,6 +430,8 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 pt-4 space-y-4">
         
+        {activeTab === 'home' && (
+          <>
         {/* WEEKLY CALENDAR STRIP */}
         <section className="bg-white rounded-3xl p-3 border-2 border-slate-200/90 shadow-sm">
           <div className="grid grid-cols-7 gap-1 text-center">
@@ -638,19 +764,455 @@ export const MobileAppDashboard: React.FC<MobileAppDashboardProps> = ({
             </div>
           )}
         </section>
+          </>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB 2: LOG (In App Design & Colors)                               */}
+        {/* ================================================================= */}
+        {activeTab === 'log' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xl font-black text-[#0f172a]">Meal Log</h2>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setLogWeekOffset((w) => w - 1)}
+                  aria-label="Previous week"
+                  className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-700 active:scale-95"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {logWeekOffset !== 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLogWeekOffset(0);
+                      setSelectedDateStr(todayStr);
+                    }}
+                    className="px-3 h-8 rounded-full bg-[#0f172a] text-[#b6ff2e] text-[11px] font-black"
+                  >
+                    Today
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setLogWeekOffset((w) => Math.min(0, w + 1))}
+                  disabled={logWeekOffset >= 0}
+                  aria-label="Next week"
+                  className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-700 active:scale-95 disabled:opacity-40"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Week Strip with Activity Dots */}
+            <section className="bg-white rounded-3xl p-3 border-2 border-slate-200/90 shadow-sm">
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {logWeekDays.map((d) => {
+                  const isSelected = d.dateStr === selectedDateStr;
+                  return (
+                    <button
+                      key={d.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDateStr(d.dateStr)}
+                      className={`flex flex-col items-center justify-center py-2 rounded-2xl transition-all ${
+                        isSelected ? 'bg-[#0f172a] text-white shadow-md' : 'hover:bg-slate-50 text-slate-500'
+                      }`}
+                    >
+                      <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                        {d.label}
+                      </span>
+                      <span className={`text-sm font-black mt-0.5 ${isSelected ? 'text-[#b6ff2e]' : 'text-slate-800'}`}>
+                        {d.dayNum}
+                      </span>
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                          d.hasMeals ? (isSelected ? 'bg-[#b6ff2e]' : 'bg-[#84cc16]') : 'bg-transparent'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Day Summary */}
+            <section className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-slate-400">
+                  {selectedDateStr === todayStr ? 'Today' : selectedDateStr}
+                </p>
+                <p className="text-xl font-black text-[#0f172a] mt-0.5">
+                  {totalCaloriesLogged} <span className="text-xs font-bold text-slate-400">/ {dailyCalorieTarget} kcal</span>
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-black">
+                <span className="px-2.5 py-1 rounded-full bg-lime-50 text-[#65a30d] border border-lime-200">
+                  P {totalProteinLogged}g
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-sky-50 text-sky-600 border border-sky-200">
+                  C {totalCarbsLogged}g
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                  F {totalFatsLogged}g
+                </span>
+              </div>
+            </section>
+
+            {/* Grouped by Meal Type */}
+            {(['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const).map((cat) => {
+              const group = mealsForDate.filter(
+                (m) => ((m as any).category || 'Lunch').toLowerCase() === cat.toLowerCase()
+              );
+              const subKcal = group.reduce((s, m) => s + (m.totalCalories || 0), 0);
+              return (
+                <section key={cat} className="space-y-2">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-sm font-black text-[#0f172a]">{cat}</h3>
+                    {group.length > 0 && (
+                      <span className="text-xs font-black text-[#65a30d]">{subKcal} kcal</span>
+                    )}
+                  </div>
+
+                  {group.length === 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenActionSheet(cat)}
+                      className="w-full py-3.5 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-[#84cc16] text-xs font-black text-slate-500 hover:text-[#0f172a] flex items-center justify-center gap-1.5 transition-all active:scale-98"
+                    >
+                      <Plus className="w-4 h-4 text-[#84cc16]" />
+                      <span>Add {cat.toLowerCase()}</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      {group.map((meal, idx) => {
+                        const mealId = (meal as any)._id || meal.id || `log-${cat}-${idx}`;
+                        const photo = getMealPhoto(meal);
+                        return (
+                          <div
+                            key={mealId}
+                            onClick={() => setSelectedMealForDetail(meal)}
+                            className="bg-white rounded-2xl p-3 border-2 border-slate-200/90 shadow-sm flex items-center gap-3 cursor-pointer hover:border-[#0f172a] transition-all"
+                          >
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 flex items-center justify-center">
+                              {photo ? (
+                                <img src={photo} alt={meal.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <Utensils className="w-4 h-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-black text-[#0f172a] truncate">{meal.title}</h4>
+                              <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+                                <span className="text-[#65a30d] font-black">{meal.totalCalories} kcal</span> • P {meal.totalProtein}g
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMeal(mealId);
+                              }}
+                              aria-label="Delete meal"
+                              className="p-2 text-slate-300 hover:text-rose-500"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB 3: INSIGHTS (In App Design & Colors)                          */}
+        {/* ================================================================= */}
+        {activeTab === 'insights' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xl font-black text-[#0f172a]">Insights</h2>
+              <div className="bg-white border-2 border-slate-200 p-1 rounded-2xl flex items-center gap-1">
+                {(['week', 'month'] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setInsightsRange(r)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-black capitalize transition-all ${
+                      insightsRange === r ? 'bg-[#0f172a] text-[#b6ff2e]' : 'text-slate-500'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Calorie Bar Chart */}
+            <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm space-y-4">
+              <div>
+                <p className="text-xs font-bold text-slate-400">
+                  {insightsRange === 'week' ? 'Calories this week' : 'Monthly daily average'}
+                </p>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-3xl font-black text-[#0f172a]">{insightsData.avgKcal}</span>
+                  <span className="text-xs font-bold text-slate-400">kcal / day</span>
+                </div>
+              </div>
+
+              {(() => {
+                const maxVal = Math.max(dailyCalorieTarget * 1.25, ...insightsData.bars.map((b) => b.kcal), 1000);
+                const goalPct = Math.min(92, (dailyCalorieTarget / maxVal) * 100);
+                return (
+                  <div className="relative h-36 pt-4">
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-dashed border-slate-300 pointer-events-none flex justify-end"
+                      style={{ bottom: `${goalPct}%` }}
+                    >
+                      <span className="text-[9px] font-black text-slate-400 -mt-3.5 bg-white px-1">
+                        Goal {dailyCalorieTarget}
+                      </span>
+                    </div>
+                    <div className="h-full flex items-end justify-between gap-2 relative z-10">
+                      {insightsData.bars.map((b, i) => {
+                        const hPct = b.kcal > 0 ? Math.max(8, Math.min(100, (b.kcal / maxVal) * 100)) : 5;
+                        const over = b.kcal > dailyCalorieTarget;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center h-full justify-end gap-1.5">
+                            <div className="w-full max-w-[26px] flex-1 flex items-end">
+                              <div
+                                className={`w-full rounded-t-lg transition-all duration-500 ${
+                                  b.kcal === 0 ? 'bg-slate-100' : over ? 'bg-rose-400' : 'bg-[#84cc16]'
+                                }`}
+                                style={{ height: `${hPct}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-500">{b.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </section>
+
+            {/* Macro Split Donut */}
+            <section className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm space-y-3">
+              <h3 className="text-sm font-black text-[#0f172a]">Macro split</h3>
+              <div className="flex items-center justify-between gap-5">
+                {(() => {
+                  const r = 38;
+                  const c = 2 * Math.PI * r;
+                  const pD = (insightsData.pPct / 100) * c;
+                  const cD = (insightsData.cPct / 100) * c;
+                  const fD = (insightsData.fPct / 100) * c;
+                  return (
+                    <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#f1f5f9" strokeWidth="10" />
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#84cc16" strokeWidth="10" strokeDasharray={`${pD} ${c}`} />
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#38bdf8" strokeWidth="10" strokeDasharray={`${cD} ${c}`} strokeDashoffset={-pD} />
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#fbbf24" strokeWidth="10" strokeDasharray={`${fD} ${c}`} strokeDashoffset={-(pD + cD)} />
+                      </svg>
+                      <span className="absolute text-xs font-black text-[#0f172a]">100%</span>
+                    </div>
+                  );
+                })()}
+                <div className="flex-1 space-y-2 text-xs font-bold">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#84cc16]" /> Protein
+                    </span>
+                    <span className="font-black text-[#0f172a]">{insightsData.pPct}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-400" /> Carbs
+                    </span>
+                    <span className="font-black text-[#0f172a]">{insightsData.cPct}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Fat
+                    </span>
+                    <span className="font-black text-[#0f172a]">{insightsData.fPct}%</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Weight Progress Shortcut */}
+            <section
+              onClick={() => setIsWeightModalOpen(true)}
+              className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99]"
+            >
+              <div>
+                <p className="text-xs font-black text-slate-400">Weight progress</p>
+                <p className="text-lg font-black text-[#0f172a] mt-0.5">
+                  {currentWeight} kg <span className="text-xs font-bold text-slate-400">· Target {profile.targetWeightKg || 65} kg</span>
+                </p>
+              </div>
+              <span className="text-xs font-black px-3 py-1.5 rounded-xl bg-[#0f172a] text-[#b6ff2e]">Log</span>
+            </section>
+          </div>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB 4: PROFILE (In App Design & Colors)                           */}
+        {/* ================================================================= */}
+        {activeTab === 'profile' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center text-xl font-black shrink-0">
+                {(profile.name || 'A').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-[#0f172a]">{profile.name || 'Athlete'}</h2>
+                <p className="text-xs font-bold text-slate-400">
+                  Daily Goal: {dailyCalorieTarget} kcal · P {profile.proteinGoalGrams || 120}g
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-4 border-2 border-slate-200/90 shadow-sm divide-y divide-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsNutritionReportOpen(true)}
+                className="w-full py-3 flex items-center justify-between text-xs font-black text-[#0f172a]"
+              >
+                <span>Nutrition Report</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsWeightModalOpen(true)}
+                className="w-full py-3 flex items-center justify-between text-xs font-black text-[#0f172a]"
+              >
+                <span>Update Current Weight ({currentWeight} kg)</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+              <a
+                href="/privacy"
+                className="w-full py-3 flex items-center justify-between text-xs font-black text-[#0f172a]"
+              >
+                <span>Privacy Policy</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </a>
+              <a
+                href="/terms"
+                className="w-full py-3 flex items-center justify-between text-xs font-black text-[#0f172a]"
+              >
+                <span>Terms of Service</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </a>
+            </div>
+
+            {profile.role === 'admin' && (
+              <a
+                href="/admin"
+                className="w-full p-4 rounded-3xl bg-[#0f172a] text-white flex items-center justify-between shadow-md"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-5 h-5 text-[#b6ff2e]" />
+                  <div className="text-left">
+                    <p className="text-xs font-black">Admin Management Portal</p>
+                    <p className="text-[10px] text-slate-400">View users, all scans & tokens</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </a>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Sign out from your PlateVision account?')) {
+                  onSignOut();
+                }
+              }}
+              className="w-full py-3.5 rounded-3xl bg-rose-50 text-rose-600 font-black text-xs hover:bg-rose-100 border border-rose-200"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
 
       </main>
 
-      {/* FLOATING ACTION BUTTON (The signature CalZen-like Black + Button) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-        <button
-          onClick={() => handleOpenActionSheet()}
-          aria-label="Add or Scan Meal"
-          className="w-16 h-16 rounded-full bg-[#14171d] text-white flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:bg-black active:scale-90 transition-all border-2 border-white/20"
-        >
-          <Plus className="w-8 h-8 stroke-[2.5]" />
-        </button>
-      </div>
+      {/* 4-TAB BOTTOM NAVIGATION BAR WITH RAISED CENTER "+" BUTTON */}
+      <nav
+        aria-label="App Navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+      >
+        <div className="max-w-md mx-auto px-2 h-16 grid grid-cols-5 items-center relative">
+          {/* Home */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all ${
+              activeTab === 'home' ? 'text-[#0f172a] font-black' : 'text-slate-400 font-bold'
+            }`}
+          >
+            <Home className={`w-5 h-5 ${activeTab === 'home' ? 'text-[#84cc16] stroke-[2.5]' : ''}`} />
+            <span className="text-[10px]">Home</span>
+          </button>
+
+          {/* Log */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('log')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all ${
+              activeTab === 'log' ? 'text-[#0f172a] font-black' : 'text-slate-400 font-bold'
+            }`}
+          >
+            <CalendarDays className={`w-5 h-5 ${activeTab === 'log' ? 'text-[#84cc16] stroke-[2.5]' : ''}`} />
+            <span className="text-[10px]">Log</span>
+          </button>
+
+          {/* Center Raised "+" Button (Kept exactly as requested!) */}
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => handleOpenActionSheet()}
+              aria-label="Add or Scan Meal"
+              className="-mt-7 w-16 h-16 rounded-full bg-[#14171d] text-white flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:bg-black active:scale-90 transition-all border-4 border-[#F8F9FA]"
+            >
+              <Plus className="w-8 h-8 stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Insights */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('insights')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all ${
+              activeTab === 'insights' ? 'text-[#0f172a] font-black' : 'text-slate-400 font-bold'
+            }`}
+          >
+            <BarChart2 className={`w-5 h-5 ${activeTab === 'insights' ? 'text-[#84cc16] stroke-[2.5]' : ''}`} />
+            <span className="text-[10px]">Insights</span>
+          </button>
+
+          {/* Profile */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all ${
+              activeTab === 'profile' ? 'text-[#0f172a] font-black' : 'text-slate-400 font-bold'
+            }`}
+          >
+            <User className={`w-5 h-5 ${activeTab === 'profile' ? 'text-[#84cc16] stroke-[2.5]' : ''}`} />
+            <span className="text-[10px]">Profile</span>
+          </button>
+        </div>
+      </nav>
 
       {/* ========================================================================= */}
       {/* BOTTOM ACTION SHEET: AUTO-DETECTED MEAL TIME + ACTION LIST               */}
