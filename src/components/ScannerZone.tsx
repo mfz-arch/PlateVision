@@ -281,12 +281,14 @@ export const ScannerZone: React.FC<ScannerZoneProps> = ({
           previousResult: {
             title: selectedDish.title,
             detectedItems: selectedDish.detectedItems.map((i) => ({
+              id: i.id,
               name: i.name,
               calories: i.calories,
               protein: i.protein,
               carbs: i.carbs,
               fats: i.fats,
-              weightGrams: i.weightGrams
+              weightGrams: i.weightGrams,
+              boundingBox: i.boundingBox
             }))
           },
           userCorrection: aiFixText

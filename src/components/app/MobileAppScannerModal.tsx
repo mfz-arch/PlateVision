@@ -206,12 +206,14 @@ export const MobileAppScannerModal: React.FC<MobileAppScannerModalProps> = ({
           previousResult: {
             title: mealTitle,
             detectedItems: detectedItems.map((i) => ({
+              id: i.id,
               name: i.name,
               calories: i.calories,
               protein: i.protein,
               carbs: i.carbs,
               fats: i.fats,
-              weightGrams: i.weightGrams
+              weightGrams: i.weightGrams,
+              boundingBox: i.boundingBox
             }))
           },
           userCorrection: aiFixPrompt

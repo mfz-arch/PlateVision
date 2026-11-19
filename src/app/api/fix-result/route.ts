@@ -16,6 +16,7 @@ const FIX_PROMPT = `You are an expert AI clinical dietitian. The user previously
 {USER_CORRECTION}
 
 Re-analyze the food image with the user's correction in mind. Fix the mistakes the user pointed out. Keep items that were correct. Update or replace items that were wrong.
+IMPORTANT: Preserve the exact "id" and "boundingBox" coordinates (in normalized 0-100 percentages: ymin, xmin, ymax, xmax, or x, y, width, height) from Previous AI Result for every item that refers to the same region on the plate. Only compute a new boundingBox if a brand-new food item was added.
 
 Return your response strictly in raw valid JSON format:
 {
@@ -123,42 +124,105 @@ export async function POST(req: NextRequest) {
 
         const responseText = response.text;
         if (responseText) {
-          const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleanJson);
+          let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          let parsed: any;
+          try {
+            parsed = JSON.parse(cleanJson);
+          } catch {
+            const firstBrace = cleanJson.indexOf('{');
+            const lastBrace = cleanJson.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace > firstBrace) {
+              cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
+              parsed = JSON.parse(cleanJson);
+            } else {
+              throw new Error('Invalid JSON response from Vision AI');
+            }
+          }
 
-          // Normalize bounding boxes
+          const prevItems: any[] = Array.isArray(previousResult?.detectedItems)
+            ? previousResult.detectedItems
+            : [];
+          const quadrantBoxes = [
+            { x: 35, y: 10, width: 55, height: 45 },
+            { x: 8, y: 52, width: 42, height: 40 },
+            { x: 52, y: 60, width: 40, height: 35 },
+            { x: 8, y: 12, width: 35, height: 38 }
+          ];
+
+          // Normalize bounding boxes while preserving accurate previous boxes
           if (Array.isArray(parsed.detectedItems)) {
             parsed.detectedItems = parsed.detectedItems.map((item: any, idx: number) => {
-              let box = item.boundingBox;
-              let x = 10, y = 10, width = 40, height = 40;
+              const matchedPrev =
+                prevItems.find((p) => p?.id && item?.id && p.id === item.id) ||
+                prevItems.find(
+                  (p) =>
+                    p?.name &&
+                    item?.name &&
+                    p.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+                ) ||
+                prevItems[idx];
+
+              const box = item.boundingBox;
+              let finalBox = matchedPrev?.boundingBox &&
+                typeof matchedPrev.boundingBox.x === 'number' &&
+                typeof matchedPrev.boundingBox.y === 'number'
+                ? { ...matchedPrev.boundingBox }
+                : quadrantBoxes[idx % quadrantBoxes.length];
 
               if (box) {
-                if (box.ymin !== undefined && box.xmin !== undefined && box.ymax !== undefined && box.xmax !== undefined) {
-                  let ymin = box.ymin > 100 ? box.ymin / 10 : box.ymin;
-                  let xmin = box.xmin > 100 ? box.xmin / 10 : box.xmin;
-                  let ymax = box.ymax > 100 ? box.ymax / 10 : box.ymax;
-                  let xmax = box.xmax > 100 ? box.xmax / 10 : box.xmax;
-                  x = Math.max(5, Math.min(85, Math.round(xmin)));
-                  y = Math.max(5, Math.min(85, Math.round(ymin)));
-                  width = Math.max(15, Math.min(75, Math.round(Math.abs(xmax - xmin))));
-                  height = Math.max(15, Math.min(75, Math.round(Math.abs(ymax - ymin))));
-                } else if (box.x !== undefined && box.y !== undefined) {
-                  x = Math.max(5, Math.min(85, Math.round(box.x)));
-                  y = Math.max(5, Math.min(85, Math.round(box.y)));
-                  width = Math.max(15, Math.min(75, Math.round(box.width || 40)));
-                  height = Math.max(15, Math.min(75, Math.round(box.height || 40)));
+                if (Array.isArray(box) && box.length === 4) {
+                  let [ymin, xmin, ymax, xmax] = box.map(Number);
+                  if (ymax > 100 || xmax > 100) {
+                    ymin /= 10; xmin /= 10; ymax /= 10; xmax /= 10;
+                  }
+                  if ([ymin, xmin, ymax, xmax].every((n) => Number.isFinite(n))) {
+                    finalBox = {
+                      x: Math.max(5, Math.min(85, Math.round(xmin))),
+                      y: Math.max(5, Math.min(85, Math.round(ymin))),
+                      width: Math.max(15, Math.min(75, Math.round(Math.abs(xmax - xmin)))),
+                      height: Math.max(15, Math.min(75, Math.round(Math.abs(ymax - ymin))))
+                    };
+                  }
+                } else if (typeof box === 'object') {
+                  if (box.ymin !== undefined && box.xmin !== undefined && box.ymax !== undefined && box.xmax !== undefined) {
+                    let ymin = Number(box.ymin) > 100 ? Number(box.ymin) / 10 : Number(box.ymin);
+                    let xmin = Number(box.xmin) > 100 ? Number(box.xmin) / 10 : Number(box.xmin);
+                    let ymax = Number(box.ymax) > 100 ? Number(box.ymax) / 10 : Number(box.ymax);
+                    let xmax = Number(box.xmax) > 100 ? Number(box.xmax) / 10 : Number(box.xmax);
+                    if ([ymin, xmin, ymax, xmax].every((n) => Number.isFinite(n))) {
+                      finalBox = {
+                        x: Math.max(5, Math.min(85, Math.round(xmin))),
+                        y: Math.max(5, Math.min(85, Math.round(ymin))),
+                        width: Math.max(15, Math.min(75, Math.round(Math.abs(xmax - xmin)))),
+                        height: Math.max(15, Math.min(75, Math.round(Math.abs(ymax - ymin))))
+                      };
+                    }
+                  } else if (box.x !== undefined && box.y !== undefined) {
+                    const bx = Number(box.x);
+                    const by = Number(box.y);
+                    const bw = Number(box.width || 40);
+                    const bh = Number(box.height || 40);
+                    if ([bx, by, bw, bh].every((n) => Number.isFinite(n))) {
+                      finalBox = {
+                        x: Math.max(5, Math.min(85, Math.round(bx))),
+                        y: Math.max(5, Math.min(85, Math.round(by))),
+                        width: Math.max(15, Math.min(75, Math.round(bw))),
+                        height: Math.max(15, Math.min(75, Math.round(bh)))
+                      };
+                    }
+                  }
                 }
               }
 
               return {
-                id: item.id || `fixed-${idx + 1}`,
+                id: item.id || matchedPrev?.id || `fixed-${idx + 1}`,
                 name: item.name || `Item ${idx + 1}`,
                 calories: Number(item.calories) || 0,
                 protein: Number(item.protein) || 0,
                 carbs: Number(item.carbs) || 0,
                 fats: Number(item.fats) || 0,
                 weightGrams: Number(item.weightGrams) || 100,
-                boundingBox: { x, y, width, height }
+                boundingBox: finalBox
               };
             });
           }
