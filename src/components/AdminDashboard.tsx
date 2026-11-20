@@ -383,36 +383,35 @@ export const AdminDashboard: React.FC = () => {
     <div className="flex flex-col lg:flex-row gap-6 items-start animate-in fade-in duration-300">
       
       {/* =====================================================================
-          LEFT SIDEBAR NAVIGATION (STICKY ON DESKTOP)
+          LEFT EXECUTIVE SIDEBAR (Haze / Shadcn Dark Slate Style)
          ===================================================================== */}
-      <aside className="w-full lg:w-72 shrink-0 bg-white rounded-3xl border-2 border-slate-200 shadow-sm p-5 space-y-6 lg:sticky lg:top-24">
+      <aside className="w-full lg:w-64 shrink-0 bg-[#0f172a] text-slate-300 rounded-2xl border border-slate-800 shadow-sm p-4 space-y-6 lg:sticky lg:top-24">
         
-        {/* Sidebar Header / Brand Identity */}
-        <div className="p-4 rounded-2xl bg-[#0f172a] text-white space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#b6ff2e]">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>FOUNDER OS v2.5</span>
-            </span>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              Online
-            </span>
+        {/* Sidebar Brand Header */}
+        <div className="flex items-center justify-between px-2 pt-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
+              <span className="text-xs font-black text-[#b6ff2e]">PV</span>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white leading-none">PlateVision</h2>
+              <p className="text-[11px] text-slate-400 mt-1">Admin Console</p>
+            </div>
           </div>
-          <h2 className="text-lg font-black tracking-tight text-white">PlateVision SaaS</h2>
-          <p className="text-[11px] text-slate-400">
-            {isFr ? 'Centre de contrôle exécutif' : 'Executive Management & Telemetry'}
-          </p>
+          <span className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Live
+          </span>
         </div>
 
         {/* Navigation Groups */}
         <nav className="space-y-5">
           {sidebarGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1.5">
-              <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <div key={gIdx} className="space-y-1">
+              <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 {group.groupLabel}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const IconComp = item.icon;
                   const isActive = activeSection === item.id;
@@ -420,22 +419,22 @@ export const AdminDashboard: React.FC = () => {
                     <button
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-black transition-all ${
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all ${
                         isActive
-                          ? 'bg-[#b6ff2e] text-[#0f172a] shadow-xs border border-[#84cc16]'
-                          : 'text-slate-600 hover:text-[#0f172a] hover:bg-slate-50 font-bold'
+                          ? 'bg-white/10 text-white font-semibold border-l-2 border-[#b6ff2e]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5 font-medium'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <IconComp className={`w-4 h-4 ${isActive ? 'text-[#0f172a]' : 'text-slate-400'}`} />
-                        <span>{item.label}</span>
+                      <div className="flex items-center gap-2.5 truncate">
+                        <IconComp className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#b6ff2e]' : 'text-slate-400'}`} />
+                        <span className="truncate">{item.label}</span>
                       </div>
                       {item.badge && (
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums ${
                             isActive
-                              ? 'bg-[#0f172a] text-[#b6ff2e]'
-                              : 'bg-slate-100 text-slate-700'
+                              ? 'bg-[#b6ff2e]/15 text-[#b6ff2e]'
+                              : 'bg-white/5 text-slate-400'
                           }`}
                         >
                           {item.badge}
@@ -449,22 +448,22 @@ export const AdminDashboard: React.FC = () => {
           ))}
         </nav>
 
-        {/* Sidebar Quick Footer Stats */}
-        <div className="pt-4 border-t border-slate-200 space-y-2.5 text-xs">
+        {/* Sidebar Footer Summary */}
+        <div className="pt-4 border-t border-slate-800 space-y-2.5 text-xs px-1">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 font-semibold">{isFr ? 'Coût API ce mois' : 'Monthly API Spend'}</span>
-            <span className="font-black text-[#65a30d]">$0.00 (Free Tier)</span>
+            <span className="text-slate-400">{isFr ? 'Coût API' : 'API Spend'}</span>
+            <span className="font-semibold text-white tabular-nums">$0.00</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 font-semibold">{isFr ? 'Taux d\'activation' : 'User Activation'}</span>
-            <span className="font-black text-[#0f172a]">{biMetrics.activationRate}%</span>
+            <span className="text-slate-400">{isFr ? 'Activation' : 'Activation'}</span>
+            <span className="font-semibold text-[#b6ff2e] tabular-nums">{biMetrics.activationRate}%</span>
           </div>
           <button
             onClick={handleExportUsersCsv}
-            className="w-full mt-2 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#0f172a] font-black text-xs flex items-center justify-center gap-2 transition-all"
+            className="w-full mt-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-medium text-xs flex items-center justify-center gap-2 transition-all"
           >
-            <Download className="w-3.5 h-3.5 text-[#65a30d]" />
-            <span>{isFr ? 'Exporter CSV Athlètes' : 'Export Athletes CSV'}</span>
+            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <span>{isFr ? 'Exporter CSV' : 'Export CSV'}</span>
           </button>
         </div>
 
@@ -473,269 +472,290 @@ export const AdminDashboard: React.FC = () => {
       {/* =====================================================================
           RIGHT MAIN CONTENT WORKSPACE
          ===================================================================== */}
-      <div className="flex-1 w-full min-w-0 space-y-6">
+      <div className="flex-1 w-full min-w-0 space-y-5">
         
-        {/* Contextual Top Action Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs">
+        {/* Top Utility Bar (Shadcn / Haze Style) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-              <span>SaaS Command Center</span>
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              <span>Dashboard</span>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-[#65a30d] font-black">{activeItemMeta?.label}</span>
+              <span className="text-slate-900 font-semibold">{activeItemMeta?.label}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight mt-1">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight mt-0.5">
               {activeItemMeta?.label}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search athletes..."
+                className="pl-8 pr-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 w-44"
+              />
+            </form>
             <button
               onClick={handleExportUsersCsv}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 text-[#0f172a] font-black text-xs hover:bg-slate-50 transition-all"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-all"
             >
-              <Download className="w-3.5 h-3.5 text-[#65a30d]" />
-              <span>Export CSV</span>
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export</span>
             </button>
             <button
               onClick={() => fetchAllData(true)}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0f172a] text-[#b6ff2e] font-black text-xs hover:bg-slate-800 transition-all disabled:opacity-50 shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0f172a] text-white font-semibold text-xs hover:bg-slate-800 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? 'Syncing...' : 'Live Refresh'}</span>
+              <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
             </button>
           </div>
         </div>
 
         {/* =================================================================
-            VIEW 1: EXECUTIVE OVERVIEW (NORTH STAR KPIs + VELOCITY + PREVIEW)
+            VIEW 1: EXECUTIVE OVERVIEW (Haze Hero + Shadcn KPIs & Charts)
            ================================================================= */}
         {activeSection === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             
-            {/* 5 North Star Metric Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            {/* Executive Hero Banner (Inspired by Haze / Flux, using PlateVision #0f172a + #84cc16) */}
+            <div className="rounded-xl bg-gradient-to-r from-[#0f172a] via-[#131d33] to-[#0f172a] border border-slate-800 p-6 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+              <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-[#84cc16]/10 blur-3xl pointer-events-none" />
+              <div className="space-y-2 relative z-10">
+                <p className="text-xs font-medium text-slate-400">
+                  Cumulative Platform Nutrition Tracked
+                </p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-white">
+                    {stats?.aggregates?.calories ? stats.aggregates.calories.toLocaleString() : '0'} kcal
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#84cc16]/15 text-[#b6ff2e] text-xs font-semibold border border-[#84cc16]/30 tabular-nums">
+                    +{stats?.todayMealsCount || 0} scans today
+                  </span>
+                </div>
+                <div className="pt-1 flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveSection('gemini')}
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-medium text-white border border-white/10 transition-all inline-flex items-center gap-1.5"
+                  >
+                    <span>View AI Telemetry</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#b6ff2e]" />
+                  </button>
+                  <span className="text-xs text-slate-400 tabular-nums">
+                    Avg ~{biMetrics.avgCaloriesPerMeal} kcal / meal
+                  </span>
+                </div>
+              </div>
+
+              {/* Clean Minimalist Trend Sparkline */}
+              <div className="w-full md:w-64 h-20 relative z-10 shrink-0">
+                <svg viewBox="0 0 240 64" className="w-full h-full overflow-visible">
+                  <defs>
+                    <linearGradient id="pvAdminArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#b6ff2e" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#b6ff2e" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0 52 L40 46 L80 49 L120 34 L160 38 L200 20 L240 12 L240 64 L0 64 Z"
+                    fill="url(#pvAdminArea)"
+                  />
+                  <path
+                    d="M0 52 L40 46 L80 49 L120 34 L160 38 L200 20 L240 12"
+                    fill="none"
+                    stroke="#b6ff2e"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* 4-Column Shadcn Minimalist KPI Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <div
                 onClick={() => setActiveSection('users')}
-                className="p-5 bg-white rounded-2xl border-2 border-slate-200 hover:border-[#84cc16] shadow-xs space-y-2 cursor-pointer transition-all"
+                className="p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 shadow-xs space-y-2 cursor-pointer transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Athletes</span>
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
-                    <Users className="w-4 h-4" />
-                  </div>
+                  <span className="text-xs font-medium text-slate-500">Total Athletes</span>
+                  <Users className="w-4 h-4 text-slate-400" />
                 </div>
-                <p className="text-3xl font-black text-[#0f172a]">{stats?.totalUsers || 0}</p>
-                <p className="text-[11px] text-[#65a30d] font-bold flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> {biMetrics.activationRate}% activated
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats?.totalUsers || 0}</p>
+                <p className="text-xs text-slate-500">
+                  <span className="text-[#65a30d] font-semibold">{biMetrics.activationRate}%</span> activated users
                 </p>
               </div>
 
               <div
                 onClick={() => setActiveSection('activity')}
-                className="p-5 bg-white rounded-2xl border-2 border-slate-200 hover:border-[#84cc16] shadow-xs space-y-2 cursor-pointer transition-all"
+                className="p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 shadow-xs space-y-2 cursor-pointer transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Meals Scanned</span>
-                  <div className="w-8 h-8 rounded-xl bg-lime-100 border border-lime-200 flex items-center justify-center text-[#65a30d]">
-                    <Utensils className="w-4 h-4" />
-                  </div>
+                  <span className="text-xs font-medium text-slate-500">Meals Scanned</span>
+                  <Utensils className="w-4 h-4 text-slate-400" />
                 </div>
-                <p className="text-3xl font-black text-[#65a30d]">{stats?.totalMeals || 0}</p>
-                <p className="text-[11px] text-slate-500 font-semibold">
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats?.totalMeals || 0}</p>
+                <p className="text-xs text-slate-500 tabular-nums">
                   Avg {biMetrics.avgMealsPerUser} meals / athlete
                 </p>
               </div>
 
-              <div className="p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-xs space-y-2">
+              <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Scans Today</span>
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
-                    <Activity className="w-4 h-4" />
-                  </div>
+                  <span className="text-xs font-medium text-slate-500">Scans Today</span>
+                  <Activity className="w-4 h-4 text-slate-400" />
                 </div>
-                <p className="text-3xl font-black text-[#0f172a]">{stats?.todayMealsCount || 0}</p>
-                <p className="text-[11px] text-slate-500 font-semibold">24h active stream</p>
-              </div>
-
-              <div className="p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Calories Tracked</span>
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#0f172a]">
-                    <Flame className="w-4 h-4" />
-                  </div>
-                </div>
-                <p className="text-3xl font-black text-[#0f172a]">
-                  {stats?.aggregates?.calories ? stats.aggregates.calories.toLocaleString() : 0}
-                </p>
-                <p className="text-[11px] text-slate-500 font-semibold">
-                  ~{biMetrics.avgCaloriesPerMeal} kcal / meal avg
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats?.todayMealsCount || 0}</p>
+                <p className="text-xs text-slate-500">
+                  {biMetrics.powerUsersCount} power athletes (3+ logs)
                 </p>
               </div>
 
               <div
                 onClick={() => setActiveSection('gemini')}
-                className="p-5 bg-[#0f172a] text-white rounded-2xl border-2 border-slate-800 shadow-sm space-y-2 cursor-pointer hover:border-[#b6ff2e] transition-all"
+                className="p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 shadow-xs space-y-2 cursor-pointer transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#b6ff2e] font-black uppercase tracking-wider">Gemini Tokens</span>
-                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#b6ff2e]">
-                    <Cpu className="w-4 h-4" />
-                  </div>
+                  <span className="text-xs font-medium text-slate-500">AI Tokens Today</span>
+                  <Cpu className="w-4 h-4 text-slate-400" />
                 </div>
-                <p className="text-3xl font-black text-white">
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">
                   {stats?.geminiUsage?.todayTokens ? stats.geminiUsage.todayTokens.toLocaleString() : '0'}
                 </p>
-                <p className="text-[10px] text-slate-300 font-bold flex items-center justify-between">
-                  <span>{stats?.geminiUsage?.todayRequests || 0} req today</span>
-                  <span className="text-[#b6ff2e]">$0.00</span>
+                <p className="text-xs text-slate-500 tabular-nums">
+                  {stats?.geminiUsage?.todayRequests || 0} requests · <span className="text-[#65a30d] font-semibold">$0.00</span>
                 </p>
               </div>
             </div>
 
-            {/* SaaS Engagement & Velocity Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Shadcn Overview Split: Vertical Bar Chart (7 cols) + Recent Athletes (5 cols) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               
-              {/* Left 7 Cols: Scan Activity Velocity by Date */}
-              <div className="lg:col-span-7 p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-5">
+              {/* Left 7 Cols: Vertical Bar Chart */}
+              <div className="lg:col-span-7 p-6 bg-white rounded-xl border border-slate-200 shadow-xs space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-black text-[#0f172a] flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-[#65a30d]" />
-                      <span>Daily AI Scan Velocity (Recent Activity Days)</span>
-                    </h3>
-                    <p className="text-xs text-slate-500">Volume of meal photos processed across active dates</p>
+                    <h3 className="text-base font-semibold text-slate-900">Overview</h3>
+                    <p className="text-xs text-slate-500">Daily AI scan volume across recent active dates</p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-lime-100 text-[#0f172a] text-xs font-black">
-                    {activity.length} Total Scans
+                  <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-semibold tabular-nums">
+                    {activity.length} total
                   </span>
                 </div>
 
                 {biMetrics.recentDates.length > 0 ? (
-                  <div className="space-y-3 pt-2">
-                    {biMetrics.recentDates.map(([dateStr, count]) => {
+                  <div className="h-56 pt-4 flex items-end justify-between gap-3 border-b border-slate-100 pb-2">
+                    {biMetrics.recentDates.map(([dateStr, count], idx) => {
                       const maxCount = Math.max(...biMetrics.recentDates.map((d) => d[1]), 1);
-                      const pct = Math.max(12, Math.round((count / maxCount) * 100));
+                      const pct = Math.max(10, Math.round((count / maxCount) * 100));
+                      const isLatest = idx === biMetrics.recentDates.length - 1;
                       return (
-                        <div key={dateStr} className="space-y-1">
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="font-mono text-slate-600">{dateStr}</span>
-                            <span className="text-[#0f172a] font-black">{count} meals scanned</span>
-                          </div>
-                          <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <div key={dateStr} className="flex-1 flex flex-col items-center h-full justify-end gap-2 group">
+                          <span className="text-[11px] font-semibold text-slate-500 tabular-nums opacity-80 group-hover:opacity-100">
+                            {count}
+                          </span>
+                          <div className="w-full max-w-[38px] flex-1 flex items-end">
                             <div
-                              className="h-full bg-gradient-to-r from-[#84cc16] to-emerald-500 rounded-full transition-all duration-500"
-                              style={{ width: `${pct}%` }}
+                              className={`w-full rounded-t-md transition-all duration-500 ${
+                                isLatest ? 'bg-[#65a30d]' : 'bg-[#0f172a] group-hover:bg-slate-700'
+                              }`}
+                              style={{ height: `${pct}%` }}
                             />
                           </div>
+                          <span className="text-[10px] font-medium text-slate-500 tabular-nums">
+                            {dateStr.slice(5)}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 py-8 text-center">No meal activity recorded yet.</p>
+                  <p className="text-xs text-slate-400 py-16 text-center">No meal activity recorded yet.</p>
                 )}
               </div>
 
-              {/* Right 5 Cols: SaaS Funnel & Retention Health */}
-              <div className="lg:col-span-5 p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-5">
-                <h3 className="text-base font-black text-[#0f172a] flex items-center gap-2">
-                  <Award className="w-4 h-4 text-[#65a30d]" />
-                  <span>SaaS Cohort & Funnel Health</span>
-                </h3>
+              {/* Right 5 Cols: Recent Athletes (Shadcn "Recent Sales" Style) */}
+              <div className="lg:col-span-5 p-6 bg-white rounded-xl border border-slate-200 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">Recent Athletes</h3>
+                    <p className="text-xs text-slate-500">Top active accounts by logged meals</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveSection('users')}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+                  >
+                    View all
+                  </button>
+                </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                    <p className="text-[10px] font-bold uppercase text-slate-500">Onboarding Rate</p>
-                    <p className="text-2xl font-black text-emerald-600">100%</p>
-                    <p className="text-[10px] text-slate-500">Completed BMR setup</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                    <p className="text-[10px] font-bold uppercase text-slate-500">Active Scanners</p>
-                    <p className="text-2xl font-black text-[#0f172a]">{biMetrics.activeUsersCount} / {users.length}</p>
-                    <p className="text-[10px] text-slate-500">Logged 1+ meal</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                    <p className="text-[10px] font-bold uppercase text-slate-500">Power Athletes</p>
-                    <p className="text-2xl font-black text-[#65a30d]">{biMetrics.powerUsersCount}</p>
-                    <p className="text-[10px] text-slate-500">3+ meals logged</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                    <p className="text-[10px] font-bold uppercase text-slate-500">Avg Tokens / Scan</p>
-                    <p className="text-2xl font-black text-[#0f172a]">{biMetrics.avgTokensPerScan.toLocaleString()}</p>
-                    <p className="text-[10px] text-slate-500">Gemini 2.5 Flash</p>
-                  </div>
+                <div className="space-y-4 pt-1">
+                  {users.slice(0, 5).map((u) => (
+                    <div
+                      key={u._id}
+                      onClick={() => setSelectedUserInspector(u)}
+                      className="flex items-center justify-between gap-3 cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-semibold text-xs shrink-0 group-hover:bg-[#0f172a] group-hover:text-white transition-colors">
+                          {(u.name || 'A').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">{u.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-slate-900 tabular-nums">
+                          {u.mealsCount} meals
+                        </p>
+                        <p className="text-[11px] text-slate-400 tabular-nums">
+                          {u.dailyCaloriesGoal} kcal
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
             </div>
 
-            {/* Bottom Quick Preview: Latest 3 Scans & Latest 3 Users */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Latest Scans Preview */}
-              <div className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-wider">Recent Scanned Meals</h3>
-                  <button
-                    onClick={() => setActiveSection('activity')}
-                    className="text-xs font-black text-[#65a30d] hover:underline flex items-center gap-1"
-                  >
-                    <span>View All ({activity.length})</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
+            {/* Bottom Row: Recent Scanned Meals */}
+            <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Recent Scanned Meals</h3>
+                  <p className="text-xs text-slate-500">Latest food recognition results across the platform</p>
                 </div>
-                <div className="space-y-3">
-                  {activity.slice(0, 3).map((meal) => (
-                    <div key={meal.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img src={meal.imageUrl} alt={meal.title} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-[#0f172a] truncate">{meal.title}</p>
-                          <p className="text-[10px] text-slate-500 font-semibold">{meal.category} • {meal.dateStr}</p>
-                        </div>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-lg bg-lime-100 text-[#0f172a] font-black text-xs shrink-0">
-                        {meal.totalCalories} kcal
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  onClick={() => setActiveSection('activity')}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+                >
+                  <span>View stream ({activity.length})</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-
-              {/* Top Athletes Preview */}
-              <div className="p-6 bg-white rounded-3xl border-2 border-slate-200 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-wider">Top Active Athletes</h3>
-                  <button
-                    onClick={() => setActiveSection('users')}
-                    className="text-xs font-black text-[#65a30d] hover:underline flex items-center gap-1"
-                  >
-                    <span>Open CRM ({users.length})</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {users.slice(0, 3).map((u) => (
-                    <div key={u._id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-[#0f172a] text-[#b6ff2e] flex items-center justify-center font-black text-xs shrink-0">
-                          {(u.name || 'A').slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-[#0f172a] truncate">{u.name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono truncate">{u.email}</p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs font-black text-[#65a30d]">{u.mealsCount} meals</p>
-                        <p className="text-[10px] text-slate-500 font-bold">{u.dailyCaloriesGoal} kcal/day</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {activity.slice(0, 3).map((meal) => (
+                  <div key={meal.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src={meal.imageUrl} alt={meal.title} className="w-11 h-11 rounded-lg object-cover shrink-0 border border-slate-200" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-slate-900 truncate">{meal.title}</p>
+                        <p className="text-[11px] text-slate-500">{meal.category} · {meal.dateStr}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <span className="text-xs font-semibold text-slate-900 tabular-nums shrink-0">
+                      {meal.totalCalories} kcal
+                    </span>
+                  </div>
+                ))}
               </div>
-
             </div>
 
           </div>
