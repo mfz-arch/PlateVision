@@ -6,7 +6,7 @@ import {
   Utensils, Database, Cpu, Image as ImageIcon, CheckCircle2,
   Sparkles, TrendingUp, Calendar, LayoutDashboard, BarChart3,
   DollarSign, Download, Filter, Eye, ShieldCheck, Server,
-  ArrowUpRight, Clock, Award, Layers, ChevronRight, X, Check, Zap
+  ArrowUpRight, Clock, Award, Layers, ChevronRight, ChevronsLeft, ChevronsRight, X, Check, Zap
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -86,6 +86,7 @@ export const AdminDashboard: React.FC = () => {
   const isFr = language === 'fr';
 
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [activity, setActivity] = useState<ActivityMeal[]>([]);
@@ -380,37 +381,75 @@ export const AdminDashboard: React.FC = () => {
     .find((i) => i.id === activeSection);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-start animate-in fade-in duration-300">
+    <div className="flex flex-col lg:flex-row gap-5 items-start animate-in fade-in duration-300">
       
       {/* =====================================================================
-          LEFT EXECUTIVE SIDEBAR (Haze / Shadcn Dark Slate Style)
+          MOBILE COMPACT HORIZONTAL TAB BAR (< lg)
          ===================================================================== */}
-      <aside className="w-full lg:w-64 shrink-0 bg-[#0f172a] text-slate-300 rounded-2xl border border-slate-800 shadow-sm p-4 space-y-6 lg:sticky lg:top-24">
-        
-        {/* Sidebar Brand Header */}
-        <div className="flex items-center justify-between px-2 pt-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
-              <span className="text-xs font-black text-[#b6ff2e]">PV</span>
+      <div className="w-full lg:hidden flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        {sidebarGroups.flatMap((g) => g.items).map((item) => {
+          const IconComp = item.icon;
+          const isActive = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs border transition-all ${
+                isActive
+                  ? 'bg-white border-[#84cc16] text-slate-900 font-semibold shadow-xs'
+                  : 'bg-white/80 border-slate-200 text-slate-500 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#65a30d]' : 'text-slate-400'}`} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* =====================================================================
+          LEFT SLIM COLLAPSIBLE SIDEBAR (Shadcn Light White Style, Desktop)
+         ===================================================================== */}
+      <aside
+        className={`hidden lg:flex flex-col shrink-0 bg-white text-slate-700 rounded-xl border border-slate-200 shadow-xs p-3 space-y-5 sticky top-24 transition-all duration-200 ${
+          sidebarCollapsed ? 'w-16' : 'w-56'
+        }`}
+      >
+        {/* Sidebar Brand Header + Collapse Toggle */}
+        <div className="flex items-center justify-between px-1.5 pt-0.5">
+          {!sidebarCollapsed && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-[#b6ff2e]/25 border border-[#84cc16]/40 flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-black text-[#365314]">PV</span>
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xs font-bold text-slate-900 leading-none truncate">PlateVision</h2>
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate">Admin</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-white leading-none">PlateVision</h2>
-              <p className="text-[11px] text-slate-400 mt-1">Admin Console</p>
-            </div>
-          </div>
-          <span className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Live
-          </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={`w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-900 flex items-center justify-center transition-colors ${
+              sidebarCollapsed ? 'mx-auto' : ''
+            }`}
+          >
+            {sidebarCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
+          </button>
         </div>
 
         {/* Navigation Groups */}
-        <nav className="space-y-5">
+        <nav className="space-y-4">
           {sidebarGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1">
-              <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                {group.groupLabel}
-              </p>
+              {!sidebarCollapsed && (
+                <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {group.groupLabel}
+                </p>
+              )}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const IconComp = item.icon;
@@ -419,22 +458,29 @@ export const AdminDashboard: React.FC = () => {
                     <button
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all ${
+                      title={item.label}
+                      className={`w-full flex items-center ${
+                        sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-2.5'
+                      } py-2 rounded-lg text-xs transition-all cursor-pointer group ${
                         isActive
-                          ? 'bg-white/10 text-white font-semibold border-l-2 border-[#b6ff2e]'
-                          : 'text-slate-400 hover:text-white hover:bg-white/5 font-medium'
+                          ? 'bg-slate-100 text-slate-900 font-semibold'
+                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <IconComp className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#b6ff2e]' : 'text-slate-400'}`} />
-                        <span className="truncate">{item.label}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <IconComp
+                          className={`w-4 h-4 shrink-0 transition-colors ${
+                            isActive ? 'text-[#65a30d]' : 'text-slate-400 group-hover:text-slate-700'
+                          }`}
+                        />
+                        {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                       </div>
-                      {item.badge && (
+                      {!sidebarCollapsed && item.badge && (
                         <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums ${
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
                             isActive
-                              ? 'bg-[#b6ff2e]/15 text-[#b6ff2e]'
-                              : 'bg-white/5 text-slate-400'
+                              ? 'bg-[#b6ff2e]/40 text-[#365314]'
+                              : 'bg-slate-100 text-slate-500'
                           }`}
                         >
                           {item.badge}
@@ -449,21 +495,20 @@ export const AdminDashboard: React.FC = () => {
         </nav>
 
         {/* Sidebar Footer Summary */}
-        <div className="pt-4 border-t border-slate-800 space-y-2.5 text-xs px-1">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">{isFr ? 'Coût API' : 'API Spend'}</span>
-            <span className="font-semibold text-white tabular-nums">$0.00</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">{isFr ? 'Activation' : 'Activation'}</span>
-            <span className="font-semibold text-[#b6ff2e] tabular-nums">{biMetrics.activationRate}%</span>
-          </div>
+        <div className="pt-3 border-t border-slate-100 space-y-2 text-[11px]">
+          {!sidebarCollapsed && (
+            <div className="flex items-center justify-between px-1">
+              <span className="text-slate-400">{isFr ? 'Activation' : 'Activation'}</span>
+              <span className="font-semibold text-[#65a30d] tabular-nums">{biMetrics.activationRate}%</span>
+            </div>
+          )}
           <button
             onClick={handleExportUsersCsv}
-            className="w-full mt-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-medium text-xs flex items-center justify-center gap-2 transition-all"
+            title={isFr ? 'Exporter CSV' : 'Export CSV'}
+            className="w-full py-2 px-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium text-xs flex items-center justify-center gap-1.5 transition-all"
           >
-            <Download className="w-3.5 h-3.5 text-slate-400" />
-            <span>{isFr ? 'Exporter CSV' : 'Export CSV'}</span>
+            <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            {!sidebarCollapsed && <span>{isFr ? 'Exporter CSV' : 'Export CSV'}</span>}
           </button>
         </div>
 
@@ -474,7 +519,7 @@ export const AdminDashboard: React.FC = () => {
          ===================================================================== */}
       <div className="flex-1 w-full min-w-0 space-y-5">
         
-        {/* Top Utility Bar (Shadcn / Haze Style) */}
+        {/* Top Utility Bar (Clean Light Shadcn Style) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div>
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
@@ -508,7 +553,7 @@ export const AdminDashboard: React.FC = () => {
             <button
               onClick={() => fetchAllData(true)}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0f172a] text-white font-semibold text-xs hover:bg-slate-800 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#b6ff2e] hover:bg-[#a3f01b] text-[#0f172a] border border-[#84cc16]/40 font-semibold text-xs transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
@@ -517,33 +562,32 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* =================================================================
-            VIEW 1: EXECUTIVE OVERVIEW (Haze Hero + Shadcn KPIs & Charts)
+            VIEW 1: EXECUTIVE OVERVIEW (Light Shadcn KPIs & Charts)
            ================================================================= */}
         {activeSection === 'overview' && (
           <div className="space-y-5">
             
-            {/* Executive Hero Banner (Inspired by Haze / Flux, using PlateVision #0f172a + #84cc16) */}
-            <div className="rounded-xl bg-gradient-to-r from-[#0f172a] via-[#131d33] to-[#0f172a] border border-slate-800 p-6 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-              <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-[#84cc16]/10 blur-3xl pointer-events-none" />
-              <div className="space-y-2 relative z-10">
-                <p className="text-xs font-medium text-slate-400">
+            {/* Clean Light Executive Summary Card */}
+            <div className="rounded-xl bg-white border border-slate-200 shadow-xs p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-slate-500">
                   Cumulative Platform Nutrition Tracked
                 </p>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-white">
+                  <span className="text-2xl sm:text-3xl font-bold tracking-tight tabular-nums text-slate-900">
                     {stats?.aggregates?.calories ? stats.aggregates.calories.toLocaleString() : '0'} kcal
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-[#84cc16]/15 text-[#b6ff2e] text-xs font-semibold border border-[#84cc16]/30 tabular-nums">
+                  <span className="px-2 py-0.5 rounded-md bg-lime-50 text-[#4d7c0f] text-xs font-semibold border border-lime-200 tabular-nums">
                     +{stats?.todayMealsCount || 0} scans today
                   </span>
                 </div>
                 <div className="pt-1 flex items-center gap-3">
                   <button
                     onClick={() => setActiveSection('gemini')}
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-medium text-white border border-white/10 transition-all inline-flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 border border-slate-200 transition-all inline-flex items-center gap-1.5"
                   >
                     <span>View AI Telemetry</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-[#b6ff2e]" />
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#65a30d]" />
                   </button>
                   <span className="text-xs text-slate-400 tabular-nums">
                     Avg ~{biMetrics.avgCaloriesPerMeal} kcal / meal
@@ -552,12 +596,12 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Clean Minimalist Trend Sparkline */}
-              <div className="w-full md:w-64 h-20 relative z-10 shrink-0">
+              <div className="w-full md:w-64 h-16 shrink-0">
                 <svg viewBox="0 0 240 64" className="w-full h-full overflow-visible">
                   <defs>
                     <linearGradient id="pvAdminArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#b6ff2e" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#b6ff2e" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#84cc16" stopOpacity="0.22" />
+                      <stop offset="100%" stopColor="#84cc16" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
                   <path
@@ -567,7 +611,7 @@ export const AdminDashboard: React.FC = () => {
                   <path
                     d="M0 52 L40 46 L80 49 L120 34 L160 38 L200 20 L240 12"
                     fill="none"
-                    stroke="#b6ff2e"
+                    stroke="#65a30d"
                     strokeWidth="2"
                     strokeLinecap="round"
                   />
@@ -662,7 +706,7 @@ export const AdminDashboard: React.FC = () => {
                           <div className="w-full max-w-[38px] flex-1 flex items-end">
                             <div
                               className={`w-full rounded-t-md transition-all duration-500 ${
-                                isLatest ? 'bg-[#65a30d]' : 'bg-[#0f172a] group-hover:bg-slate-700'
+                                isLatest ? 'bg-[#65a30d]' : 'bg-slate-200 group-hover:bg-[#84cc16]'
                               }`}
                               style={{ height: `${pct}%` }}
                             />
